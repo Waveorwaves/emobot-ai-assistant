@@ -1,4 +1,4 @@
-# 🤖 Emobot
+# Emobot
 
 **Emobot** is a personalized LLM-based assistant that detects user emotion from conversations and can take actions using external tools such as Google Calendar and Gmail via API integrations. It aims to make AI agents not only smarter, but more empathetic and context-aware.
 
