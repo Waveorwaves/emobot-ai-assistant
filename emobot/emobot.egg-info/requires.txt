@@ -1,0 +1,10 @@
+python-telegram-bot>=20.0
+python-dotenv>=1.0.0
+pydub>=0.25.1
+SpeechRecognition>=3.10.0
+pytz>=2023.3
+duckduckgo-search>=2.9.5
+requests>=2.31.0
+google-api-python-client>=2.108.0
+google-auth-httplib2>=0.1.0
+google-auth-oauthlib>=1.0.0
