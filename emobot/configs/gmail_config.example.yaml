@@ -1,0 +1,31 @@
+# Gmail Configuration Example
+# Copy this file to gmail_config.yaml and fill in your actual credentials
+
+gmail:
+  # OAuth 2.0 credentials from Google Cloud Console
+  client_id: "your_client_id_here"
+  client_secret: "your_client_secret_here"
+  
+  # Redirect URI (must match what's configured in Google Cloud Console)
+  redirect_uri: "http://localhost:8080/callback"
+  
+  # Gmail API scopes
+  scopes:
+    - "https://www.googleapis.com/auth/gmail.readonly"
+    - "https://www.googleapis.com/auth/gmail.send"
+    - "https://www.googleapis.com/auth/gmail.modify"
+  
+  # Your Gmail address
+  user_email: "your_email@gmail.com"
+  
+  # Token storage file (will be created automatically)
+  token_file: "gmail_token.json"
+  
+  # Credentials storage file (will be created automatically)
+  credentials_file: "gmail_credentials.json"
+
+# Optional: Email preferences
+email_preferences:
+  max_results: 10
+  include_attachments: false
+  mark_as_read: true 

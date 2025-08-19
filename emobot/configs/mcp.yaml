@@ -1,0 +1,23 @@
+# Configuration for MCP (Model-Centric Tools) Server
+
+# Server settings
+server:
+  host: "127.0.0.1"
+  port: 8080
+
+# List of tools to be loaded by the server
+tools:
+  - name: "web_search"
+    module: "tools.mcp_server.web_search"
+    class: "WebSearchTool"
+    enabled: true
+  
+  - name: "email"
+    module: "tools.mcp_server.email"
+    class: "EmailTool"
+    enabled: true
+
+  - name: "todo_list"
+    module: "tools.mcp_server.todo"
+    class: "TodoListTool"
+    enabled: true 
