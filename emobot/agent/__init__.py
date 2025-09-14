@@ -1,11 +1,11 @@
 """
 Emobot Agent 模块
 
-基于 smolagents 框架实现的智能助手，包含以下核心组件：
-- 感知模块 (Perception)：处理和理解用户输入
-- 推理模块 (Reasoning)：实现 ReAct 循环，进行思考和决策
-- 记忆模块 (Memory)：管理短期和长期记忆
-- 动作模块 (Actions)：执行具体的工具调用和动作
+Intelligent assistant based on smolagents framework, containing the following core components:
+- Perception Module: Process and understand user input
+- Reasoning Module: Implements ReAct loop for thinking and decision making
+- Memory Module: Manage short-term and long-term memory
+- Actions Module: Execute specific tool calls and actions
 """
 
 from .perception import PerceptionModule

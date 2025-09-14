@@ -59,18 +59,21 @@ class EmailTool(MCPToolBase):
         self.auth_manager = GmailAuthManager()
         self.service = None
 
-    def execute(self, operation: str, **kwargs) -> Dict[str, Any]:
+    def execute(self, **kwargs) -> Dict[str, Any]:
         """
         执行指定的邮件操作
 
         Args:
-            operation: 要执行的操作
-            **kwargs: 基于操作的附加参数
+            **kwargs: 包含operation和其他参数的字典
 
         Returns:
             包含操作结果的字典
         """
         try:
+            operation = kwargs.get("operation")
+            if not operation:
+                return {"status": "error", "error_message": "缺少operation参数"}
+
             # 确保 Gmail 服务可用
             if not self._ensure_service():
                 return {"status": "error", "error_message": "Gmail 服务不可用，请检查认证配置"}
@@ -151,7 +154,7 @@ class EmailTool(MCPToolBase):
 
             return {
                 "status": "success", 
-                "result": f"邮件已成功发送给 {recipient}",
+                "result": f"Email successfully sent to {recipient}",
                 "message_id": sent_message['id']
             }
 
@@ -173,7 +176,7 @@ class EmailTool(MCPToolBase):
 
             messages = results.get('messages', [])
             if not messages:
-                return {"status": "success", "result": f"没有找到匹配 '{search_query}' 的邮件"}
+                return {"status": "success", "result": f"No emails found matching '{search_query}' 的邮件"}
 
             # 获取邮件详情
             email_list = []
@@ -204,10 +207,10 @@ class EmailTool(MCPToolBase):
                 body={'removeLabelIds': ['UNREAD']}
             ).execute()
 
-            return {"status": "success", "result": "邮件已标记为已读"}
+            return {"status": "success", "result": "Email marked as read"}
 
         except Exception as e:
-            return {"status": "error", "error_message": f"标记邮件失败: {str(e)}"}
+            return {"status": "error", "error_message": f"Mark email failed: {str(e)}"}
 
     def _get_unread_count(self) -> Dict[str, Any]:
         """获取未读邮件数量"""
@@ -225,7 +228,7 @@ class EmailTool(MCPToolBase):
             }
 
         except Exception as e:
-            return {"status": "error", "error_message": f"获取未读数量失败: {str(e)}"}
+            return {"status": "error", "error_message": f"Get unread count failed: {str(e)}"}
 
     def _get_message_details(self, message_id: str) -> Dict[str, Any]:
         """获取邮件详细信息"""

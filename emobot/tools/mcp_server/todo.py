@@ -7,11 +7,16 @@ import json
 from typing import Dict, Any, List, Optional
 from datetime import datetime, date
 from .todo_models import TodoListManager, TodoTask, TaskPriority, TaskStatus, TaskCategory
+from .tool_base import MCPToolBase
 
-class TodoListTool:
+class TodoListTool(MCPToolBase):
     """待办事项管理工具"""
     
+    name = "todo_list"
+    description = "管理待办事项列表，支持添加、查看、更新、删除、搜索等操作"
+    
     def __init__(self):
+        super().__init__()
         self.manager = TodoListManager()
     
     def get_schema(self) -> Dict[str, Any]:
@@ -45,6 +50,10 @@ class TodoListTool:
                 "title": {
                     "type": "string",
                     "description": "任务标题"
+                },
+                "task": {
+                    "type": "string",
+                    "description": "任务标题（title的别名）"
                 },
                 "description": {
                     "type": "string",
@@ -85,25 +94,25 @@ class TodoListTool:
             }
         }
     
-    def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, **kwargs) -> Dict[str, Any]:
         """执行待办事项操作"""
         try:
-            operation = parameters.get("operation")
+            operation = kwargs.get("operation")
             
             if operation == "add_task":
-                return self._add_task(parameters)
+                return self._add_task(kwargs)
             elif operation == "view_list":
-                return self._view_list(parameters)
+                return self._view_list(kwargs)
             elif operation == "view_task":
-                return self._view_task(parameters)
+                return self._view_task(kwargs)
             elif operation == "update_task":
-                return self._update_task(parameters)
+                return self._update_task(kwargs)
             elif operation == "delete_task":
-                return self._delete_task(parameters)
+                return self._delete_task(kwargs)
             elif operation == "mark_done":
-                return self._mark_done(parameters)
+                return self._mark_done(kwargs)
             elif operation == "search_tasks":
-                return self._search_tasks(parameters)
+                return self._search_tasks(kwargs)
             elif operation == "get_statistics":
                 return self._get_statistics()
             elif operation == "get_overdue":
@@ -128,7 +137,8 @@ class TodoListTool:
     
     def _add_task(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """添加新任务"""
-        title = parameters.get("title")
+        # 支持"title"和"task"两种字段名
+        title = parameters.get("title") or parameters.get("task")
         if not title:
             return {"status": "error", "message": "任务标题不能为空"}
         

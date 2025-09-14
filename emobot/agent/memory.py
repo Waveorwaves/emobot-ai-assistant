@@ -161,20 +161,55 @@ class MemoryManager:
         }
     
     def _save_user_patterns(self):
-        """Save user behavior patterns"""
+        """Save user behavior patterns with safe file writing"""
         patterns_file = os.path.join(self.memory_dir, "user_patterns.json")
+        temp_file = patterns_file + ".tmp"
+        backup_file = patterns_file + ".backup"
         
-        # Convert defaultdict to regular dict for JSON serialization
-        patterns_to_save = {
-            "intent_frequency": dict(self.user_patterns["intent_frequency"]),
-            "tool_usage": dict(self.user_patterns["tool_usage"]),
-            "interaction_times": self.user_patterns["interaction_times"][-100:],  # Keep only the last 100
-            "common_entities": dict(self.user_patterns["common_entities"]),
-            "preferences": self.user_patterns["preferences"]
-        }
-        
-        with open(patterns_file, 'w', encoding='utf-8') as f:
-            json.dump(patterns_to_save, f, ensure_ascii=False, indent=2)
+        try:
+            # Create backup
+            if os.path.exists(patterns_file):
+                import shutil
+                shutil.copy2(patterns_file, backup_file)
+            
+            # Convert defaultdict to regular dict for JSON serialization
+            patterns_to_save = {
+                "intent_frequency": dict(self.user_patterns["intent_frequency"]),
+                "tool_usage": dict(self.user_patterns["tool_usage"]),
+                "interaction_times": self.user_patterns["interaction_times"][-100:],  # Keep only the last 100
+                "common_entities": dict(self.user_patterns["common_entities"]),
+                "preferences": self.user_patterns["preferences"]
+            }
+            
+            # Write to temp file first
+            with open(temp_file, 'w', encoding='utf-8') as f:
+                json.dump(patterns_to_save, f, ensure_ascii=False, indent=2)
+            
+            # Verify temp file
+            with open(temp_file, 'r', encoding='utf-8') as f:
+                json.load(f)
+            
+            # Atomic move
+            os.replace(temp_file, patterns_file)
+            
+            # Clean up backup
+            if os.path.exists(backup_file):
+                os.remove(backup_file)
+                
+        except Exception as e:
+            print(f"❌ Failed to save user patterns: {e}")
+            
+            # Clean up temp file
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+            
+            # Restore from backup
+            if os.path.exists(backup_file):
+                try:
+                    os.replace(backup_file, patterns_file)
+                    print("✅ Restored user patterns file from backup")
+                except Exception as restore_error:
+                    print(f"❌ Failed to restore user patterns backup: {restore_error}")
     
     def _update_user_patterns(self, entry: Dict[str, Any]):
         """Update user behavior patterns"""
@@ -232,22 +267,33 @@ class MemoryManager:
         self.user_patterns["preferences"][key] = value
         self._save_user_patterns()
 
+    def _make_serializable(self, obj: Any) -> Any:
+        """Convert object to JSON serializable format"""
+        if isinstance(obj, dict):
+            return {k: self._make_serializable(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [self._make_serializable(item) for item in obj]
+        elif hasattr(obj, '__dict__'):
+            try:
+                return str(obj)
+            except:
+                return f"Object of type {type(obj).__name__}"
+        elif hasattr(obj, 'content'):
+            return str(obj.content)
+        elif hasattr(obj, '__str__'):
+            return str(obj)
+        else:
+            return obj
+
     # ========== Episodic Memory Management ==========
     
-    def _load_episodic_memory(self) -> List[Dict[str, Any]]:
-        """Load episodic memory"""
-        episodic_file = os.path.join(self.memory_dir, "episodic_memory.json")
-        
-        if os.path.exists(episodic_file):
-            with open(episodic_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        
-        return []
-    
     def save_important_episode(self, episode: Dict[str, Any]):
-        """Save important interaction fragments"""
+        """Save important interaction fragments with safe file writing"""
+        # Ensure all episode data is serializable
+        serializable_episode = self._make_serializable(episode)
+        
         self.episodic_memory.append({
-            "episode": episode,
+            "episode": serializable_episode,
             "timestamp": datetime.now().isoformat(),
             "importance": episode.get("importance", "normal")
         })
@@ -255,9 +301,91 @@ class MemoryManager:
         # Keep only the last 50 important fragments
         self.episodic_memory = self.episodic_memory[-50:]
         
+        # Safe file writing
+        self._safe_write_episodic_memory()
+    
+    def _safe_write_episodic_memory(self):
+        """Safely write episodic memory to file using atomic operations"""
         episodic_file = os.path.join(self.memory_dir, "episodic_memory.json")
-        with open(episodic_file, 'w', encoding='utf-8') as f:
-            json.dump(self.episodic_memory, f, ensure_ascii=False, indent=2)
+        temp_file = episodic_file + ".tmp"
+        backup_file = episodic_file + ".backup"
+        
+        try:
+            # Create backup of current file if it exists
+            if os.path.exists(episodic_file):
+                import shutil
+                shutil.copy2(episodic_file, backup_file)
+            
+            # Write to temporary file first
+            with open(temp_file, 'w', encoding='utf-8') as f:
+                json.dump(self.episodic_memory, f, ensure_ascii=False, indent=2)
+            
+            # Verify the temporary file is valid JSON
+            with open(temp_file, 'r', encoding='utf-8') as f:
+                json.load(f)
+            
+            # Atomic move: rename temp file to actual file
+            os.replace(temp_file, episodic_file)
+            
+            # Clean up backup if everything succeeded
+            if os.path.exists(backup_file):
+                os.remove(backup_file)
+                
+        except Exception as e:
+            print(f"❌ Failed to write episodic memory: {e}")
+            
+            # Clean up temp file if it exists
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+            
+            # Restore from backup if available
+            if os.path.exists(backup_file):
+                try:
+                    os.replace(backup_file, episodic_file)
+                    print("✅ Restored episodic memory file from backup")
+                except Exception as restore_error:
+                    print(f"❌ Failed to restore from backup: {restore_error}")
+            
+            # Revert memory to last known good state
+            self._load_episodic_memory()
+    
+    def _load_episodic_memory(self) -> List[Dict[str, Any]]:
+        """Load episodic memory with error recovery"""
+        episodic_file = os.path.join(self.memory_dir, "episodic_memory.json")
+        backup_file = episodic_file + ".backup"
+        
+        # Try to load the main file
+        if os.path.exists(episodic_file):
+            try:
+                with open(episodic_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    print(f"✅ Successfully loaded episodic memory: {len(data)} records")
+                    return data
+            except json.JSONDecodeError as e:
+                print(f"❌ Main file JSON format error: {e}")
+                
+                # Try to load from backup
+                if os.path.exists(backup_file):
+                    try:
+                        with open(backup_file, 'r', encoding='utf-8') as f:
+                            data = json.load(f)
+                            print(f"✅ Restored episodic memory from backup: {len(data)} records")
+                            
+                            # Try to repair the main file
+                            try:
+                                with open(episodic_file, 'w', encoding='utf-8') as f:
+                                    json.dump(data, f, ensure_ascii=False, indent=2)
+                                print("✅ Main file repaired successfully")
+                            except Exception as repair_error:
+                                print(f"❌ Failed to repair main file: {repair_error}")
+                            
+                            return data
+                    except json.JSONDecodeError as backup_error:
+                        print(f"❌ Backup file also corrupted: {backup_error}")
+        
+        # If all else fails, return empty list
+        print("⚠️ Cannot load episodic memory, using empty list")
+        return []
     
     def search_similar_episodes(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
         """Search for similar historical interaction fragments"""
@@ -295,15 +423,56 @@ class MemoryManager:
         }
     
     def add_semantic_knowledge(self, category: str, key: str, value: str):
-        """Add semantic knowledge"""
+        """Add semantic knowledge with safe file writing"""
         if category not in self.semantic_memory:
             self.semantic_memory[category] = {}
         
         self.semantic_memory[category][key] = value
         
+        # Safe file writing
+        self._safe_write_semantic_memory()
+    
+    def _safe_write_semantic_memory(self):
+        """Safely write semantic memory to file"""
         semantic_file = os.path.join(self.memory_dir, "semantic_memory.json")
-        with open(semantic_file, 'w', encoding='utf-8') as f:
-            json.dump(self.semantic_memory, f, ensure_ascii=False, indent=2)
+        temp_file = semantic_file + ".tmp"
+        backup_file = semantic_file + ".backup"
+        
+        try:
+            # Create backup
+            if os.path.exists(semantic_file):
+                import shutil
+                shutil.copy2(semantic_file, backup_file)
+            
+            # Write to temp file first
+            with open(temp_file, 'w', encoding='utf-8') as f:
+                json.dump(self.semantic_memory, f, ensure_ascii=False, indent=2)
+            
+            # Verify temp file
+            with open(temp_file, 'r', encoding='utf-8') as f:
+                json.load(f)
+            
+            # Atomic move
+            os.replace(temp_file, semantic_file)
+            
+            # Clean up backup
+            if os.path.exists(backup_file):
+                os.remove(backup_file)
+                
+        except Exception as e:
+            print(f"❌ Failed to save semantic memory: {e}")
+            
+            # Clean up temp file
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+            
+            # Restore from backup
+            if os.path.exists(backup_file):
+                try:
+                    os.replace(backup_file, semantic_file)
+                    print("✅ Restored semantic memory file from backup")
+                except Exception as restore_error:
+                    print(f"❌ Failed to restore semantic memory backup: {restore_error}")
     
     def get_relevant_knowledge(self, context: str) -> List[str]:
         """Get relevant domain knowledge"""

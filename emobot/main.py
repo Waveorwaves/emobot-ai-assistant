@@ -30,11 +30,11 @@ class EmobotApp:
     Manages agent lifecycle, user interaction, and system functionality
     """
     
-    def __init__(self, model_id: str = "gemini-1.5-pro", config_path: str = "configs/mcp.yaml"):
+    def __init__(self, model_id: str = "gemini-1.5-flash", config_path: str = "configs/mcp.yaml"):
         # 如果没有指定模型，尝试从环境变量获取
         if model_id is None:
-            model_id = os.getenv("DEFAULT_MODEL", "gemini-1.5-pro")
-        self.model_id = model_id or "gemini-1.5-pro"  # 确保不为 None
+            model_id = os.getenv("DEFAULT_MODEL", "gemini-1.5-flash")
+        self.model_id = model_id or "gemini-1.5-flash"  # 确保不为 None
         self.config_path = config_path
         self.agent: Optional[ReasoningModule] = None
         self.server_thread: Optional[threading.Thread] = None
@@ -52,11 +52,16 @@ class EmobotApp:
             "/explain": self._explain_last,
             "/preferences": self._show_preferences,
             "/reflect": self._reflect,
+            "/pending": self._show_pending_confirmation,
+            "/cancel": self._cancel_pending_confirmation,
+            "/test_email": self._test_email_generation,
             "/exit": self._exit
         }
         
         self.last_query = None
         self.last_response = None
+    
+
 
     def start(self):
         """Start Emobot application"""
@@ -195,7 +200,7 @@ class EmobotApp:
             print("💡 Type /help to see available commands")
 
     def _handle_query(self, query: str):
-        """Handle user queries"""
+        """Handle user queries with confirmation support"""
         print("\n🤔 Thinking...")
         
         start_time = time.time()
@@ -206,8 +211,13 @@ class EmobotApp:
                 print("❌ Agent not initialized, please check configuration")
                 return
             
-            # Call agent to process query
-            response = self.agent.process_query(query)
+            # Check if there's a pending confirmation
+            if self.agent.has_pending_confirmation():
+                print("🔄 Processing confirmation response...")
+                response = self.agent.handle_confirmation_response(query)
+            else:
+                # Call agent to process query
+                response = self.agent.process_query(query)
             
             # Record query and response
             self.last_query = query
@@ -240,12 +250,19 @@ class EmobotApp:
   /explain      - Explain reasoning process of last query
   /preferences  - Show user preference analysis
   /reflect      - Let agent reflect on its performance
+  /pending      - Show pending confirmation requests
+  /cancel       - Cancel pending confirmation requests
+  /test_email   - Test email content generation
   /exit         - Exit program
 
 💡 Tips:
   - Type questions directly to chat with Emobot
   - Supports mixed English and Chinese input
   - Can request to search information, manage emails and to-do items
+  - Some operations (like sending emails) require confirmation for security
+  - When prompted for confirmation, type 'yes' or 'y' to proceed, 'no' or 'n' to cancel
+  - Use /pending to see what actions are waiting for confirmation
+  - Use /cancel to cancel pending confirmations
 """
         print(help_text)
 
@@ -423,6 +440,73 @@ class EmobotApp:
         print("\n  Learning Progress:")
         for metric, value in reflection['learning_progress'].items():
             print(f"    - {metric}: {value}")
+
+    def _show_pending_confirmation(self):
+        """Show pending confirmation requests"""
+        if not self.agent:
+            print("❌ Agent not initialized")
+            return
+        
+        pending_requests = self.agent.get_pending_confirmation_requests()
+        
+        if not pending_requests:
+            print("✅ No pending confirmation requests.")
+            return
+        
+        print("\n⚠️ Pending Confirmation Requests:")
+        for req in pending_requests:
+            print(f"  - ID: {req['id']}")
+            print(f"    Query: {req['query']}")
+            print(f"    Status: {req['status']}")
+            print(f"    Created At: {req['created_at']}")
+            print(f"    Expires At: {req['expires_at']}")
+            print("-" * 20)
+
+    def _cancel_pending_confirmation(self):
+        """Cancel pending confirmation requests"""
+        if not self.agent:
+            print("❌ Agent not initialized")
+            return
+        
+        pending_requests = self.agent.get_pending_confirmation_requests()
+        
+        if not pending_requests:
+            print("✅ No pending confirmation requests to cancel.")
+            return
+        
+        print("\n🚫 Cancelling pending confirmation requests...")
+        for req in pending_requests:
+            print(f"  - Cancelling ID: {req['id']}")
+            self.agent.cancel_confirmation_request(req['id'])
+            print(f"    Cancelled ID: {req['id']}")
+        print("✅ All pending confirmation requests cancelled.")
+
+    def _test_email_generation(self):
+        """Test email generation"""
+        if not self.agent:
+            print("❌ Agent not initialized")
+            return
+        
+        print("\n💌 Testing Email Generation...")
+        
+        test_queries = [
+            "Send a test email to john.doe@example.com",
+            "Send an email to Wang_Yifei1213@outlook.com to ask if he has finished the task",
+            "Email alice@company.com to ask about the meeting reschedule",
+            "Send bob@email.com a message to inform him about the project update"
+        ]
+        
+        for i, query in enumerate(test_queries, 1):
+            print(f"\n📧 Test {i}: {query}")
+            try:
+                subject, body = self.agent._extract_email_content(query)
+                print(f"   📋 Subject: {subject}")
+                print(f"   📝 Body: {body}")
+                print("   " + "-" * 40)
+            except Exception as e:
+                print(f"   ❌ Error: {e}")
+        
+        print("\n✅ Email generation test completed!")
 
     def _exit(self):
         """Exit program"""

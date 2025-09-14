@@ -186,11 +186,11 @@ $RECYCLE.BIN/
 .env
 .env-*
 !.env-example
-configs/gmail_config.yaml
-configs/*_config.yaml
-!configs/mcp.yaml
-!configs/system_prompt.md
-!configs/local_model_config.yaml
+emobot/configs/gmail_config.yaml
+emobot/configs/*_config.yaml
+!emobot/configs/mcp.yaml
+!emobot/configs/system_prompt.md
+!emobot/configs/local_model_config.yaml
 
 # API Keys and Tokens
 gmail_token.json

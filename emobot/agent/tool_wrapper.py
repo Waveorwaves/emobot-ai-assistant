@@ -4,18 +4,29 @@ from typing import Dict, Any
 class MCPToolWrapper(Tool):
     """Wrapper for MCP tools to work with smolagents"""
     
-    def __init__(self, action_executor):
+    def __init__(self, action_executor, tool_name: str):
         super().__init__()
         self.action_executor = action_executor
-        self.name = "mcp_tool"
-        self.description = "MCP tool wrapper"
+        self.tool_name = tool_name
+        self.name = tool_name
+        self.description = f"MCP tool wrapper for {tool_name}"
         self.output_type = "string"
-        self.inputs = {}
+        # Define inputs to be compatible with smolagents
+        self.inputs = {
+            "parameters": {
+                "type": "object",
+                "description": "Tool parameters",
+                "nullable": True
+            }
+        }
     
-    def forward(self, **kwargs) -> str:
+    def forward(self, parameters: Dict[str, Any] = None) -> str:
         """Execute the MCP tool"""
         try:
-            result = self.action_executor.execute_action(self.name, kwargs)
+            if parameters is None:
+                parameters = {}
+                
+            result = self.action_executor.execute_action(self.tool_name, parameters)
             
             if result.get("status") == "error":
                 raise Exception(result.get("error_message", "Unknown error"))

@@ -77,7 +77,7 @@ class ActionExecutor:
         try:
             # Prepare request
             request_data = {
-                "tool": tool_name,
+                "tool_name": tool_name,
                 "parameters": parameters
             }
             

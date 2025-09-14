@@ -82,7 +82,7 @@ class ModelManager:
                         model = self._create_provider_model(target_provider, model_id)
                         if model:
                             self.current_model = model
-                            self.logger.info(f"成功创建指定的 {target_provider} 模型: {model_id}")
+                            self.logger.info(f"Successfully created specified {target_provider} model: {model_id}")
                             return model
                     except Exception as e:
                         self.logger.warning(f"创建指定的 {target_provider} 模型失败: {e}")
@@ -316,7 +316,7 @@ class ModelManager:
             return None
     
     def create_agent(self, model, tools: List[Any], system_prompt: str):
-        """创建工具调用代理"""
+        """Create tool calling agent"""
         try:
             # 对于 OpenAI 模型，直接使用 smolagents 的 ToolCallingAgent
             if (hasattr(model, 'generate') and 
@@ -345,8 +345,8 @@ class ModelManager:
                 self.system_prompt = system_prompt
             
             def run(self, query: str):
-                # 简化的实现，实际应该包含工具调用逻辑
-                full_prompt = f"{self.system_prompt}\n\n用户查询: {query}"
+                # Simplified implementation, should include tool calling logic
+                full_prompt = f"{self.system_prompt}\n\nUser Query: {query}"
                 response = self.model.generate(full_prompt)
                 
                 # 返回一个类似 smolagents 响应的对象
@@ -379,3 +379,61 @@ class ModelManager:
                 status["available_providers"].append(provider)
         
         return status 
+
+    def create_gemini_model(self, model_id: str = "gemini-1.5-flash") -> Any:
+        """Create Gemini model with fallback options"""
+        try:
+            import google.generativeai as genai
+            
+            # Set API key
+            api_key = os.getenv("GOOGLE_API_KEY")
+            if not api_key:
+                raise Exception("GOOGLE_API_KEY not found in environment variables")
+            
+            genai.configure(api_key=api_key)
+            
+            # Available Gemini models with their free quotas
+            gemini_models = {
+                "gemini-1.5-flash": {
+                    "model": "gemini-1.5-flash",
+                    "free_quota": 50,
+                    "description": "Fastest, cheapest model"
+                },
+                "gemini-1.5-pro": {
+                    "model": "gemini-1.5-pro", 
+                    "free_quota": 150,
+                    "description": "Better reasoning, higher quota"
+                },
+                "gemini-1.0-pro": {
+                    "model": "gemini-1.0-pro",
+                    "free_quota": 150,
+                    "description": "Stable, reliable performance"
+                }
+            }
+            
+            # Try the requested model first
+            if model_id in gemini_models:
+                try:
+                    model = genai.GenerativeModel(gemini_models[model_id]["model"])
+                    self.logger.info(f"Successfully created {model_id} model (Free quota: {gemini_models[model_id]['free_quota']} requests/day)")
+                    return model
+                except Exception as e:
+                    self.logger.warning(f"Failed to create {model_id}: {e}")
+            
+            # Fallback to other models if requested model fails
+            for fallback_id, fallback_info in gemini_models.items():
+                if fallback_id != model_id:
+                    try:
+                        model = genai.GenerativeModel(fallback_info["model"])
+                        self.logger.info(f"Fallback: Created {fallback_id} model (Free quota: {fallback_info['free_quota']} requests/day)")
+                        return model
+                    except Exception as e:
+                        self.logger.warning(f"Fallback {fallback_id} also failed: {e}")
+                        continue
+            
+            raise Exception("All Gemini models failed to initialize")
+            
+        except ImportError:
+            raise Exception("google-generativeai package not installed")
+        except Exception as e:
+            raise Exception(f"Failed to create Gemini model: {e}") 

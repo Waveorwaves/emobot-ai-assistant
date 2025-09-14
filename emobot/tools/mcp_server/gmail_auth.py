@@ -125,7 +125,7 @@ class GmailAuthManager:
         with open(token_file, 'w') as token:
             json.dump(token_data, token)
         
-        print(f"✅ Token 已保存到 {token_file}")
+        print(f"✅ Token saved to {token_file}")
     
     def get_service(self):
         """获取 Gmail 服务实例"""
@@ -136,9 +136,9 @@ class GmailAuthManager:
         if not self.service:
             try:
                 self.service = build('gmail', 'v1', credentials=self.credentials)
-                print("✅ Gmail 服务连接成功")
+                print("✅ Gmail service connected successfully")
             except Exception as e:
-                print(f"❌ 创建 Gmail 服务失败: {e}")
+                print(f"❌ Failed to create Gmail service: {e}")
                 return None
                 
         return self.service

@@ -4,7 +4,7 @@ import json
 
 class PerceptionModule:
     """
-    感知模块：处理和理解用户输入
+    Perception Module: Process and understand user input
     
     负责接收用户输入并转换为结构化格式，包括：
     - 意图识别

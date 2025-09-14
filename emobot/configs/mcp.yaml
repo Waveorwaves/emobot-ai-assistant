@@ -20,4 +20,9 @@ tools:
   - name: "todo_list"
     module: "tools.mcp_server.todo"
     class: "TodoListTool"
+    enabled: true
+
+  - name: "calendar"
+    module: "tools.mcp_server.calendar"
+    class: "CalendarTool"
     enabled: true 
