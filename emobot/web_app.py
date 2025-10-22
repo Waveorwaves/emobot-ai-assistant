@@ -7,7 +7,15 @@ import os
 import sys
 import logging
 from flask import Flask, request, jsonify, render_template_string
-from flask_cors import CORS
+
+# Try to import CORS, make it optional
+try:
+    from flask_cors import CORS
+    CORS_AVAILABLE = True
+except ImportError:
+    CORS_AVAILABLE = False
+    print("⚠️  flask-cors not installed. CORS will not be enabled.")
+    print("   Install with: pip install flask-cors")
 import threading
 import time
 
@@ -24,7 +32,11 @@ logging.basicConfig(
 )
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for frontend access
+
+# Enable CORS if available
+if CORS_AVAILABLE:
+    CORS(app)  # Enable CORS for frontend access
+    print("✅ CORS enabled for cross-origin requests")
 
 # Global variables
 reasoning_module = None
@@ -661,7 +673,7 @@ def main():
     parser = argparse.ArgumentParser(description="Emobot Web Application")
     parser.add_argument('--model', type=str, default='gemini-2.0-flash', help='Model to use')
     parser.add_argument('--host', type=str, default='127.0.0.1', help='Host to bind to')
-    parser.add_argument('--port', type=int, default=8000, help='Port to bind to (default: 8000 for frontend compatibility)')
+    parser.add_argument('--port', type=int, default=8000, help='Port to bind to (default: 8000, avoid 5000 due to macOS ControlCenter conflict)')
     args = parser.parse_args()
     
     print("="*60)

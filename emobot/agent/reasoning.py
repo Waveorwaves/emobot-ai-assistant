@@ -111,7 +111,7 @@ class ReasoningModule:
 
     def process_query(self, query: str) -> str:
         """
-        Process user query using ReAct loop with conversation context
+        Process user query using ReAct loop with conversation context and episodic memory
 
         Args:
             query: User's query
@@ -121,19 +121,31 @@ class ReasoningModule:
         """
         print(f"🔍 Processing query: {query}")
         
-        # Get conversation history for context
+        # Get conversation history for context (short-term memory)
         conversation_history = self.memory.get_formatted_history(max_entries=5)
         print(f"📚 Conversation history available: {bool(conversation_history and conversation_history != 'No history records.')}")
+        
+        # 🔥 NEW: Retrieve relevant episodic memories
+        relevant_episodes = self.memory.search_similar_episodes(query, limit=3)
+        episodic_context = ""
+        if relevant_episodes:
+            episodic_context = self._format_episodic_context(relevant_episodes)
+            print(f"🧠 Found {len(relevant_episodes)} relevant past experiences")
+        else:
+            print("🧠 No relevant past experiences found")
+        
+        # Combine all context information
+        full_context = self._combine_context(conversation_history, episodic_context)
         
         # Update memory with new query
         self.memory.add_to_short_term({"user_input": query})
         
-        # Create execution plan with context
-        plan = self._create_execution_plan(query, conversation_history)
+        # Create execution plan with enhanced context
+        plan = self._create_execution_plan(query, full_context)
         print(f"📋 Plan created with context: {plan.get('context_used', False)}")
         
-        # Execute ReAct loop with context
-        result = self._run_tool_calling_loop(query, plan, conversation_history)
+        # Execute ReAct loop with enhanced context
+        result = self._run_tool_calling_loop(query, plan, full_context)
         
         # Update memory with result
         self.memory.save_important_episode({
@@ -143,6 +155,41 @@ class ReasoningModule:
         })
         
         return result
+
+    def _format_episodic_context(self, episodes: List[Dict[str, Any]]) -> str:
+        """Format episodic memories into context string"""
+        if not episodes:
+            return ""
+        
+        context = "\n\nRelevant Past Experiences:\n"
+        for i, episode in enumerate(episodes, 1):
+            episode_data = episode.get("episode", {})
+            query_text = episode_data.get("query", "Unknown query")
+            result_text = episode_data.get("result", "No result")
+            timestamp = episode.get("timestamp", "Unknown time")
+            
+            # Truncate long results for context
+            if len(result_text) > 150:
+                result_text = result_text[:150] + "..."
+            
+            context += f"{i}. [{timestamp[:10]}] Query: {query_text}\n"
+            context += f"   Result: {result_text}\n\n"
+        
+        return context
+
+    def _combine_context(self, conversation_history: str, episodic_context: str) -> str:
+        """Combine conversation history and episodic context"""
+        combined = ""
+        
+        # Add conversation history
+        if conversation_history and conversation_history != "No history records.":
+            combined += conversation_history
+        
+        # Add episodic context
+        if episodic_context:
+            combined += episodic_context
+        
+        return combined if combined else "No history records."
 
     def _create_execution_plan(self, query: str, conversation_history: str = "") -> dict:
         """
@@ -328,15 +375,15 @@ class ReasoningModule:
                             tool_results: list, plan: dict, conversation_history: str = "") -> str:
         """Build thought prompt for current step with conversation context"""
         
-        # Add conversation context if available
+        # Add enhanced context if available (includes both conversation history and episodic memory)
         context_section = ""
         if conversation_history and conversation_history != "No history records.":
             context_section = f"""
         
-        Conversation History:
+        Context Information:
         {conversation_history}
         
-        IMPORTANT: Consider the conversation history when making decisions. If the user is continuing a previous task or providing additional information (like an email address after asking to send an email), use that context to understand what they want.
+        IMPORTANT: Consider both the recent conversation history and any relevant past experiences when making decisions. If the user is continuing a previous task or providing additional information (like an email address after asking to send an email), use that context to understand what they want. Past experiences can help you understand user preferences and patterns.
         """
         
         prompt = f"""

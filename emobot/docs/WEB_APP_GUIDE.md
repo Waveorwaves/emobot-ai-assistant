@@ -24,8 +24,10 @@ python web_app.py --model gemini-2.0-flash
 
 Open your browser and go to:
 ```
-http://127.0.0.1:5000
+http://127.0.0.1:8000
 ```
+
+**Note:** We use port 8000 instead of 5000 because macOS ControlCenter often occupies port 5000.
 
 You should see a beautiful chat interface!
 
@@ -54,12 +56,12 @@ python web_app.py --model gemini-1.5-pro
 ### Allow External Access
 
 ```bash
-python web_app.py --host 0.0.0.0 --port 5000
+python web_app.py --host 0.0.0.0 --port 8000
 ```
 
 Then access from other devices on your network:
 ```
-http://YOUR_IP_ADDRESS:5000
+http://YOUR_IP_ADDRESS:8000
 ```
 
 ## API Endpoints
@@ -117,15 +119,15 @@ Health check
 
 ```bash
 # Send a chat message
-curl -X POST http://127.0.0.1:5000/api/chat \
+curl -X POST http://127.0.0.1:8000/api/chat \
   -H "Content-Type: application/json" \
   -d '{"message": "what is AI?"}'
 
 # Get available tools
-curl http://127.0.0.1:5000/api/tools
+curl http://127.0.0.1:8000/api/tools
 
 # Health check
-curl http://127.0.0.1:5000/api/health
+curl http://127.0.0.1:8000/api/health
 ```
 
 ## Using the API with JavaScript
@@ -133,7 +135,7 @@ curl http://127.0.0.1:5000/api/health
 ```javascript
 // Send a message
 async function sendMessage(message) {
-  const response = await fetch('http://127.0.0.1:5000/api/chat', {
+  const response = await fetch('http://127.0.0.1:8000/api/chat', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -153,12 +155,12 @@ sendMessage('search for Python tutorials');
 ```
 ┌─────────────────────────────────────────────────┐
 │                  Browser                        │
-│  http://127.0.0.1:5000                         │
+│  http://127.0.0.1:8000                         │
 └──────────────────┬──────────────────────────────┘
                    │ HTTP
                    ▼
 ┌─────────────────────────────────────────────────┐
-│         Flask Web Server (Port 5000)            │
+│         Flask Web Server (Port 8000)            │
 │  ┌───────────────────────────────────────────┐ │
 │  │  Routes:                                   │ │
 │  │  - GET  /           → Web UI              │ │

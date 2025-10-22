@@ -40,8 +40,8 @@ class ModelManager:
             "gemini": {
                 "enabled": bool(os.getenv("GOOGLE_API_KEY")),
                 "api_key": os.getenv("GOOGLE_API_KEY"),
-                "models": ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"],
-                "default_model": "gemini-1.5-flash"
+                "models": ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest"],
+                "default_model": "gemini-2.5-flash"
             },
             "local": {
                 "enabled": True,  # 本地模型总是可用的

@@ -30,11 +30,11 @@ class EmobotApp:
     Manages agent lifecycle, user interaction, and system functionality
     """
     
-    def __init__(self, model_id: str = "gemini-1.5-flash", config_path: str = "configs/mcp.yaml"):
+    def __init__(self, model_id: str = "gemini-2.5-flash", config_path: str = "configs/mcp.yaml"):
         # 如果没有指定模型，尝试从环境变量获取
         if model_id is None:
-            model_id = os.getenv("DEFAULT_MODEL", "gemini-1.5-flash")
-        self.model_id = model_id or "gemini-1.5-flash"  # 确保不为 None
+            model_id = os.getenv("DEFAULT_MODEL", "gemini-2.5-flash")
+        self.model_id = model_id or "gemini-2.5-flash"  # 确保不为 None
         self.config_path = config_path
         self.agent: Optional[ReasoningModule] = None
         self.server_thread: Optional[threading.Thread] = None
@@ -520,8 +520,8 @@ def main():
     parser.add_argument(
         "--model",
         type=str,
-        default="gemini-1.5-flash",
-        help="Language model to use (default: gemini-1.5-flash)"
+        default="gemini-2.5-flash",
+        help="Language model to use (default: gemini-2.5-flash)"
     )
     parser.add_argument(
         "--config",
