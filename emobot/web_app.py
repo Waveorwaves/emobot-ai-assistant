@@ -44,7 +44,7 @@ reasoning_wrapper = None
 mcp_server_thread = None
 server_url = "http://127.0.0.1:8080"
 
-# Simple HTML template
+# Enhanced HTML template with multiple pages
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
@@ -58,18 +58,16 @@ HTML_TEMPLATE = """
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             padding: 20px;
         }
-        .container {
+        .app-container {
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             width: 100%;
-            max-width: 800px;
-            height: 600px;
+            max-width: 1200px;
+            height: 700px;
+            margin: 0 auto;
             display: flex;
             flex-direction: column;
         }
@@ -82,6 +80,61 @@ HTML_TEMPLATE = """
         }
         .header h1 { font-size: 24px; margin-bottom: 5px; }
         .header p { font-size: 14px; opacity: 0.9; }
+        
+        /* Navigation */
+        .nav-container {
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0;
+        }
+        .nav-tabs {
+            display: flex;
+            list-style: none;
+        }
+        .nav-tab {
+            flex: 1;
+            text-align: center;
+        }
+        .nav-tab button {
+            width: 100%;
+            padding: 15px 20px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        .nav-tab button:hover {
+            background: #e9ecef;
+            color: #333;
+        }
+        .nav-tab button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: white;
+        }
+        
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .page {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .page.active {
+            display: flex;
+        }
+        
+        /* Chat Page Styles */
         .chat-container {
             flex: 1;
             overflow-y: auto;
@@ -117,7 +170,6 @@ HTML_TEMPLATE = """
         .input-container {
             padding: 20px;
             background: white;
-            border-radius: 0 0 20px 20px;
             border-top: 1px solid #e0e0e0;
         }
         .input-form {
@@ -179,36 +231,299 @@ HTML_TEMPLATE = """
             0%, 80%, 100% { transform: scale(0); }
             40% { transform: scale(1); }
         }
+        
+        /* Calendar Page Styles */
+        .calendar-container {
+            flex: 1;
+            padding: 20px;
+            background: #f7f7f7;
+            overflow-y: auto;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .calendar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        .refresh-btn {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+        .refresh-btn:hover {
+            background: #5a6fd8;
+        }
+        .events-list {
+            display: grid;
+            gap: 15px;
+        }
+        .event-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s;
+        }
+        .event-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        .event-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .event-time {
+            font-size: 14px;
+            color: #667eea;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .event-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.4;
+        }
+        .no-events {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .loading-calendar {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+        .error-message {
+            background: #ffe6e6;
+            color: #d63031;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #d63031;
+        }
+        
+        /* Confirmation message styles */
+        .confirmation-pending .message-content {
+            background: #fff3cd !important;
+            color: #856404 !important;
+            border: 1px solid #ffeaa7 !important;
+            border-left: 4px solid #fdcb6e !important;
+        }
+        
+        .confirmation-message {
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="app-container">
         <div class="header">
             <h1>🤖 Emobot</h1>
             <p>Your Intelligent AI Assistant</p>
         </div>
-        <div class="chat-container" id="chatContainer">
-            <div class="message bot">
-                <div class="message-content">
-                    Hello! I'm Emobot, your AI assistant. I can help you search the web, manage emails, create tasks, and more. How can I help you today?
+        
+        <!-- Navigation -->
+        <div class="nav-container">
+            <ul class="nav-tabs">
+                <li class="nav-tab">
+                    <button onclick="switchPage('chat')" class="nav-btn active" data-page="chat">
+                        💬 Chat
+                    </button>
+                </li>
+                <li class="nav-tab">
+                    <button onclick="switchPage('calendar')" class="nav-btn" data-page="calendar">
+                        📅 Calendar
+                    </button>
+                </li>
+                <li class="nav-tab">
+                    <button onclick="switchPage('email')" class="nav-btn" data-page="email">
+                        📧 Email
+                    </button>
+                </li>
+                <li class="nav-tab">
+                    <button onclick="switchPage('todo')" class="nav-btn" data-page="todo">
+                        ✅ Todo
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Chat Page -->
+            <div id="chatPage" class="page active">
+                <div class="chat-container" id="chatContainer">
+                    <div class="message bot">
+                        <div class="message-content">
+                            Hello! I'm Emobot, your AI assistant. I can help you search the web, manage emails, create tasks, and more. How can I help you today?
+                        </div>
+                    </div>
+                </div>
+                <div class="input-container">
+                    <form class="input-form" id="chatForm">
+                        <input 
+                            type="text" 
+                            id="messageInput" 
+                            placeholder="Type your message here..."
+                            autocomplete="off"
+                            required
+                        >
+                        <button type="submit" id="sendButton">Send</button>
+                    </form>
                 </div>
             </div>
-        </div>
-        <div class="input-container">
-            <form class="input-form" id="chatForm">
-                <input 
-                    type="text" 
-                    id="messageInput" 
-                    placeholder="Type your message here..."
-                    autocomplete="off"
-                    required
-                >
-                <button type="submit" id="sendButton">Send</button>
-            </form>
+            
+            <!-- Calendar Page -->
+            <div id="calendarPage" class="page">
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <div class="calendar-title">📅 Your Calendar Events</div>
+                        <button class="refresh-btn" onclick="loadCalendarEvents()">🔄 Refresh</button>
+                    </div>
+                    <div id="calendarContent">
+                        <div class="loading-calendar">Loading calendar events...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Email Page (Placeholder) -->
+            <div id="emailPage" class="page">
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <div class="calendar-title">📧 Email Management</div>
+                    </div>
+                    <div class="no-events">
+                        Email interface coming soon...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Todo Page (Placeholder) -->
+            <div id="todoPage" class="page">
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <div class="calendar-title">✅ Todo Management</div>
+                    </div>
+                    <div class="no-events">
+                        Todo interface coming soon...
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
+        // Page switching functionality
+        function switchPage(pageName) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Remove active class from all nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected page
+            document.getElementById(pageName + 'Page').classList.add('active');
+            
+            // Add active class to selected nav button
+            document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
+            
+            // Load page-specific content
+            if (pageName === 'calendar') {
+                loadCalendarEvents();
+            }
+        }
+        
+        // Calendar functionality
+        async function loadCalendarEvents() {
+            const calendarContent = document.getElementById('calendarContent');
+            calendarContent.innerHTML = '<div class="loading-calendar">Loading calendar events...</div>';
+            
+            try {
+                const response = await fetch('/api/calendar/events');
+                const data = await response.json();
+                
+                if (data.success && data.events && data.events.length > 0) {
+                    displayCalendarEvents(data.events);
+                } else {
+                    calendarContent.innerHTML = `
+                        <div class="no-events">
+                            <h3>📅 No events found</h3>
+                            <p>You don't have any calendar events at the moment.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading calendar events:', error);
+                calendarContent.innerHTML = `
+                    <div class="error-message">
+                        ❌ Failed to load calendar events: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        function displayCalendarEvents(events) {
+            const calendarContent = document.getElementById('calendarContent');
+            
+            const eventsHtml = events.map(event => {
+                const eventTime = event.time || event.start_time || event.datetime || 'No time specified';
+                const eventTitle = event.title || event.summary || 'Untitled Event';
+                const eventDescription = event.description || event.details || '';
+                
+                return `
+                    <div class="event-card">
+                        <div class="event-title">${escapeHtml(eventTitle)}</div>
+                        <div class="event-time">
+                            🕒 ${escapeHtml(eventTime)}
+                        </div>
+                        ${eventDescription ? `<div class="event-description">${escapeHtml(eventDescription)}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            calendarContent.innerHTML = `<div class="events-list">${eventsHtml}</div>`;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Chat functionality (existing code)
         const chatContainer = document.getElementById('chatContainer');
         const chatForm = document.getElementById('chatForm');
         const messageInput = document.getElementById('messageInput');
@@ -283,6 +598,20 @@ HTML_TEMPLATE = """
                 
                 if (data.success) {
                     addMessage(data.response, false);
+                    
+                    // Check if there's a pending confirmation
+                    if (data.has_pending_confirmation && data.pending_confirmations && data.pending_confirmations.length > 0) {
+                        // Add a visual indicator for pending confirmation
+                        const confirmationDiv = document.createElement('div');
+                        confirmationDiv.className = 'message bot confirmation-pending';
+                        confirmationDiv.innerHTML = `
+                            <div class="message-content confirmation-message">
+                                ⏳ Waiting for your confirmation. Please type 'yes' or 'y' to proceed, 'no' or 'n' to cancel.
+                            </div>
+                        `;
+                        chatContainer.appendChild(confirmationDiv);
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }
                 } else {
                     addMessage('Sorry, I encountered an error: ' + data.error, false);
                 }
@@ -300,6 +629,12 @@ HTML_TEMPLATE = """
 
         // Focus input on load
         messageInput.focus();
+        
+        // Load calendar events when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Don't auto-load calendar on page load to avoid unnecessary API calls
+            // It will load when user clicks the calendar tab
+        });
     </script>
 </body>
 </html>
@@ -396,7 +731,7 @@ def query():
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
-    """Handle chat messages (legacy endpoint)"""
+    """Handle chat messages with confirmation support"""
     try:
         data = request.json
         message = data.get('message', '').strip()
@@ -407,12 +742,25 @@ def chat():
         if not reasoning_module:
             return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
         
-        # Process query through reasoning module
-        response = reasoning_module.process_query(message)
+        # Check if there's a pending confirmation (like terminal version)
+        if reasoning_module.has_pending_confirmation():
+            logging.debug("Processing confirmation response...")
+            response = reasoning_module.handle_confirmation_response(message)
+        else:
+            # Process normal query
+            response = reasoning_module.process_query(message)
+        
+        # Check if there's now a pending confirmation after processing
+        has_pending = reasoning_module.has_pending_confirmation()
+        pending_confirmations = []
+        if has_pending:
+            pending_confirmations = reasoning_module.get_pending_confirmation_requests()
         
         return jsonify({
             'success': True,
-            'response': response
+            'response': response,
+            'has_pending_confirmation': has_pending,
+            'pending_confirmations': pending_confirmations
         })
         
     except Exception as e:
@@ -449,6 +797,56 @@ def health():
         'mcp_server': server_url
     })
 
+@app.route('/api/confirmations', methods=['GET'])
+def get_pending_confirmations():
+    """Get pending confirmation requests"""
+    try:
+        if not reasoning_module:
+            return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
+        
+        has_pending = reasoning_module.has_pending_confirmation()
+        pending_confirmations = []
+        if has_pending:
+            pending_confirmations = reasoning_module.get_pending_confirmation_requests()
+        
+        return jsonify({
+            'success': True,
+            'has_pending_confirmation': has_pending,
+            'pending_confirmations': pending_confirmations
+        })
+    except Exception as e:
+        logging.error(f"Get confirmations error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/confirmations/cancel', methods=['POST'])
+def cancel_confirmations():
+    """Cancel all pending confirmations"""
+    try:
+        if not reasoning_module:
+            return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
+        
+        # Cancel all pending confirmations
+        pending = reasoning_module.get_pending_confirmation_requests()
+        cancelled_count = 0
+        
+        for req in pending:
+            reasoning_module.cancel_confirmation_request(req['id'])
+            cancelled_count += 1
+        
+        return jsonify({
+            'success': True,
+            'message': f'Cancelled {cancelled_count} pending confirmations'
+        })
+    except Exception as e:
+        logging.error(f"Cancel confirmations error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 # Calendar API Endpoints
 @app.route('/api/calendar/events', methods=['GET'])
 def get_calendar_events():
@@ -457,12 +855,18 @@ def get_calendar_events():
         if not reasoning_module:
             return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
         
-        # Use the list_events tool
-        result = reasoning_module.action_executor.execute_tool('list_events', {})
+        # Use the calendar tool with list_events operation
+        result = reasoning_module.action_executor.execute_action('calendar', {'operation': 'list_events'})
         
+        # Extract events from the result
+        if isinstance(result, dict) and result.get('status') == 'success':
+            events = result.get('events', [])
+        else:
+            events = []
+            
         return jsonify({
             'success': True,
-            'events': result if isinstance(result, list) else []
+            'events': events
         })
     except Exception as e:
         logging.error(f"Calendar events error: {e}")
@@ -484,11 +888,11 @@ def create_calendar_event():
         if not title or not time:
             return jsonify({'success': False, 'error': 'Title and time required'}), 400
         
-        # Use the create_event tool
-        result = reasoning_module.action_executor.execute_tool('create_event', {
+        # Use the calendar tool with create_event operation
+        result = reasoning_module.action_executor.execute_action('calendar', {
+            'operation': 'create_event',
             'title': title,
-            'time': time,
-            'duration': duration,
+            'start_time': time,
             'description': description
         })
         
@@ -509,8 +913,8 @@ def list_emails():
         if not reasoning_module:
             return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
         
-        # Use the list_emails tool
-        result = reasoning_module.action_executor.execute_tool('list_emails', {})
+        # Use the email tool with list operation
+        result = reasoning_module.action_executor.execute_action('email', {'operation': 'read_inbox'})
         
         return jsonify({
             'success': True,
@@ -535,9 +939,10 @@ def send_email():
         if not to or not subject or not body:
             return jsonify({'success': False, 'error': 'To, subject, and body required'}), 400
         
-        # Use the send_email tool
-        result = reasoning_module.action_executor.execute_tool('send_email', {
-            'to': to,
+        # Use the email tool with send operation
+        result = reasoning_module.action_executor.execute_action('email', {
+            'operation': 'send_email',
+            'recipient': to,
             'subject': subject,
             'body': body
         })
@@ -558,9 +963,10 @@ def read_email(email_id):
         if not reasoning_module:
             return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
         
-        # Use the read_email tool
-        result = reasoning_module.action_executor.execute_tool('read_email', {
-            'email_id': email_id
+        # Use the email tool with read operation
+        result = reasoning_module.action_executor.execute_action('email', {
+            'operation': 'read_inbox',
+            'message_id': email_id
         })
         
         return jsonify({
@@ -579,8 +985,8 @@ def list_todos():
         if not reasoning_module:
             return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
         
-        # Use the list_tasks tool
-        result = reasoning_module.action_executor.execute_tool('list_tasks', {})
+        # Use the todo_list tool with view_list operation
+        result = reasoning_module.action_executor.execute_action('todo_list', {'operation': 'view_list'})
         
         return jsonify({
             'success': True,
@@ -605,8 +1011,9 @@ def add_todo():
         if not title:
             return jsonify({'success': False, 'error': 'Title required'}), 400
         
-        # Use the add_task tool
-        result = reasoning_module.action_executor.execute_tool('add_task', {
+        # Use the todo_list tool with add_task operation
+        result = reasoning_module.action_executor.execute_action('todo_list', {
+            'operation': 'add_task',
             'title': title,
             'description': description,
             'priority': priority
@@ -630,8 +1037,9 @@ def update_todo(todo_id):
         
         data = request.json
         
-        # Use the update_task tool if available
-        result = reasoning_module.action_executor.execute_tool('update_task', {
+        # Use the todo_list tool with update_task operation
+        result = reasoning_module.action_executor.execute_action('todo_list', {
+            'operation': 'update_task',
             'task_id': todo_id,
             **data
         })
@@ -652,8 +1060,9 @@ def delete_todo(todo_id):
         if not reasoning_module:
             return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
         
-        # Use the delete_task tool if available
-        result = reasoning_module.action_executor.execute_tool('delete_task', {
+        # Use the todo_list tool with delete_task operation
+        result = reasoning_module.action_executor.execute_action('todo_list', {
+            'operation': 'delete_task',
             'task_id': todo_id
         })
         

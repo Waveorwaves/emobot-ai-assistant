@@ -124,11 +124,12 @@ Final Answer: I have successfully sent the email to user@example.com asking abou
    - Operations: 
      - `list_events` - View calendar events (use this to check schedule)
      - `create_event` - Create new event
-     - `delete_event` - Delete an event
+     - `delete_event` - Delete an event (requires event_id)
      - `parse_email_for_event` - Extract event info from email
      - `send_invitation` - Send calendar invitation
    - To check schedule/calendar: Use operation="list_events"
    - To create event: Use operation="create_event", title="event title", start_time="time", etc.
+   - **CRITICAL FOR DELETE**: To delete an event, you MUST first use `list_events` to get the event_id, then use `delete_event` with that event_id
    - **IMPORTANT**: Use `list_events` not `get_schedule` or `get_events`
 
 **Critical Tool Selection Rules:**

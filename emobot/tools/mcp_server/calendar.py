@@ -247,50 +247,100 @@ class CalendarTool(MCPToolBase):
         
         # Try natural language parsing
         now = datetime.now()
+        base_date = now.date()
         
-        # Common patterns
-        if "today" in time_str.lower():
+        # Handle day references
+        time_str_lower = time_str.lower()
+        if "today" in time_str_lower:
             base_date = now.date()
-        elif "tomorrow" in time_str.lower():
+        elif "tomorrow" in time_str_lower:
             base_date = (now + timedelta(days=1)).date()
-        elif "next week" in time_str.lower():
-            base_date = (now + timedelta(days=7)).date()
-        else:
-            base_date = now.date()
+        elif "sunday" in time_str_lower:
+            # Find next Sunday
+            days_ahead = 6 - now.weekday()  # Sunday is 6
+            if days_ahead <= 0:  # Target day already happened this week
+                days_ahead += 7
+            base_date = (now + timedelta(days=days_ahead)).date()
+        elif "monday" in time_str_lower:
+            days_ahead = 0 - now.weekday()
+            if days_ahead <= 0:
+                days_ahead += 7
+            base_date = (now + timedelta(days=days_ahead)).date()
+        elif "tuesday" in time_str_lower:
+            days_ahead = 1 - now.weekday()
+            if days_ahead <= 0:
+                days_ahead += 7
+            base_date = (now + timedelta(days=days_ahead)).date()
+        elif "wednesday" in time_str_lower:
+            days_ahead = 2 - now.weekday()
+            if days_ahead <= 0:
+                days_ahead += 7
+            base_date = (now + timedelta(days=days_ahead)).date()
+        elif "thursday" in time_str_lower:
+            days_ahead = 3 - now.weekday()
+            if days_ahead <= 0:
+                days_ahead += 7
+            base_date = (now + timedelta(days=days_ahead)).date()
+        elif "friday" in time_str_lower:
+            days_ahead = 4 - now.weekday()
+            if days_ahead <= 0:
+                days_ahead += 7
+            base_date = (now + timedelta(days=days_ahead)).date()
+        elif "saturday" in time_str_lower:
+            days_ahead = 5 - now.weekday()
+            if days_ahead <= 0:
+                days_ahead += 7
+            base_date = (now + timedelta(days=days_ahead)).date()
         
-        # Extract time
+        # Extract time with improved patterns
         time_patterns = [
-            r"(\d{1,2}):(\d{2})\s*(am|pm)?",
-            r"(\d{1,2})\s*(am|pm)",
-            r"(\d{1,2})\s*(\d{2})"
+            r"(\d{1,2}):(\d{2})\s*(am|pm)",  # 6:00 pm
+            r"(\d{1,2})\s*(am|pm)",          # 6 pm
+            r"(\d{1,2}):(\d{2})",            # 18:00
+            r"(\d{1,2})\s*pm",               # 6pm
+            r"(\d{1,2})\s*am"                # 6am
         ]
         
         for pattern in time_patterns:
-            match = re.search(pattern, time_str.lower())
+            match = re.search(pattern, time_str_lower)
             if match:
-                if len(match.groups()) == 3:  # HH:MM AM/PM
-                    hour = int(match.group(1))
-                    minute = int(match.group(2))
-                    ampm = match.group(3)
-                    if ampm == "pm" and hour != 12:
-                        hour += 12
-                    elif ampm == "am" and hour == 12:
-                        hour = 0
-                elif len(match.groups()) == 2:  # HH AM/PM
-                    hour = int(match.group(1))
-                    minute = 0
-                    ampm = match.group(2)
-                    if ampm == "pm" and hour != 12:
-                        hour += 12
-                    elif ampm == "am" and hour == 12:
-                        hour = 0
-                else:  # HH:MM
-                    hour = int(match.group(1))
-                    minute = int(match.group(2))
-                
-                return datetime.combine(base_date, datetime.min.time().replace(hour=hour, minute=minute))
+                try:
+                    if len(match.groups()) >= 3 and match.group(3):  # HH:MM AM/PM
+                        hour = int(match.group(1))
+                        minute = int(match.group(2))
+                        ampm = match.group(3)
+                        if ampm == "pm" and hour != 12:
+                            hour += 12
+                        elif ampm == "am" and hour == 12:
+                            hour = 0
+                    elif len(match.groups()) >= 2 and match.group(2) and match.group(2) in ['am', 'pm']:  # HH AM/PM
+                        hour = int(match.group(1))
+                        minute = 0
+                        ampm = match.group(2)
+                        if ampm == "pm" and hour != 12:
+                            hour += 12
+                        elif ampm == "am" and hour == 12:
+                            hour = 0
+                    elif len(match.groups()) >= 2 and match.group(2).isdigit():  # HH:MM
+                        hour = int(match.group(1))
+                        minute = int(match.group(2))
+                    else:  # Just hour
+                        hour = int(match.group(1))
+                        minute = 0
+                        # Assume PM for hours 1-11, AM for 12
+                        if "pm" in time_str_lower and hour != 12:
+                            hour += 12
+                        elif "am" in time_str_lower and hour == 12:
+                            hour = 0
+                    
+                    # Validate hour and minute
+                    if 0 <= hour <= 23 and 0 <= minute <= 59:
+                        return datetime.combine(base_date, datetime.min.time().replace(hour=hour, minute=minute))
+                except (ValueError, IndexError):
+                    continue
         
-        return None
+        # If no time found, default to current time
+        return datetime.combine(base_date, now.time())
     
     def _extract_event_from_text(self, text: str) -> Optional[Dict[str, Any]]:
         """Extract event information from text"""

@@ -119,20 +119,20 @@ class ReasoningModule:
         Returns:
             Final response to user
         """
-        print(f"🔍 Processing query: {query}")
+        logging.debug(f"Processing query: {query}")
         
         # Get conversation history for context (short-term memory)
         conversation_history = self.memory.get_formatted_history(max_entries=5)
-        print(f"📚 Conversation history available: {bool(conversation_history and conversation_history != 'No history records.')}")
+        logging.debug(f"Conversation history available: {bool(conversation_history and conversation_history != 'No history records.')}")
         
         # 🔥 NEW: Retrieve relevant episodic memories
         relevant_episodes = self.memory.search_similar_episodes(query, limit=3)
         episodic_context = ""
         if relevant_episodes:
             episodic_context = self._format_episodic_context(relevant_episodes)
-            print(f"🧠 Found {len(relevant_episodes)} relevant past experiences")
+            logging.debug(f"Found {len(relevant_episodes)} relevant past experiences")
         else:
-            print("🧠 No relevant past experiences found")
+            logging.debug("No relevant past experiences found")
         
         # Combine all context information
         full_context = self._combine_context(conversation_history, episodic_context)
@@ -142,7 +142,7 @@ class ReasoningModule:
         
         # Create execution plan with enhanced context
         plan = self._create_execution_plan(query, full_context)
-        print(f"📋 Plan created with context: {plan.get('context_used', False)}")
+        logging.debug(f"Plan created with context: {plan.get('context_used', False)}")
         
         # Execute ReAct loop with enhanced context
         result = self._run_tool_calling_loop(query, plan, full_context)
@@ -228,8 +228,17 @@ class ReasoningModule:
         """
         
         try:
-            # Use a simple model call to create plan
-            response = self.agent.run(plan_prompt)
+            # Use a simple model call to create plan (suppress output)
+            import sys
+            import io
+            from contextlib import redirect_stdout, redirect_stderr
+            
+            captured_stdout = io.StringIO()
+            captured_stderr = io.StringIO()
+            
+            with redirect_stdout(captured_stdout), redirect_stderr(captured_stderr):
+                response = self.agent.run(plan_prompt)
+            
             return {
                 "query": query,
                 "plan": response,
@@ -264,18 +273,37 @@ class ReasoningModule:
         executed_tools = []  # Track executed tool calls to prevent duplicates
         
         while step <= self.max_steps:
-            print(f"\n🔄 ReAct Step {step}/{self.max_steps}")
+            logging.debug(f"ReAct Step {step}/{self.max_steps}")
             
             # Build thought prompt with context
             thought_prompt = self._build_thought_prompt(query, step, current_thought, tool_results, plan, conversation_history)
             
-            # Get model's thought
+            # Get model's thought (suppress any intermediate output from smolagents)
             try:
-                thought_response = self.agent.run(thought_prompt)
+                import sys
+                import io
+                from contextlib import redirect_stdout, redirect_stderr
+                
+                # Capture any output from smolagents
+                captured_stdout = io.StringIO()
+                captured_stderr = io.StringIO()
+                
+                with redirect_stdout(captured_stdout), redirect_stderr(captured_stderr):
+                    thought_response = self.agent.run(thought_prompt)
+                
                 current_thought = str(thought_response)
-                print(f"💭 Thought: {current_thought[:200]}...")
+                logging.debug(f"Thought: {current_thought[:200]}...")
+                
+                # Log any captured output for debugging
+                stdout_content = captured_stdout.getvalue()
+                stderr_content = captured_stderr.getvalue()
+                if stdout_content:
+                    logging.debug(f"Agent stdout: {stdout_content}")
+                if stderr_content:
+                    logging.debug(f"Agent stderr: {stderr_content}")
+                    
             except Exception as e:
-                print(f"❌ Thought generation failed: {e}")
+                logging.error(f"Thought generation failed: {e}")
                 break
             
             # Extract tool call or final answer
@@ -286,16 +314,16 @@ class ReasoningModule:
             requires_tool = self._check_requires_tool_execution(query, current_thought)
             
             if requires_tool and not tool_call:
-                print("⚠️ WARNING: Action requested but no tool call extracted!")
-                print("🔄 Attempting to generate tool call from context...")
+                logging.debug("WARNING: Action requested but no tool call extracted!")
+                logging.debug("Attempting to generate tool call from context...")
                 tool_call = self._generate_tool_call_from_context(query, current_thought)
             
             # Check for duplicate tool calls
             if tool_call:
                 tool_signature = f"{tool_call['tool_name']}:{tool_call['parameters'].get('operation', '')}:{tool_call['parameters'].get('recipient', '')}"
                 if tool_signature in executed_tools:
-                    print(f"⚠️ Duplicate tool call detected: {tool_signature}")
-                    print("🔄 Skipping duplicate execution")
+                    logging.debug(f"Duplicate tool call detected: {tool_signature}")
+                    logging.debug("Skipping duplicate execution")
                     # If we have results and a duplicate is attempted, provide final answer
                     if tool_results:
                         return self._generate_final_answer_from_results(query, tool_results)
@@ -303,23 +331,23 @@ class ReasoningModule:
             
             if final_answer and not tool_results:
                 if requires_tool:
-                    print("⚠️ WARNING: Final answer provided without tool execution!")
-                    print("🚫 Blocking premature final answer")
+                    logging.debug("WARNING: Final answer provided without tool execution!")
+                    logging.debug("Blocking premature final answer")
                     final_answer = ""  # Clear the final answer to force tool execution
                 else:
-                    print(f"✅ Final Answer found!")
+                    logging.debug("Final Answer found!")
                     return final_answer
             elif final_answer:
-                print(f"✅ Final Answer found after {len(tool_results)} tool executions!")
+                logging.debug(f"Final Answer found after {len(tool_results)} tool executions!")
                 return final_answer
             
             if tool_call:
-                print(f"🔧 Executing tool: {tool_call['tool_name']}")
-                print(f"📦 With parameters: {tool_call['parameters']}")
+                logging.debug(f"Executing tool: {tool_call['tool_name']}")
+                logging.debug(f"With parameters: {tool_call['parameters']}")
                 
                 # Check if this operation needs confirmation
                 if self.needs_confirmation(tool_call['tool_name'], tool_call['parameters']):
-                    print("⚠️ This operation requires user confirmation")
+                    logging.debug("This operation requires user confirmation")
                     
                     # Store pending action
                     self.pending_confirmation = {
@@ -358,12 +386,12 @@ class ReasoningModule:
                 # Display tool result
                 if result.get('status') == 'success':
                     result_str = str(result.get('result', result))
-                    print(f"✅ Tool result: {result_str[:200]}...")
+                    logging.debug(f"Tool result: {result_str[:200]}...")
                 else:
                     error_msg = result.get('error_message', 'Unknown error')
-                    print(f"❌ Tool failed: {error_msg}")
+                    logging.error(f"Tool failed: {error_msg}")
             else:
-                print("⚠️ No tool call or final answer detected")
+                logging.debug("No tool call or final answer detected")
                 break
             
             step += 1
@@ -456,28 +484,28 @@ class ReasoningModule:
             json_pattern = r'```json\s*(\{.*?\})\s*```'
             matches = re.findall(json_pattern, thought, re.DOTALL)
             
-            print(f"🔍 Searching for tool calls in thought...")
-            print(f"📝 Thought preview: {thought[:200]}...")
+            logging.debug(f"Searching for tool calls in thought...")
+            logging.debug(f"Thought preview: {thought[:200]}...")
             
             if matches:
-                print(f"📋 Found {len(matches)} JSON matches")
+                logging.debug(f"Found {len(matches)} JSON matches")
                 for i, match in enumerate(matches):
                     try:
                         tool_call = json.loads(match)
                         if "tool_name" in tool_call and "parameters" in tool_call:
                             # Validate tool name exists
                             if tool_call["tool_name"] in self.tools:
-                                print(f"✅ Valid tool call extracted: {tool_call['tool_name']}")
-                                print(f"📦 Parameters: {tool_call['parameters']}")
+                                logging.debug(f"Valid tool call extracted: {tool_call['tool_name']}")
+                                logging.debug(f"Parameters: {tool_call['parameters']}")
                                 return tool_call
                             else:
-                                print(f"❌ Invalid tool name: {tool_call['tool_name']}")
-                                print(f"Available tools: {list(self.tools.keys())}")
+                                logging.debug(f"Invalid tool name: {tool_call['tool_name']}")
+                                logging.debug(f"Available tools: {list(self.tools.keys())}")
                     except json.JSONDecodeError as e:
-                        print(f"❌ JSON decode error in match {i}: {e}")
+                        logging.debug(f"JSON decode error in match {i}: {e}")
                         continue
             else:
-                print("📋 No JSON matches found, attempting intent detection...")
+                logging.debug("No JSON matches found, attempting intent detection...")
             
             # Enhanced intent detection based on context
             thought_lower = thought.lower()
@@ -489,20 +517,20 @@ class ReasoningModule:
             recent_history = self.memory.get_formatted_history(max_entries=5)
             history_lower = recent_history.lower() if recent_history else ""
             
-            print(f"📧 Email address found: {email_match.group(1) if email_match else 'None'}")
+            logging.debug(f"Email address found: {email_match.group(1) if email_match else 'None'}")
             
             # Strong email sending intent detection
             send_keywords = ['send', 'email', 'mail', 'ask', 'tell', 'notify', 'message']
             has_send_intent = any(keyword in thought_lower for keyword in send_keywords)
             has_email_in_history = any(keyword in history_lower for keyword in ['send', 'email', 'mail'])
             
-            print(f"📮 Send intent detected: {has_send_intent}")
-            print(f"📚 Email context in history: {has_email_in_history}")
+            logging.debug(f"Send intent detected: {has_send_intent}")
+            logging.debug(f"Email context in history: {has_email_in_history}")
             
             # If we have an email address and any indication of sending
             if email_match and (has_send_intent or has_email_in_history):
                 email_address = email_match.group(1)
-                print(f"🎯 Auto-generating email send command for: {email_address}")
+                logging.debug(f"Auto-generating email send command for: {email_address}")
                 
                 # Extract meaningful content from the query
                 subject, body = self._extract_email_content(query)
@@ -519,7 +547,7 @@ class ReasoningModule:
             
             # Fallback: if user explicitly asks to send email
             if any(phrase in thought_lower for phrase in ['send an email', 'send email', 'email to']):
-                print("📧 Email sending request detected without specific address")
+                logging.debug("Email sending request detected without specific address")
                 return {
                     "tool_name": "email",
                     "parameters": {
@@ -527,11 +555,11 @@ class ReasoningModule:
                     }
                 }
             
-            print("❌ No tool call could be extracted or inferred")
+            logging.debug("No tool call could be extracted or inferred")
             return None
             
         except Exception as e:
-            print(f"❌ Tool call extraction failed: {e}")
+            logging.error(f"Tool call extraction failed: {e}")
             import traceback
             traceback.print_exc()
             return None
@@ -569,7 +597,7 @@ class ReasoningModule:
         # Email sending detection
         if email_match and any(keyword in combined_lower for keyword in ['send', 'email', 'mail', 'ask', 'tell', 'notify', 'inform']):
             email_address = email_match.group(1)
-            print(f"🎯 Auto-generating email tool call for: {email_address}")
+            logging.debug(f"Auto-generating email tool call for: {email_address}")
             
             # Extract meaningful content from the query for subject and body
             subject, body = self._extract_email_content(query)
@@ -586,7 +614,7 @@ class ReasoningModule:
         
         # Calendar detection
         if any(keyword in combined_lower for keyword in ['calendar', 'schedule', 'appointment', 'meeting', 'event']):
-            print("📅 Auto-generating calendar tool call")
+            logging.debug("Auto-generating calendar tool call")
             
             # Check what calendar operation is needed
             if any(keyword in combined_lower for keyword in ['check', 'see', 'view', 'show', 'list', 'what']):
@@ -606,10 +634,18 @@ class ReasoningModule:
                         "title": title
                     }
                 }
+            elif any(keyword in combined_lower for keyword in ['delete', 'remove', 'cancel']):
+                # For delete operations, first list events to find the right one
+                return {
+                    "tool_name": "calendar",
+                    "parameters": {
+                        "operation": "list_events"
+                    }
+                }
         
         # Todo list detection
         if any(keyword in combined_lower for keyword in ['todo', 'task', 'to-do', 'to do']):
-            print("📋 Auto-generating todo tool call")
+            logging.debug("Auto-generating todo tool call")
             
             if any(keyword in combined_lower for keyword in ['add', 'create', 'new']):
                 task_description = self._extract_task_description(query)
@@ -663,7 +699,7 @@ Now generate the email for: {query}
             response = self.agent.run(email_generation_prompt)
             response_str = str(response)
             
-            print(f"📝 Model response: {response_str[:300]}...")
+            logging.debug(f"Model response: {response_str[:300]}...")
             
             # Try multiple parsing patterns
             parsing_patterns = [
@@ -688,17 +724,17 @@ Now generate the email for: {query}
                     body = re.sub(r'\s*```\s*$', '', body).strip()
                     body = re.sub(r'^\s*```\s*', '', body).strip()
                     
-                    print(f"✅ Successfully parsed model response:")
-                    print(f"   Subject: {subject}")
-                    print(f"   Body preview: {body[:100]}...")
+                    logging.debug(f"Successfully parsed model response:")
+                    logging.debug(f"   Subject: {subject}")
+                    logging.debug(f"   Body preview: {body[:100]}...")
                     
                     return subject, body
             
-            print("⚠️ Could not parse model response, using intelligent fallback")
+            logging.debug("Could not parse model response, using intelligent fallback")
             return self._extract_email_content_intelligent_fallback(query)
                 
         except Exception as e:
-            print(f"❌ Model generation failed: {e}")
+            logging.error(f"Model generation failed: {e}")
             return self._extract_email_content_intelligent_fallback(query)
     
     def _extract_email_content_intelligent_fallback(self, query: str) -> tuple:
@@ -798,7 +834,7 @@ Now generate the email for: {query}
             return ""
             
         except Exception as e:
-            print(f"❌ Final answer extraction failed: {e}")
+            logging.error(f"Final answer extraction failed: {e}")
             return ""
 
     def _generate_final_answer_from_results(self, query: str, tool_results: list) -> str:
@@ -832,32 +868,32 @@ Now generate the email for: {query}
     def _generate_fallback_answer(self, query: str, tool_results: list, last_thought: str) -> str:
         """Generate fallback answer"""
         try:
-            fallback_prompt = f"""
-            Based on the following information, generate a useful reply for the user:
-
-            User Query: {query}
-
-            Tool Call History:
-            """
-            
+            # If we have tool results, format them directly
             if tool_results:
+                # Check if we have calendar events to display
                 for result in tool_results:
-                    fallback_prompt += f"""
-            - Tool: {result['tool']}
-              Result: {str(result['result'])[:200]}...
-            """
-            else:
-                fallback_prompt += "No tool calls were made.\n"
+                    if result['tool'] == 'calendar' and result['parameters'].get('operation') == 'list_events':
+                        calendar_result = result['result']
+                        if isinstance(calendar_result, dict) and calendar_result.get('status') == 'success':
+                            events = calendar_result.get('events', [])
+                            if events:
+                                event_list = "Here are your calendar events:\n\n"
+                                for i, event in enumerate(events, 1):
+                                    title = event.get('title', 'Untitled Event')
+                                    start_time = event.get('start_time', 'No time specified')
+                                    event_id = event.get('id', 'unknown')
+                                    event_list += f"{i}. **{title}**\n   Time: {start_time}\n   ID: {event_id}\n\n"
+                                return event_list
+                            else:
+                                return "You don't have any calendar events at the moment."
+                        else:
+                            return "I couldn't retrieve your calendar events. Please try again."
+                
+                # For other tool results, provide a generic response
+                return f"I've executed the requested action. The operation completed with the following result: {str(tool_results[-1]['result'])}"
             
-            fallback_prompt += f"""
-
-            Last Thought: {last_thought}
-
-            Please provide a useful reply, directly answering the user's question:
-            """
-            
-            response = self.agent.run(fallback_prompt)
-            return str(response)
+            # If no tool results, provide a generic response
+            return "I'm ready to help you. Please let me know what you'd like me to do."
             
         except Exception as e:
             return f"I apologize, I cannot fulfill this request. Error message: {e}"
@@ -954,9 +990,17 @@ Do you want me to proceed? (yes/y to confirm, no/n to cancel)"""
             
             elif operation == 'delete_event':
                 event_id = parameters.get('event_id', 'unknown')
+                event_title = parameters.get('title', 'Unknown Event')
+                
+                # Try to get a more meaningful description
+                if event_title != 'Unknown Event':
+                    event_description = f'"{event_title}" (ID: {event_id})'
+                else:
+                    event_description = f'Event ID: {event_id}'
+                
                 return f"""🗑️ Delete Event Confirmation
 
-I'm about to delete calendar event: {event_id}
+I'm about to delete calendar event: {event_description}
 
 Do you want me to proceed? (yes/y to confirm, no/n to cancel)"""
         
@@ -989,7 +1033,7 @@ Do you want me to proceed? (yes/y to confirm, no/n to cancel)"""
             tool_name = self.pending_confirmation['tool_name']
             parameters = self.pending_confirmation['parameters']
             
-            print(f"✅ User confirmed. Executing {tool_name}...")
+            logging.debug(f"User confirmed. Executing {tool_name}...")
             result = self.action_executor.execute_action(tool_name, parameters)
             
             # Clear pending confirmation

@@ -210,22 +210,25 @@ class ModelManager:
                     
                     # 处理 List[ChatMessage] 类型
                     if isinstance(prompt, list):
-                        # 取最后一个 user 消息
-                        user_msgs = [m for m in prompt if hasattr(m, 'role') and getattr(m, 'role', None) == 'user']
-                        if user_msgs:
-                            last_user = user_msgs[-1]
-                            if hasattr(last_user, 'content') and isinstance(last_user.content, list) and len(last_user.content) > 0:
-                                # 从 content[0]['text'] 提取字符串
-                                prompt_text = last_user.content[0].get('text', '')
+                        # 构建完整的对话历史，而不是只取最后一个消息
+                        conversation_parts = []
+                        for msg in prompt:
+                            if hasattr(msg, 'role') and hasattr(msg, 'content'):
+                                role = getattr(msg, 'role', 'unknown')
+                                if isinstance(msg.content, list) and len(msg.content) > 0:
+                                    content = msg.content[0].get('text', str(msg.content))
+                                else:
+                                    content = str(msg.content)
+                                conversation_parts.append(f"{role}: {content}")
                             else:
-                                prompt_text = str(last_user)
+                                conversation_parts.append(str(msg))
+                        
+                        # 如果有多个消息，组合成完整对话
+                        if len(conversation_parts) > 1:
+                            prompt_text = "\n".join(conversation_parts)
                         else:
-                            # 如果没有 user 消息，取最后一个消息
-                            last_msg = prompt[-1]
-                            if hasattr(last_msg, 'content') and isinstance(last_msg.content, list) and len(last_msg.content) > 0:
-                                prompt_text = last_msg.content[0].get('text', '')
-                            else:
-                                prompt_text = str(last_msg)
+                            prompt_text = conversation_parts[0] if conversation_parts else str(prompt)
+                            
                     elif hasattr(prompt, 'role') and getattr(prompt, 'role', None) == 'user':
                         # 单个 ChatMessage 对象
                         if hasattr(prompt, 'content') and isinstance(prompt.content, list) and len(prompt.content) > 0:
