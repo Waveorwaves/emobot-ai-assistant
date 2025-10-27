@@ -22,6 +22,7 @@ class GmailAuthManager:
         self.config = self._load_config()
         self.credentials = None
         self.service = None
+        self.contacts_service = None
         
     def _load_config(self) -> Dict[str, Any]:
         """加载配置文件"""
@@ -93,8 +94,22 @@ class GmailAuthManager:
             )
             
             # 启动本地服务器进行认证，使用不同的端口避免冲突
+            import socket
+            # 找一个可用的端口
+            for port in range(8083, 8090):
+                try:
+                    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                        s.bind(('localhost', port))
+                        available_port = port
+                        break
+                except OSError:
+                    continue
+            else:
+                available_port = 0  # Let the system choose
+            
+            print(f"Using port {available_port} for OAuth authentication")
             self.credentials = flow.run_local_server(
-                port=8082,  # 使用 8082 端口避免与其他服务冲突
+                port=available_port,
                 open_browser=True
             )
             
@@ -142,6 +157,22 @@ class GmailAuthManager:
                 return None
                 
         return self.service
+    
+    def get_contacts_service(self):
+        """获取 Google Contacts 服务实例"""
+        if not self.credentials:
+            if not self.authenticate():
+                return None
+                
+        if not self.contacts_service:
+            try:
+                self.contacts_service = build('people', 'v1', credentials=self.credentials)
+                print("✅ Google Contacts service connected successfully")
+            except Exception as e:
+                print(f"❌ Failed to create Contacts service: {e}")
+                return None
+                
+        return self.contacts_service
     
     def test_connection(self) -> bool:
         """测试 Gmail 连接"""

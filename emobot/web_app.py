@@ -342,6 +342,293 @@ HTML_TEMPLATE = """
             50% { opacity: 0.7; }
             100% { opacity: 1; }
         }
+        
+        /* Email Page Styles */
+        .email-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f7f7f7;
+            overflow: hidden;
+        }
+        
+        .email-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .email-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .email-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+        
+        .action-btn:hover {
+            background: #5a6fd8;
+        }
+        
+        .email-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .email-sidebar {
+            width: 200px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .sidebar-section {
+            margin-bottom: 20px;
+        }
+        
+        .sidebar-section h4 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .folder-list, .label-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .folder-list li, .label-list li {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 6px;
+            margin-bottom: 2px;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        
+        .folder-list li:hover, .label-list li:hover {
+            background: #f0f0f0;
+        }
+        
+        .folder-list li.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .email-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .email-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+        
+        .email-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .email-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .email-item.unread {
+            border-left: 4px solid #667eea;
+            font-weight: 600;
+        }
+        
+        .email-sender {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .email-subject {
+            color: #555;
+            margin-bottom: 5px;
+        }
+        
+        .email-snippet {
+            color: #777;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .email-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .loading-email {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .contact-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .form-group {
+            position: relative;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .send-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .draft-btn {
+            background: #ffc107;
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .cancel-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -415,14 +702,73 @@ HTML_TEMPLATE = """
                 </div>
             </div>
             
-            <!-- Email Page (Placeholder) -->
+            <!-- Email Page -->
             <div id="emailPage" class="page">
-                <div class="calendar-container">
-                    <div class="calendar-header">
-                        <div class="calendar-title">📧 Email Management</div>
+                <div class="email-container">
+                    <div class="email-header">
+                        <div class="email-title">📧 Email Management</div>
+                        <div class="email-actions">
+                            <button class="action-btn" onclick="loadInbox()">📥 Inbox</button>
+                            <button class="action-btn" onclick="loadContacts()">👥 Contacts</button>
+                            <button class="action-btn" onclick="showComposeModal()">✉️ Compose</button>
+                            <button class="refresh-btn" onclick="refreshEmailData()">🔄 Refresh</button>
+                        </div>
                     </div>
-                    <div class="no-events">
-                        Email interface coming soon...
+                    <div class="email-content">
+                        <div class="email-sidebar">
+                            <div class="sidebar-section">
+                                <h4>📁 Folders</h4>
+                                <ul id="folderList" class="folder-list">
+                                    <li onclick="loadInbox()" class="active">📥 Inbox</li>
+                                    <li onclick="loadSent()">📤 Sent</li>
+                                    <li onclick="loadDrafts()">📝 Drafts</li>
+                                    <li onclick="loadTrash()">🗑️ Trash</li>
+                                </ul>
+                            </div>
+                            <div class="sidebar-section">
+                                <h4>🏷️ Labels</h4>
+                                <ul id="labelList" class="label-list">
+                                    <!-- Labels will be loaded here -->
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="email-main">
+                            <div id="emailList" class="email-list">
+                                <div class="loading-email">Loading emails...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Compose Email Modal -->
+            <div id="composeModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>✉️ Compose Email</h3>
+                        <span class="close" onclick="closeComposeModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <form id="composeForm">
+                            <div class="form-group">
+                                <label>To:</label>
+                                <input type="email" id="composeTo" required>
+                                <button type="button" onclick="showContactPicker()" class="contact-btn">👥</button>
+                            </div>
+                            <div class="form-group">
+                                <label>Subject:</label>
+                                <input type="text" id="composeSubject" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Message:</label>
+                                <textarea id="composeBody" rows="10" required></textarea>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="send-btn">📤 Send</button>
+                                <button type="button" onclick="saveDraft()" class="draft-btn">📝 Save Draft</button>
+                                <button type="button" onclick="closeComposeModal()" class="cancel-btn">❌ Cancel</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -463,6 +809,8 @@ HTML_TEMPLATE = """
             // Load page-specific content
             if (pageName === 'calendar') {
                 loadCalendarEvents();
+            } else if (pageName === 'email') {
+                loadEmailPage();
             }
         }
         
@@ -630,6 +978,255 @@ HTML_TEMPLATE = """
         // Focus input on load
         messageInput.focus();
         
+        // Email functionality
+        async function loadEmailPage() {
+            await loadInbox();
+            await loadLabels();
+        }
+        
+        async function loadInbox() {
+            updateFolderSelection('inbox');
+            await loadEmailsByQuery('in:inbox');
+        }
+        
+        async function loadSent() {
+            updateFolderSelection('sent');
+            await loadEmailsByQuery('in:sent');
+        }
+        
+        async function loadDrafts() {
+            updateFolderSelection('drafts');
+            await loadEmailsByQuery('in:draft');
+        }
+        
+        async function loadTrash() {
+            updateFolderSelection('trash');
+            await loadEmailsByQuery('in:trash');
+        }
+        
+        function updateFolderSelection(folderType) {
+            // Remove active class from all folder items
+            document.querySelectorAll('.folder-list li').forEach(li => li.classList.remove('active'));
+            
+            // Add active class to selected folder
+            const folderMap = {
+                'inbox': 0,
+                'sent': 1,
+                'drafts': 2,
+                'trash': 3
+            };
+            
+            const folderItems = document.querySelectorAll('.folder-list li');
+            if (folderItems[folderMap[folderType]]) {
+                folderItems[folderMap[folderType]].classList.add('active');
+            }
+        }
+        
+        async function loadEmailsByQuery(query = null) {
+            const emailList = document.getElementById('emailList');
+            emailList.innerHTML = '<div class="loading-email">Loading emails...</div>';
+            
+            try {
+                let url = '/api/email/list';
+                if (query) {
+                    // For now, we'll use the basic inbox API and filter client-side
+                    // In a full implementation, you'd want to add search support to the API
+                    url = '/api/email/list';
+                }
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success && data.emails && data.emails.length > 0) {
+                    displayEmails(data.emails);
+                } else {
+                    emailList.innerHTML = `
+                        <div class="no-events">
+                            <h3>📭 No emails found</h3>
+                            <p>${data.error || 'Your mailbox is empty or there was an error loading emails.'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading emails:', error);
+                emailList.innerHTML = `
+                    <div class="error-message">
+                        ❌ Failed to load emails: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        function displayEmails(emails) {
+            const emailList = document.getElementById('emailList');
+            
+            const emailsHtml = emails.map(email => {
+                const isUnread = !email.is_read;
+                const sender = email.sender || 'Unknown Sender';
+                const subject = email.subject || 'No Subject';
+                const snippet = email.snippet || email.body || '';
+                const date = email.date || '';
+                
+                return `
+                    <div class="email-item ${isUnread ? 'unread' : ''}" onclick="openEmail('${email.id}')">
+                        <div class="email-sender">${escapeHtml(sender)}</div>
+                        <div class="email-subject">${escapeHtml(subject)}</div>
+                        <div class="email-snippet">${escapeHtml(snippet.substring(0, 100))}${snippet.length > 100 ? '...' : ''}</div>
+                        <div class="email-meta">
+                            <span>${date}</span>
+                            <span>${isUnread ? '🔵 Unread' : '✅ Read'}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            emailList.innerHTML = emailsHtml;
+        }
+        
+        async function loadLabels() {
+            try {
+                const response = await fetch('/api/email/labels');
+                const data = await response.json();
+                
+                if (data.success && data.labels) {
+                    const labelList = document.getElementById('labelList');
+                    const labelsHtml = data.labels.map(label => {
+                        if (label.type === 'user') { // Only show user-created labels
+                            return `<li onclick="loadLabelEmails('${label.id}')">${label.name}</li>`;
+                        }
+                        return '';
+                    }).join('');
+                    labelList.innerHTML = labelsHtml;
+                }
+            } catch (error) {
+                console.error('Error loading labels:', error);
+            }
+        }
+        
+        async function loadContacts() {
+            try {
+                const response = await fetch('/api/email/contacts');
+                const data = await response.json();
+                
+                if (data.success && data.contacts) {
+                    console.log('Contacts loaded:', data.contacts);
+                    // Could show contacts in a modal or sidebar
+                }
+            } catch (error) {
+                console.error('Error loading contacts:', error);
+            }
+        }
+        
+        function showComposeModal() {
+            document.getElementById('composeModal').style.display = 'block';
+        }
+        
+        function closeComposeModal() {
+            document.getElementById('composeModal').style.display = 'none';
+            document.getElementById('composeForm').reset();
+        }
+        
+        async function refreshEmailData() {
+            if (document.getElementById('emailPage').classList.contains('active')) {
+                await loadEmailPage();
+            }
+        }
+        
+        // Compose form handler
+        document.getElementById('composeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const to = document.getElementById('composeTo').value;
+            const subject = document.getElementById('composeSubject').value;
+            const body = document.getElementById('composeBody').value;
+            
+            try {
+                const response = await fetch('/api/email/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        to: to,
+                        subject: subject,
+                        body: body
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Email sent successfully!');
+                    closeComposeModal();
+                } else {
+                    alert('Failed to send email: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error sending email:', error);
+                alert('Failed to send email: ' + error.message);
+            }
+        });
+        
+        async function saveDraft() {
+            const to = document.getElementById('composeTo').value;
+            const subject = document.getElementById('composeSubject').value;
+            const body = document.getElementById('composeBody').value;
+            
+            try {
+                const response = await fetch('/api/email/draft', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        to: to,
+                        subject: subject,
+                        body: body
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Draft saved successfully!');
+                } else {
+                    alert('Failed to save draft: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error saving draft:', error);
+                alert('Failed to save draft: ' + error.message);
+            }
+        }
+        
+        function openEmail(emailId) {
+            // This could open email details in a modal or navigate to detail view
+            console.log('Opening email:', emailId);
+            // For now, just mark as read
+            markEmailAsRead(emailId);
+        }
+        
+        async function markEmailAsRead(emailId) {
+            try {
+                const response = await fetch('/api/email/mark-read', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message_id: emailId
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    // Refresh email list to show updated read status
+                    loadInbox();
+                }
+            } catch (error) {
+                console.error('Error marking email as read:', error);
+            }
+        }
+        
         // Load calendar events when page loads
         document.addEventListener('DOMContentLoaded', function() {
             // Don't auto-load calendar on page load to avoid unnecessary API calls
@@ -665,7 +1262,7 @@ def start_mcp_server():
     except Exception as e:
         print(f"❌ MCP server error: {e}")
 
-def initialize_agent(model_id="gemini-2.0-flash"):
+def initialize_agent(model_id="gemini-2.5-flash"):
     """Initialize the reasoning module"""
     global reasoning_module, reasoning_wrapper
     
@@ -695,7 +1292,7 @@ def query():
         data = request.json
         query_text = data.get('query', '').strip()
         session_id = data.get('session_id', 'default')
-        model_id = data.get('model_id', 'gemini-2.0-flash')
+        model_id = data.get('model_id', 'gemini-2.5-flash')
         
         if not query_text:
             return jsonify({'success': False, 'error': 'Empty query'}), 400
@@ -914,12 +1511,20 @@ def list_emails():
             return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
         
         # Use the email tool with list operation
-        result = reasoning_module.action_executor.execute_action('email', {'operation': 'read_inbox'})
+        result = reasoning_module.action_executor.execute_action('email', {'operation': 'read_inbox', 'max_results': 20})
         
-        return jsonify({
-            'success': True,
-            'emails': result if isinstance(result, list) else []
-        })
+        if result and result.get('status') == 'success':
+            emails = result.get('result', [])
+            return jsonify({
+                'success': True,
+                'emails': emails
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': result.get('error_message', 'Failed to fetch emails'),
+                'emails': []
+            })
     except Exception as e:
         logging.error(f"List emails error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -976,6 +1581,116 @@ def read_email(email_id):
     except Exception as e:
         logging.error(f"Read email error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/email/contacts', methods=['GET'])
+def list_contacts():
+    """List contacts"""
+    try:
+        if not reasoning_module:
+            return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
+        
+        result = reasoning_module.action_executor.execute_action('email', {'operation': 'get_contacts', 'max_results': 100})
+        
+        return jsonify({
+            'success': True,
+            'contacts': result.get('result', []) if result.get('status') == 'success' else [],
+            'error': result.get('error_message') if result.get('status') != 'success' else None
+        })
+        
+    except Exception as e:
+        logging.error(f"Contacts list error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/email/labels', methods=['GET'])
+def list_labels():
+    """List email labels"""
+    try:
+        if not reasoning_module:
+            return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
+        
+        result = reasoning_module.action_executor.execute_action('email', {'operation': 'get_labels'})
+        
+        return jsonify({
+            'success': True,
+            'labels': result.get('result', []) if result.get('status') == 'success' else [],
+            'error': result.get('error_message') if result.get('status') != 'success' else None
+        })
+        
+    except Exception as e:
+        logging.error(f"Labels list error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/email/draft', methods=['POST'])
+def create_draft():
+    """Create email draft"""
+    try:
+        if not reasoning_module:
+            return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
+        
+        data = request.json
+        to = data.get('to')
+        subject = data.get('subject')
+        body = data.get('body')
+        
+        if not all([to, subject, body]):
+            return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+        
+        result = reasoning_module.action_executor.execute_action('email', {
+            'operation': 'create_draft',
+            'recipient': to,
+            'subject': subject,
+            'body': body
+        })
+        
+        return jsonify({
+            'success': result.get('status') == 'success',
+            'result': result.get('result'),
+            'error': result.get('error_message') if result.get('status') != 'success' else None
+        })
+        
+    except Exception as e:
+        logging.error(f"Draft creation error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/email/mark-read', methods=['POST'])
+def mark_email_read():
+    """Mark email as read"""
+    try:
+        if not reasoning_module:
+            return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
+        
+        data = request.json
+        message_id = data.get('message_id')
+        
+        if not message_id:
+            return jsonify({'success': False, 'error': 'Message ID required'}), 400
+        
+        result = reasoning_module.action_executor.execute_action('email', {
+            'operation': 'mark_read',
+            'message_id': message_id
+        })
+        
+        return jsonify({
+            'success': result.get('status') == 'success',
+            'result': result.get('result'),
+            'error': result.get('error_message') if result.get('status') != 'success' else None
+        })
+        
+    except Exception as e:
+        logging.error(f"Mark read error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 # Todo API Endpoints
 @app.route('/api/todo/list', methods=['GET'])
@@ -1080,7 +1795,7 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description="Emobot Web Application")
-    parser.add_argument('--model', type=str, default='gemini-2.0-flash', help='Model to use')
+    parser.add_argument('--model', type=str, default='gemini-2.5-flash', help='Model to use')
     parser.add_argument('--host', type=str, default='127.0.0.1', help='Host to bind to')
     parser.add_argument('--port', type=int, default=8000, help='Port to bind to (default: 8000, avoid 5000 due to macOS ControlCenter conflict)')
     args = parser.parse_args()

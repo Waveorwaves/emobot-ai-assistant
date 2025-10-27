@@ -33,8 +33,46 @@ class ActionExecutor:
             "response_times": []
         }
         
+        # Initialize direct tool instances as fallback
+        self._init_direct_tools()
+        
         # Test connection
         self._test_connection()
+    
+    def _init_direct_tools(self):
+        """Initialize direct tool instances as fallback"""
+        self.direct_tools = {}
+        
+        # Try to initialize each tool individually
+        try:
+            from tools.mcp_server.email import EmailTool
+            self.direct_tools['email'] = EmailTool()
+            self.logger.info("Email tool initialized for direct execution")
+        except Exception as e:
+            self.logger.warning(f"Failed to initialize email tool: {e}")
+        
+        try:
+            from tools.mcp_server.web_search import WebSearchTool
+            self.direct_tools['web_search'] = WebSearchTool()
+            self.logger.info("Web search tool initialized for direct execution")
+        except Exception as e:
+            self.logger.warning(f"Failed to initialize web search tool: {e}")
+        
+        try:
+            from tools.mcp_server.todo import TodoListTool
+            self.direct_tools['todo_list'] = TodoListTool()
+            self.logger.info("Todo tool initialized for direct execution")
+        except Exception as e:
+            self.logger.warning(f"Failed to initialize todo tool: {e}")
+        
+        try:
+            from tools.mcp_server.calendar import CalendarTool
+            self.direct_tools['calendar'] = CalendarTool()
+            self.logger.info("Calendar tool initialized for direct execution")
+        except Exception as e:
+            self.logger.warning(f"Failed to initialize calendar tool: {e}")
+        
+        self.logger.info(f"Direct tools initialized: {list(self.direct_tools.keys())}")
 
     def _test_connection(self):
         """Test connection to MCP server"""
@@ -122,15 +160,35 @@ class ActionExecutor:
                 }
                 
         except requests.exceptions.Timeout:
-            error_msg = "Tool execution timed out"
-            self.execution_stats["failed_calls"] += 1
-            return {
-                "status": "error",
-                "error_message": error_msg
-            }
+            # Try direct tool execution as fallback
+            self.logger.warning("HTTP tool execution timed out, trying direct execution")
+            return self._execute_direct_tool(tool_name, parameters)
         except Exception as e:
-            error_msg = f"Tool execution error: {str(e)}"
+            # Try direct tool execution as fallback
+            self.logger.warning(f"HTTP tool execution failed: {e}, trying direct execution")
+            return self._execute_direct_tool(tool_name, parameters)
+    
+    def _execute_direct_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute tool directly as fallback when HTTP fails"""
+        try:
+            if tool_name not in self.direct_tools:
+                return {
+                    "status": "error",
+                    "error_message": f"Tool '{tool_name}' not available for direct execution"
+                }
+            
+            tool = self.direct_tools[tool_name]
+            result = tool.execute(**parameters)
+            
+            self.execution_stats["successful_calls"] += 1
+            self.logger.info(f"Direct tool execution successful: {tool_name}")
+            
+            return result
+            
+        except Exception as e:
+            error_msg = f"Direct tool execution error: {str(e)}"
             self.execution_stats["failed_calls"] += 1
+            self.logger.error(error_msg)
             return {
                 "status": "error",
                 "error_message": error_msg

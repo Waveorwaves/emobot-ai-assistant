@@ -310,14 +310,6 @@ class ReasoningModule:
             tool_call = self._extract_tool_call(query, current_thought)
             final_answer = self._extract_final_answer(current_thought)
             
-            # Check if this is an action request that requires tool execution
-            requires_tool = self._check_requires_tool_execution(query, current_thought)
-            
-            if requires_tool and not tool_call:
-                logging.debug("WARNING: Action requested but no tool call extracted!")
-                logging.debug("Attempting to generate tool call from context...")
-                tool_call = self._generate_tool_call_from_context(query, current_thought)
-            
             # Check for duplicate tool calls
             if tool_call:
                 tool_signature = f"{tool_call['tool_name']}:{tool_call['parameters'].get('operation', '')}:{tool_call['parameters'].get('recipient', '')}"
@@ -330,16 +322,36 @@ class ReasoningModule:
                     tool_call = None
             
             if final_answer and not tool_results:
-                if requires_tool:
-                    logging.debug("WARNING: Final answer provided without tool execution!")
-                    logging.debug("Blocking premature final answer")
-                    final_answer = ""  # Clear the final answer to force tool execution
-                else:
-                    logging.debug("Final Answer found!")
-                    return final_answer
+                logging.debug("Final Answer found!")
+                logging.debug(f"Final answer length: {len(final_answer)} characters")
+                logging.debug(f"Final answer preview: {final_answer[:200]}...")
+                return final_answer
             elif final_answer:
                 logging.debug(f"Final Answer found after {len(tool_results)} tool executions!")
+                logging.debug(f"Final answer length: {len(final_answer)} characters")
+                logging.debug(f"Final answer preview: {final_answer[:200]}...")
+                
+                # Check if the final answer looks incomplete (e.g., just a header without content)
+                # This happens when model says "Here is your contact list:" but doesn't include the actual list
+                if tool_results and len(final_answer) < 100 and any(
+                    phrase in final_answer.lower() for phrase in [
+                        'here is', 'here are', 'here\'s', 'contact list', 'calendar', 'events'
+                    ]
+                ):
+                    logging.warning("Final answer appears incomplete, regenerating from tool results...")
+                    generated_answer = self._generate_fallback_answer(query, tool_results, current_thought)
+                    logging.debug(f"Regenerated answer length: {len(generated_answer)} characters")
+                    return generated_answer
+                
                 return final_answer
+            
+            # If we have tool results but no final answer, force generate one
+            if tool_results and not final_answer and not tool_call:
+                logging.debug("Tool results available but no final answer, generating from results...")
+                generated_answer = self._generate_final_answer_from_results(query, tool_results)
+                logging.debug(f"Generated answer length: {len(generated_answer)} characters")
+                logging.debug(f"Generated answer preview: {generated_answer[:200]}...")
+                return generated_answer
             
             if tool_call:
                 logging.debug(f"Executing tool: {tool_call['tool_name']}")
@@ -399,6 +411,18 @@ class ReasoningModule:
         # If we reach here, generate fallback answer
         return self._generate_fallback_answer(query, tool_results, current_thought)
 
+    def _format_available_tools(self) -> str:
+        """Format available tools for the prompt"""
+        tools_info = []
+        for tool_name, tool in self.tools.items():
+            # Get tool description from the tool object
+            try:
+                description = tool.description if hasattr(tool, 'description') else f"{tool_name} tool"
+                tools_info.append(f"- {tool_name}: {description}")
+            except:
+                tools_info.append(f"- {tool_name}")
+        return "\n        ".join(tools_info)
+    
     def _build_thought_prompt(self, query: str, step: int, current_thought: str, 
                             tool_results: list, plan: dict, conversation_history: str = "") -> str:
         """Build thought prompt for current step with conversation context"""
@@ -452,33 +476,50 @@ class ReasoningModule:
         
         prompt += f"""
 
+        Available Tools:
+        {self._format_available_tools()}
+
         Please think according to the following format:
 
-        **Thought**: Analyze the current situation and decide the next action
-        - If more information is needed, specify the tool to be called and its parameters
-        - If enough information is available, provide the final answer
+        **Thought**: 
+        1. Understand what the user wants to achieve (not just the keywords they used)
+        2. Determine if you need to use a tool or can provide a final answer
+        3. If using a tool, select the appropriate tool and operation based on the user's intent
+        4. Consider the conversation context and previous tool results
 
         **Action**: 
         - If a tool is needed, use JSON format:
         ```json
         {{
-          "tool_name": "Tool Name",
+          "tool_name": "tool_name_here",
           "parameters": {{
-            "ParameterName": "ParameterValue"
+            "operation": "operation_name",
+            "param1": "value1",
+            "param2": "value2"
           }}
         }}
         ```
-        - If a final answer is available, use:
+        
+        - If you have enough information to answer, use:
         ```
-        Final Answer: Your final answer
+        Final Answer: Your complete answer based on the information gathered
         ```
+
+        IMPORTANT REMINDERS:
+        - Understand user INTENT, not just keywords
+        - "get my contact list" means use email tool with operation="get_contacts"
+        - "what's Jason's email" means use email tool with operation="search_contacts"
+        - "check my calendar" means use calendar tool with operation="list_events"
+        - Always wait for tool results before providing final answers for action requests
+        - When providing final answers with lists, include the COMPLETE information from tool results
+        - Do NOT truncate or summarize lists - show all the data the tool returned
 
         Please start your thinking:
         """
         return prompt
 
     def _extract_tool_call(self, query: str, thought: str) -> Optional[dict]:
-        """Extract tool call from thought result with enhanced context awareness"""
+        """Extract tool call from thought result - let the model decide"""
         try:
             import re
             json_pattern = r'```json\s*(\{.*?\})\s*```'
@@ -504,58 +545,8 @@ class ReasoningModule:
                     except json.JSONDecodeError as e:
                         logging.debug(f"JSON decode error in match {i}: {e}")
                         continue
-            else:
-                logging.debug("No JSON matches found, attempting intent detection...")
             
-            # Enhanced intent detection based on context
-            thought_lower = thought.lower()
-            
-            # Check if we have an email address in the thought
-            email_match = re.search(r'([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', thought)
-            
-            # Get recent conversation history to understand context
-            recent_history = self.memory.get_formatted_history(max_entries=5)
-            history_lower = recent_history.lower() if recent_history else ""
-            
-            logging.debug(f"Email address found: {email_match.group(1) if email_match else 'None'}")
-            
-            # Strong email sending intent detection
-            send_keywords = ['send', 'email', 'mail', 'ask', 'tell', 'notify', 'message']
-            has_send_intent = any(keyword in thought_lower for keyword in send_keywords)
-            has_email_in_history = any(keyword in history_lower for keyword in ['send', 'email', 'mail'])
-            
-            logging.debug(f"Send intent detected: {has_send_intent}")
-            logging.debug(f"Email context in history: {has_email_in_history}")
-            
-            # If we have an email address and any indication of sending
-            if email_match and (has_send_intent or has_email_in_history):
-                email_address = email_match.group(1)
-                logging.debug(f"Auto-generating email send command for: {email_address}")
-                
-                # Extract meaningful content from the query
-                subject, body = self._extract_email_content(query)
-                
-                return {
-                    "tool_name": "email",
-                    "parameters": {
-                        "operation": "send_email",
-                        "recipient": email_address,
-                        "subject": subject,
-                        "body": body
-                    }
-                }
-            
-            # Fallback: if user explicitly asks to send email
-            if any(phrase in thought_lower for phrase in ['send an email', 'send email', 'email to']):
-                logging.debug("Email sending request detected without specific address")
-                return {
-                    "tool_name": "email",
-                    "parameters": {
-                        "operation": "send_email"
-                    }
-                }
-            
-            logging.debug("No tool call could be extracted or inferred")
+            logging.debug("No valid tool call found in model response")
             return None
             
         except Exception as e:
@@ -564,38 +555,107 @@ class ReasoningModule:
             traceback.print_exc()
             return None
 
-    def _check_requires_tool_execution(self, query: str, thought: str) -> bool:
-        """Check if the query requires tool execution"""
-        query_lower = query.lower()
-        thought_lower = thought.lower()
-        
-        # Keywords that indicate action is required
-        action_keywords = [
-            'send', 'email', 'mail', 'create', 'add', 'delete', 'update',
-            'search', 'find', 'look up', 'check', 'get', 'fetch',
-            'write', 'read', 'mark', 'notify', 'ask', 'tell'
-        ]
-        
-        # Check if query contains action keywords
-        has_action = any(keyword in query_lower for keyword in action_keywords)
-        
-        # Check if an email address is present (strong indicator of email action)
-        import re
-        has_email = bool(re.search(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', query + thought))
-        
-        return has_action or has_email
-    
     def _generate_tool_call_from_context(self, query: str, thought: str) -> Optional[dict]:
         """Generate tool call from context when extraction fails"""
         import re
         combined_text = query + " " + thought
         combined_lower = combined_text.lower()
         
+        # Contact query detection (before email sending detection)
+        # More specific patterns for contact queries
+        contact_query_patterns = [
+            r"what'?s?\s+(\w+(?:\s+\w+)?)'?s?\s+email",     # "what's Jason's email"
+            r"get\s+(\w+(?:\s+\w+)?)'?s?\s+email",          # "get Jason's email"
+            r"get\s+my\s+contact\s+(\w+(?:\s+\w+)?)'?s?\s+email",  # "get my contact Jason's email"
+            r"find\s+(\w+(?:\s+\w+)?)'?s?\s+contact",       # "find Jason's contact"
+            r"(\w+(?:\s+\w+)?)'?s?\s+email\s+address",      # "Jason's email address"
+            r"(\w+(?:\s+\w+)?)'?s?\s+phone",                # "Jason's phone"
+            r"contact\s+info\s+for\s+(\w+(?:\s+\w+)?)",     # "contact info for Jason"
+            r"list\s+my\s+contacts?",                       # "list my contacts" or "list my contact"
+            r"show\s+my\s+contacts?",                       # "show my contacts" or "show my contact"
+            r"get\s+my\s+contacts?(?:\s+list)?",            # "get my contacts" or "get my contact list"
+            r"show\s+me\s+my\s+contacts?",                  # "show me my contacts"
+            r"display\s+my\s+contacts?",                    # "display my contacts"
+            r"contacts?\s+list",                            # "contact list" or "contacts list"
+            r"my\s+contact\s+list",                         # "my contact list"
+        ]
+        
+        # Check for contact query patterns
+        for pattern in contact_query_patterns:
+            match = re.search(pattern, combined_lower, re.IGNORECASE)
+            if match:
+                # Handle different pattern types
+                # Check if this is a list/show all contacts request
+                if any(keyword in pattern for keyword in ["list", "show", "display", "my contact"]) and \
+                   not any(keyword in pattern for keyword in ["what", "find", "info for"]):
+                    logging.debug("List contacts query detected")
+                    return {
+                        "tool_name": "email",
+                        "parameters": {
+                            "operation": "get_contacts"
+                        }
+                    }
+                else:
+                    # Try to get the search query from the match
+                    try:
+                        search_query = match.group(1).strip()
+                        logging.debug(f"Contact search query detected for: {search_query}")
+                        return {
+                            "tool_name": "email",
+                            "parameters": {
+                                "operation": "search_contacts",
+                                "search_query": search_query
+                            }
+                        }
+                    except (IndexError, AttributeError):
+                        # No capture group, treat as list contacts
+                        logging.debug("List contacts query detected (no capture group)")
+                        return {
+                            "tool_name": "email",
+                            "parameters": {
+                                "operation": "get_contacts"
+                            }
+                        }
+        
+        # Fallback contact detection - but be more careful not to trigger on email sending
+        # Only trigger if we have contact-related keywords AND no sending keywords
+        has_contact_keywords = any(keyword in combined_lower for keyword in ['contact', 'email address', 'phone number'])
+        has_query_keywords = any(pattern in combined_lower for pattern in [
+            "get", "find", "what's", "what is", "show me", "tell me", "list",
+            "contact info", "email address", "phone number", "contact details", "contact list"
+        ])
+        has_send_keywords = any(pattern in combined_lower for pattern in [
+            "send", "email to", "write to", "compose", "message to", "mail to"
+        ])
+        
+        if (has_contact_keywords or has_query_keywords) and not has_send_keywords:
+            # Extract potential name from query
+            name_pattern = r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b'
+            names = re.findall(name_pattern, query)
+            search_query = names[0] if names else "contacts"
+            
+            logging.debug(f"Fallback contact search for: {search_query}")
+            if search_query == "contacts" or "list" in combined_lower or "all" in combined_lower:
+                return {
+                    "tool_name": "email",
+                    "parameters": {
+                        "operation": "get_contacts"
+                    }
+                }
+            else:
+                return {
+                    "tool_name": "email",
+                    "parameters": {
+                        "operation": "search_contacts",
+                        "search_query": search_query
+                    }
+                }
+        
         # Check for email address
         email_match = re.search(r'([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', combined_text)
         
-        # Email sending detection
-        if email_match and any(keyword in combined_lower for keyword in ['send', 'email', 'mail', 'ask', 'tell', 'notify', 'inform']):
+        # Email sending detection (but exclude contact queries)
+        if email_match and any(keyword in combined_lower for keyword in ['send', 'email', 'mail', 'ask', 'tell', 'notify', 'inform']) and not any(keyword in combined_lower for keyword in ['get', 'find', 'what', 'contact', 'my contact']):
             email_address = email_match.group(1)
             logging.debug(f"Auto-generating email tool call for: {email_address}")
             
@@ -665,6 +725,9 @@ class ReasoningModule:
                 }
         
         return None
+    
+    # Note: The following helper functions are kept for backward compatibility
+    # but should not be actively used. The model should decide tool calls itself.
     
     def _extract_email_content(self, query: str) -> tuple:
         """Extract subject and body from query using model generation for natural content"""
@@ -851,6 +914,9 @@ Now generate the email for: {query}
             if tool_name == 'email' and parameters.get('operation') == 'send_email':
                 recipient = parameters.get('recipient', 'the recipient')
                 return f"I have successfully sent the email to {recipient}. {result.get('result', '')}"
+            elif tool_name == 'email' and parameters.get('operation') in ['search_contacts', 'get_contacts']:
+                # Use the fallback answer method for contact results
+                return self._generate_fallback_answer(query, tool_results, "")
             elif tool_name == 'calendar' and parameters.get('operation') == 'list_events':
                 events = result.get('events', [])
                 if events:
@@ -888,7 +954,61 @@ Now generate the email for: {query}
                                 return "You don't have any calendar events at the moment."
                         else:
                             return "I couldn't retrieve your calendar events. Please try again."
-                
+                    
+                    # Check if we have contact search results to display
+                    elif result['tool'] == 'email' and result['parameters'].get('operation') == 'search_contacts':
+                        contact_result = result['result']
+                        if isinstance(contact_result, dict) and contact_result.get('status') == 'success':
+                            contacts = contact_result.get('result', [])
+                            if contacts:
+                                contact_list = "Here are the matching contacts:\n\n"
+                                for i, contact in enumerate(contacts, 1):
+                                    name = contact.get('name', 'Unknown Name')
+                                    emails = contact.get('emails', [])
+                                    phones = contact.get('phones', [])
+                                    
+                                    contact_list += f"{i}. **{name}**\n"
+                                    if emails:
+                                        contact_list += f"   📧 Email: {', '.join(emails)}\n"
+                                    if phones:
+                                        contact_list += f"   📞 Phone: {', '.join(phones)}\n"
+                                    contact_list += "\n"
+                                return contact_list
+                            else:
+                                search_query = result['parameters'].get('search_query', 'the specified person')
+                                return f"I couldn't find any contacts matching '{search_query}' in your address book."
+                        else:
+                            error_msg = contact_result.get('error_message', 'Unknown error')
+                            if "People API" in error_msg:
+                                return f"❌ Contact functionality unavailable: {error_msg}\n\nPlease follow these steps to enable People API:\n1. Visit Google Cloud Console\n2. Search and enable 'People API'\n3. Re-authenticate the application"
+                            return "I couldn't search your contacts. Please try again."
+                    
+                    # Check if we have all contacts to display
+                    elif result['tool'] == 'email' and result['parameters'].get('operation') == 'get_contacts':
+                        contact_result = result['result']
+                        if isinstance(contact_result, dict) and contact_result.get('status') == 'success':
+                            contacts = contact_result.get('result', [])
+                            if contacts:
+                                contact_list = f"Here are your contacts ({len(contacts)} total):\n\n"
+                                for i, contact in enumerate(contacts[:10], 1):  # Show first 10
+                                    name = contact.get('name', 'Unknown Name')
+                                    emails = contact.get('emails', [])
+                                    contact_list += f"{i}. **{name}**"
+                                    if emails:
+                                        contact_list += f" - {emails[0]}"
+                                    contact_list += "\n"
+                                
+                                if len(contacts) > 10:
+                                    contact_list += f"\n... and {len(contacts) - 10} more contacts."
+                                return contact_list
+                            else:
+                                return "You don't have any contacts in your address book."
+                        else:
+                            error_msg = contact_result.get('error_message', 'Unknown error')
+                            if "People API" in error_msg:
+                                return f"❌ Contact functionality unavailable: {error_msg}\n\nPlease follow these steps to enable People API:\n1. Visit Google Cloud Console\n2. Search and enable 'People API'\n3. Re-authenticate the application"
+                            return "I couldn't retrieve your contacts. Please try again."
+                   
                 # For other tool results, provide a generic response
                 return f"I've executed the requested action. The operation completed with the following result: {str(tool_results[-1]['result'])}"
             
