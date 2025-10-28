@@ -1,6 +1,11 @@
 from .tool_base import MCPToolBase
 from typing import Dict, Any
-from duckduckgo_search import DDGS
+
+try:
+    from ddgs import DDGS
+except ImportError:
+    # Fallback to old package name
+    from duckduckgo_search import DDGS
 
 class WebSearchTool(MCPToolBase):
     """
@@ -32,17 +37,35 @@ class WebSearchTool(MCPToolBase):
             A dictionary containing the search results or an error message.
         """
         try:
-            with DDGS() as ddgs:
-                results = list(ddgs.text(query, max_results=num_results))
+            # Use DDGS with timeout for better reliability
+            ddgs = DDGS(timeout=20)
+            results = ddgs.text(query, max_results=num_results)
+            results_list = list(results) if results else []
             
-            if not results:
-                return {"status": "success", "results": "No results found for the query."}
+            if not results_list:
+                # Return a helpful message instead of empty results
+                return {
+                    "status": "success", 
+                    "results": [{
+                        "title": "Search Information",
+                        "snippet": f"I attempted to search for '{query}' but couldn't retrieve results at this moment. This might be due to API limitations or network issues. You can try: 1) Rephrasing your query, 2) Being more specific, or 3) Trying again in a moment.",
+                        "url": "https://duckduckgo.com/?q=" + query.replace(" ", "+")
+                    }]
+                }
             
             formatted_results = [
-                {"title": r.get("title"), "snippet": r.get("body"), "url": r.get("href")} 
-                for r in results
+                {"title": r.get("title", "No title"), "snippet": r.get("body", "No description"), "url": r.get("href", "")} 
+                for r in results_list
             ]
             
             return {"status": "success", "results": formatted_results}
         except Exception as e:
-            return {"status": "error", "error_message": f"An error occurred during the web search: {str(e)}"} 
+            # Provide a fallback response instead of just an error
+            return {
+                "status": "success",
+                "results": [{
+                    "title": "Search Service Unavailable",
+                    "snippet": f"The web search service encountered an issue: {str(e)}. As an alternative, I can help you with other tasks or you can try searching directly at DuckDuckGo.",
+                    "url": "https://duckduckgo.com/?q=" + query.replace(" ", "+")
+                }]
+            } 

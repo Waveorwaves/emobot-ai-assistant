@@ -629,6 +629,308 @@ HTML_TEMPLATE = """
             cursor: pointer;
             font-weight: 600;
         }
+        
+        /* Todo Page Styles */
+        .todo-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f7f7f7;
+            overflow: hidden;
+        }
+        
+        .todo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .todo-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .todo-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .todo-filters {
+            display: flex;
+            gap: 10px;
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            color: #666;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn:hover {
+            background: #e0e0e0;
+        }
+        
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .todo-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .todo-list {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .todo-item {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 4px solid #667eea;
+        }
+        
+        .todo-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        
+        .todo-item.priority-low {
+            border-left-color: #28a745;
+        }
+        
+        .todo-item.priority-medium {
+            border-left-color: #ffc107;
+        }
+        
+        .todo-item.priority-high {
+            border-left-color: #fd7e14;
+        }
+        
+        .todo-item.priority-urgent {
+            border-left-color: #dc3545;
+        }
+        
+        .todo-item.completed {
+            opacity: 0.7;
+        }
+        
+        .todo-item.completed .todo-item-title {
+            text-decoration: line-through;
+            color: #999;
+        }
+        
+        .todo-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .todo-item-title-section {
+            flex: 1;
+        }
+        
+        .todo-item-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .todo-item-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .todo-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .badge-priority {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .badge-priority.low {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .badge-priority.medium {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .badge-priority.high {
+            background: #ffe0b2;
+            color: #e65100;
+        }
+        
+        .badge-priority.urgent {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .badge-category {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        .badge-status {
+            background: #e0e0e0;
+            color: #424242;
+        }
+        
+        .badge-status.completed {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+        
+        .badge-status.in_progress {
+            background: #fff9c4;
+            color: #f57f17;
+        }
+        
+        .todo-item-description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+        
+        .todo-item-tags {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        
+        .todo-tag {
+            padding: 2px 8px;
+            background: #e3f2fd;
+            color: #1976d2;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+        
+        .todo-item-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #f0f0f0;
+        }
+        
+        .todo-item-date {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .todo-item-date.overdue {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        
+        .todo-item-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .todo-action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .todo-action-btn.complete {
+            background: #28a745;
+            color: white;
+        }
+        
+        .todo-action-btn.complete:hover {
+            background: #218838;
+        }
+        
+        .todo-action-btn.edit {
+            background: #667eea;
+            color: white;
+        }
+        
+        .todo-action-btn.edit:hover {
+            background: #5a6fd8;
+        }
+        
+        .todo-action-btn.delete {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .todo-action-btn.delete:hover {
+            background: #c82333;
+        }
+        
+        .loading-todo {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+        
+        .no-todos {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
     </style>
 </head>
 <body>
@@ -773,14 +1075,83 @@ HTML_TEMPLATE = """
                 </div>
             </div>
             
-            <!-- Todo Page (Placeholder) -->
+            <!-- Todo Page -->
             <div id="todoPage" class="page">
-                <div class="calendar-container">
-                    <div class="calendar-header">
-                        <div class="calendar-title">✅ Todo Management</div>
+                <div class="todo-container">
+                    <div class="todo-header">
+                        <div class="todo-title">✅ Todo Management</div>
+                        <div class="todo-actions">
+                            <button class="action-btn" onclick="showAddTodoModal()">➕ Add Task</button>
+                            <button class="refresh-btn" onclick="loadTodoList()">🔄 Refresh</button>
+                        </div>
                     </div>
-                    <div class="no-events">
-                        Todo interface coming soon...
+                    
+                    <div class="todo-filters">
+                        <button class="filter-btn active" onclick="filterTodos('all')" data-filter="all">All</button>
+                        <button class="filter-btn" onclick="filterTodos('pending')" data-filter="pending">Pending</button>
+                        <button class="filter-btn" onclick="filterTodos('in_progress')" data-filter="in_progress">In Progress</button>
+                        <button class="filter-btn" onclick="filterTodos('completed')" data-filter="completed">Completed</button>
+                    </div>
+                    
+                    <div id="todoContent" class="todo-content">
+                        <div class="loading-todo">Loading tasks...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add/Edit Todo Modal -->
+            <div id="todoModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="todoModalTitle">➕ Add New Task</h3>
+                        <span class="close" onclick="closeTodoModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <form id="todoForm">
+                            <input type="hidden" id="todoId" value="">
+                            <div class="form-group">
+                                <label>Task Title *</label>
+                                <input type="text" id="todoTitle" required placeholder="Enter task title">
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea id="todoDescription" rows="3" placeholder="Enter task description (optional)"></textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Priority</label>
+                                    <select id="todoPriority">
+                                        <option value="low">Low</option>
+                                        <option value="medium" selected>Medium</option>
+                                        <option value="high">High</option>
+                                        <option value="urgent">Urgent</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Category</label>
+                                    <select id="todoCategory">
+                                        <option value="work">Work</option>
+                                        <option value="personal" selected>Personal</option>
+                                        <option value="study">Study</option>
+                                        <option value="health">Health</option>
+                                        <option value="shopping">Shopping</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Due Date</label>
+                                <input type="date" id="todoDueDate">
+                            </div>
+                            <div class="form-group">
+                                <label>Tags (comma separated)</label>
+                                <input type="text" id="todoTags" placeholder="e.g., urgent, important">
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="send-btn">💾 Save Task</button>
+                                <button type="button" onclick="closeTodoModal()" class="cancel-btn">❌ Cancel</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -811,6 +1182,8 @@ HTML_TEMPLATE = """
                 loadCalendarEvents();
             } else if (pageName === 'email') {
                 loadEmailPage();
+            } else if (pageName === 'todo') {
+                loadTodoList();
             }
         }
         
@@ -1029,9 +1402,8 @@ HTML_TEMPLATE = """
             try {
                 let url = '/api/email/list';
                 if (query) {
-                    // For now, we'll use the basic inbox API and filter client-side
-                    // In a full implementation, you'd want to add search support to the API
-                    url = '/api/email/list';
+                    // Add query parameter to URL
+                    url = `/api/email/list?query=${encodeURIComponent(query)}`;
                 }
                 
                 const response = await fetch(url);
@@ -1232,6 +1604,259 @@ HTML_TEMPLATE = """
             // Don't auto-load calendar on page load to avoid unnecessary API calls
             // It will load when user clicks the calendar tab
         });
+        
+        // ============================================================================
+        // Todo Functionality
+        // ============================================================================
+        
+        let currentFilter = 'all';
+        let allTodos = [];
+        
+        async function loadTodoList() {
+            const todoContent = document.getElementById('todoContent');
+            todoContent.innerHTML = '<div class="loading-todo">Loading tasks...</div>';
+            
+            try {
+                const response = await fetch('/api/todo/list');
+                const data = await response.json();
+                
+                if (data.success && data.tasks) {
+                    allTodos = data.tasks;
+                    displayTodos(allTodos);
+                } else {
+                    todoContent.innerHTML = `
+                        <div class="no-todos">
+                            <h3>📝 No tasks found</h3>
+                            <p>Click "Add Task" to create your first todo item.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading todos:', error);
+                todoContent.innerHTML = `
+                    <div class="error-message">
+                        ❌ Failed to load tasks: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        function displayTodos(todos) {
+            const todoContent = document.getElementById('todoContent');
+            
+            if (!todos || todos.length === 0) {
+                todoContent.innerHTML = `
+                    <div class="no-todos">
+                        <h3>📝 No tasks found</h3>
+                        <p>Click "Add Task" to create your first todo item.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const todosHtml = todos.map(todo => {
+                const priority = todo.priority || 'medium';
+                const status = todo.status || 'pending';
+                const category = todo.category || 'other';
+                const isCompleted = status === 'completed';
+                const isOverdue = todo.overdue || false;
+                
+                let statusText = status.replace('_', ' ');
+                statusText = statusText.charAt(0).toUpperCase() + statusText.slice(1);
+                
+                return `
+                    <div class="todo-item priority-${priority} ${isCompleted ? 'completed' : ''}" data-status="${status}">
+                        <div class="todo-item-header">
+                            <div class="todo-item-title-section">
+                                <div class="todo-item-title">${escapeHtml(todo.title)}</div>
+                                <div class="todo-item-meta">
+                                    <span class="todo-badge badge-priority ${priority}">${priority.toUpperCase()}</span>
+                                    <span class="todo-badge badge-category">${category}</span>
+                                    <span class="todo-badge badge-status ${status}">${statusText}</span>
+                                </div>
+                            </div>
+                        </div>
+                        ${todo.description ? `<div class="todo-item-description">${escapeHtml(todo.description)}</div>` : ''}
+                        ${todo.tags && todo.tags.length > 0 ? `
+                            <div class="todo-item-tags">
+                                ${todo.tags.map(tag => `<span class="todo-tag">${escapeHtml(tag)}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                        <div class="todo-item-footer">
+                            <div class="todo-item-date ${isOverdue ? 'overdue' : ''}">
+                                ${todo.due_date ? `📅 Due: ${todo.due_date}${isOverdue ? ' (Overdue!)' : ''}` : 'No due date'}
+                            </div>
+                            <div class="todo-item-actions">
+                                ${!isCompleted ? `<button class="todo-action-btn complete" onclick="markTodoComplete('${todo.id}')">✓ Complete</button>` : ''}
+                                <button class="todo-action-btn edit" onclick="editTodo('${todo.id}')">✏️ Edit</button>
+                                <button class="todo-action-btn delete" onclick="deleteTodo('${todo.id}')">🗑️ Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            todoContent.innerHTML = `<div class="todo-list">${todosHtml}</div>`;
+        }
+        
+        function filterTodos(filter) {
+            currentFilter = filter;
+            
+            // Update active filter button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+            
+            // Filter todos
+            let filteredTodos = allTodos;
+            if (filter !== 'all') {
+                filteredTodos = allTodos.filter(todo => todo.status === filter);
+            }
+            
+            displayTodos(filteredTodos);
+        }
+        
+        function showAddTodoModal() {
+            document.getElementById('todoModalTitle').textContent = '➕ Add New Task';
+            document.getElementById('todoForm').reset();
+            document.getElementById('todoId').value = '';
+            document.getElementById('todoModal').style.display = 'block';
+        }
+        
+        function closeTodoModal() {
+            document.getElementById('todoModal').style.display = 'none';
+        }
+        
+        function editTodo(todoId) {
+            const todo = allTodos.find(t => t.id === todoId);
+            if (!todo) return;
+            
+            document.getElementById('todoModalTitle').textContent = '✏️ Edit Task';
+            document.getElementById('todoId').value = todo.id;
+            document.getElementById('todoTitle').value = todo.title;
+            document.getElementById('todoDescription').value = todo.description || '';
+            document.getElementById('todoPriority').value = todo.priority || 'medium';
+            document.getElementById('todoCategory').value = todo.category || 'personal';
+            document.getElementById('todoDueDate').value = todo.due_date || '';
+            document.getElementById('todoTags').value = todo.tags ? todo.tags.join(', ') : '';
+            
+            document.getElementById('todoModal').style.display = 'block';
+        }
+        
+        async function markTodoComplete(todoId) {
+            try {
+                const response = await fetch(`/api/todo/update/${todoId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        status: 'completed'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    loadTodoList();
+                } else {
+                    alert('Failed to mark task as complete: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error marking todo complete:', error);
+                alert('Failed to mark task as complete');
+            }
+        }
+        
+        async function deleteTodo(todoId) {
+            if (!confirm('Are you sure you want to delete this task?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/todo/delete/${todoId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    loadTodoList();
+                } else {
+                    alert('Failed to delete task: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error deleting todo:', error);
+                alert('Failed to delete task');
+            }
+        }
+        
+        // Handle todo form submission
+        document.getElementById('todoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const todoId = document.getElementById('todoId').value;
+            const title = document.getElementById('todoTitle').value.trim();
+            const description = document.getElementById('todoDescription').value.trim();
+            const priority = document.getElementById('todoPriority').value;
+            const category = document.getElementById('todoCategory').value;
+            const dueDate = document.getElementById('todoDueDate').value;
+            const tagsInput = document.getElementById('todoTags').value.trim();
+            const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(t => t) : [];
+            
+            const todoData = {
+                title,
+                description,
+                priority,
+                category,
+                due_date: dueDate,
+                tags
+            };
+            
+            try {
+                let response;
+                if (todoId) {
+                    // Update existing todo
+                    response = await fetch(`/api/todo/update/${todoId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(todoData)
+                    });
+                } else {
+                    // Add new todo
+                    response = await fetch('/api/todo/add', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(todoData)
+                    });
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    closeTodoModal();
+                    loadTodoList();
+                } else {
+                    alert('Failed to save task: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error saving todo:', error);
+                alert('Failed to save task');
+            }
+        });
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const todoModal = document.getElementById('todoModal');
+            if (event.target === todoModal) {
+                closeTodoModal();
+            }
+        };
     </script>
 </body>
 </html>
@@ -1510,14 +2135,28 @@ def list_emails():
         if not reasoning_module:
             return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
         
-        # Use the email tool with list operation
-        result = reasoning_module.action_executor.execute_action('email', {'operation': 'read_inbox', 'max_results': 20})
+        # Get query parameter for filtering (e.g., 'in:sent', 'in:draft')
+        search_query = request.args.get('query', '')
+        
+        if search_query:
+            # Use search_emails operation for specific queries
+            result = reasoning_module.action_executor.execute_action('email', {
+                'operation': 'search_emails',
+                'search_query': search_query,
+                'max_results': 20
+            })
+        else:
+            # Default to inbox
+            result = reasoning_module.action_executor.execute_action('email', {
+                'operation': 'read_inbox',
+                'max_results': 20
+            })
         
         if result and result.get('status') == 'success':
-            emails = result.get('result', [])
+            emails = result.get('emails', result.get('result', []))
             return jsonify({
                 'success': True,
-                'emails': emails
+                'emails': emails if isinstance(emails, list) else []
             })
         else:
             return jsonify({
@@ -1703,9 +2342,17 @@ def list_todos():
         # Use the todo_list tool with view_list operation
         result = reasoning_module.action_executor.execute_action('todo_list', {'operation': 'view_list'})
         
+        # Extract tasks from result
+        tasks = []
+        if isinstance(result, dict):
+            if result.get('status') == 'success':
+                tasks = result.get('tasks', [])
+            else:
+                return jsonify({'success': False, 'error': result.get('message', 'Unknown error')}), 500
+        
         return jsonify({
             'success': True,
-            'todos': result if isinstance(result, list) else []
+            'tasks': tasks
         })
     except Exception as e:
         logging.error(f"List todos error: {e}")
@@ -1722,23 +2369,39 @@ def add_todo():
         title = data.get('title')
         description = data.get('description', '')
         priority = data.get('priority', 'medium')
+        category = data.get('category', 'personal')
+        due_date = data.get('due_date')
+        tags = data.get('tags', [])
         
         if not title:
             return jsonify({'success': False, 'error': 'Title required'}), 400
         
         # Use the todo_list tool with add_task operation
-        result = reasoning_module.action_executor.execute_action('todo_list', {
+        params = {
             'operation': 'add_task',
             'title': title,
             'description': description,
-            'priority': priority
-        })
+            'priority': priority,
+            'category': category,
+            'tags': tags
+        }
         
-        return jsonify({
-            'success': True,
-            'message': 'Task added',
-            'result': result
-        })
+        if due_date:
+            params['due_date'] = due_date
+        
+        result = reasoning_module.action_executor.execute_action('todo_list', params)
+        
+        if isinstance(result, dict) and result.get('status') == 'success':
+            return jsonify({
+                'success': True,
+                'message': 'Task added successfully',
+                'task': result.get('task')
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': result.get('message', 'Failed to add task')
+            }), 500
     except Exception as e:
         logging.error(f"Add todo error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -1752,18 +2415,42 @@ def update_todo(todo_id):
         
         data = request.json
         
-        # Use the todo_list tool with update_task operation
-        result = reasoning_module.action_executor.execute_action('todo_list', {
+        # Build update parameters
+        params = {
             'operation': 'update_task',
-            'task_id': todo_id,
-            **data
-        })
+            'task_id': todo_id
+        }
         
-        return jsonify({
-            'success': True,
-            'message': 'Task updated',
-            'result': result
-        })
+        # Add optional fields
+        if 'title' in data:
+            params['title'] = data['title']
+        if 'description' in data:
+            params['description'] = data['description']
+        if 'priority' in data:
+            params['priority'] = data['priority']
+        if 'category' in data:
+            params['category'] = data['category']
+        if 'status' in data:
+            params['status'] = data['status']
+        if 'due_date' in data:
+            params['due_date'] = data['due_date']
+        if 'tags' in data:
+            params['tags'] = data['tags']
+        
+        # Use the todo_list tool with update_task operation
+        result = reasoning_module.action_executor.execute_action('todo_list', params)
+        
+        if isinstance(result, dict) and result.get('status') == 'success':
+            return jsonify({
+                'success': True,
+                'message': 'Task updated successfully',
+                'task': result.get('task')
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': result.get('message', 'Failed to update task')
+            }), 500
     except Exception as e:
         logging.error(f"Update todo error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -1781,11 +2468,16 @@ def delete_todo(todo_id):
             'task_id': todo_id
         })
         
-        return jsonify({
-            'success': True,
-            'message': 'Task deleted',
-            'result': result
-        })
+        if isinstance(result, dict) and result.get('status') == 'success':
+            return jsonify({
+                'success': True,
+                'message': 'Task deleted successfully'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': result.get('message', 'Failed to delete task')
+            }), 500
     except Exception as e:
         logging.error(f"Delete todo error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500

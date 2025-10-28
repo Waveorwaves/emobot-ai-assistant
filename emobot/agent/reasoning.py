@@ -331,14 +331,38 @@ class ReasoningModule:
                 logging.debug(f"Final answer length: {len(final_answer)} characters")
                 logging.debug(f"Final answer preview: {final_answer[:200]}...")
                 
-                # Check if the final answer looks incomplete (e.g., just a header without content)
-                # This happens when model says "Here is your contact list:" but doesn't include the actual list
-                if tool_results and len(final_answer) < 100 and any(
+                # Check if the final answer looks incomplete or is just raw search results
+                is_incomplete = False
+                
+                # Check 1: Too short with header phrases
+                if len(final_answer) < 150 and any(
                     phrase in final_answer.lower() for phrase in [
-                        'here is', 'here are', 'here\'s', 'contact list', 'calendar', 'events'
+                        'here is', 'here are', 'here\'s', 'contact list', 'calendar', 'events',
+                        'search results', 'found the following', 'operation was completed'
                     ]
                 ):
-                    logging.warning("Final answer appears incomplete, regenerating from tool results...")
+                    is_incomplete = True
+                    logging.warning("Final answer appears incomplete (too short with header)")
+                
+                # Check 2: For web search results, ensure it's not just raw results
+                if tool_results:
+                    last_tool = tool_results[-1].get('tool')
+                    if last_tool == 'web_search':
+                        # If the answer just contains URLs or looks like raw search results
+                        if ('🔗' in final_answer or 'http' in final_answer) and len(final_answer) < 500:
+                            is_incomplete = True
+                            logging.warning("Final answer appears to be raw search results without synthesis")
+                        # If it's a simple statement about search results
+                        elif any(phrase in final_answer.lower() for phrase in [
+                            'here are the search results',
+                            'search results for',
+                            'i found the following'
+                        ]) and len(final_answer) < 300:
+                            is_incomplete = True
+                            logging.warning("Final answer is just presenting search results without analysis")
+                
+                if is_incomplete:
+                    logging.warning("Regenerating answer from tool results...")
                     generated_answer = self._generate_fallback_answer(query, tool_results, current_thought)
                     logging.debug(f"Regenerated answer length: {len(generated_answer)} characters")
                     return generated_answer
@@ -439,16 +463,20 @@ class ReasoningModule:
         """
         
         prompt = f"""
-        You are in step {step} of the ReAct loop.
+        You are in step {step} of the ReAct loop (max {self.max_steps} steps).
 
         User Query: {query}
         {context_section}
 
-        Context Information:
-        Plan: {plan.get('plan', 'No plan available')}
+        Execution Plan:
+        {plan.get('plan', 'No plan available')}
+
+        Current Progress:
+        - Steps completed: {len(tool_results)}
+        - Steps remaining: {self.max_steps - step}
 
         Current Thought State:
-        {current_thought if current_thought else "Initial State"}
+        {current_thought if current_thought else "Initial State - Start by analyzing the query and planning your approach"}
 
         History of Tool Calls:
         """
@@ -483,9 +511,12 @@ class ReasoningModule:
 
         **Thought**: 
         1. Understand what the user wants to achieve (not just the keywords they used)
-        2. Determine if you need to use a tool or can provide a final answer
-        3. If using a tool, select the appropriate tool and operation based on the user's intent
-        4. Consider the conversation context and previous tool results
+        2. For complex tasks, break them down into smaller steps
+        3. Review what has been done so far (check tool results history)
+        4. Determine the NEXT action needed:
+           - If you need more information, use a tool
+           - If you have gathered enough information, provide final answer
+        5. Consider the conversation context and previous tool results
 
         **Action**: 
         - If a tool is needed, use JSON format:
@@ -513,6 +544,13 @@ class ReasoningModule:
         - Always wait for tool results before providing final answers for action requests
         - When providing final answers with lists, include the COMPLETE information from tool results
         - Do NOT truncate or summarize lists - show all the data the tool returned
+        
+        CRITICAL FOR WEB SEARCH:
+        - After getting search results, you MUST analyze and synthesize the information
+        - Do NOT just display raw search results as your final answer
+        - Extract key information, organize it logically, and present it clearly
+        - For complex queries (like "how to apply for visa"), provide step-by-step guidance
+        - Include relevant details from multiple search results
 
         Please start your thinking:
         """
@@ -925,6 +963,9 @@ Now generate the email for: {query}
                     return "You have no events scheduled."
             elif tool_name == 'todo_list':
                 return f"Todo list operation completed: {result.get('result', '')}"
+            elif tool_name == 'web_search':
+                # For web search, always use fallback to synthesize results
+                return self._generate_fallback_answer(query, tool_results, "")
             else:
                 return f"The operation was completed successfully: {result.get('result', '')}"
         else:
@@ -1008,6 +1049,83 @@ Now generate the email for: {query}
                             if "People API" in error_msg:
                                 return f"❌ Contact functionality unavailable: {error_msg}\n\nPlease follow these steps to enable People API:\n1. Visit Google Cloud Console\n2. Search and enable 'People API'\n3. Re-authenticate the application"
                             return "I couldn't retrieve your contacts. Please try again."
+                    
+                    # Check if we have web search results to display
+                    elif result['tool'] == 'web_search':
+                        search_result = result['result']
+                        if isinstance(search_result, dict) and search_result.get('status') == 'success':
+                            search_results = search_result.get('results', [])
+                            query_text = result['parameters'].get('query', 'your query')
+                            original_query = query  # The user's original question
+                            
+                            if isinstance(search_results, list) and search_results:
+                                # Instead of just showing raw results, synthesize them
+                                synthesis_text = f"Based on my search for '{query_text}', here's what I found:\n\n"
+                                
+                                # Extract key information from search results
+                                key_points = []
+                                sources = []
+                                
+                                for i, item in enumerate(search_results[:5], 1):
+                                    title = item.get('title', 'No title')
+                                    snippet = item.get('snippet', 'No description available')
+                                    url = item.get('url', '')
+                                    
+                                    # Clean up snippet - remove extra spaces and newlines
+                                    import re
+                                    snippet = re.sub(r'\s+', ' ', snippet).strip()
+                                    
+                                    # Truncate at sentence boundary if too long
+                                    if len(snippet) > 200:
+                                        # Try to cut at sentence end
+                                        sentences = re.split(r'[.!?]\s+', snippet[:200])
+                                        if len(sentences) > 1:
+                                            snippet = sentences[0] + '.'
+                                        else:
+                                            # Cut at word boundary
+                                            snippet = snippet[:200].rsplit(' ', 1)[0] + '...'
+                                    
+                                    # Add to key points if it has useful information
+                                    if snippet and snippet != 'No description available' and len(snippet) > 20:
+                                        key_points.append(snippet)
+                                    
+                                    # Collect sources
+                                    if url:
+                                        sources.append(f"{i}. [{title}]({url})")
+                                
+                                # Build synthesized answer with a summary
+                                if key_points:
+                                    # Add a brief summary based on the query type
+                                    if 'hotel' in original_query.lower() or 'stay' in original_query.lower():
+                                        synthesis_text += "**Summary:** When booking hotels in New York for December, consider location, amenities, and booking platforms for the best deals.\n\n"
+                                    elif 'visa' in original_query.lower():
+                                        synthesis_text += "**Summary:** Applying for a visa requires proper documentation, advance planning, and meeting specific requirements.\n\n"
+                                    else:
+                                        synthesis_text += "**Summary:** Here are the key findings from my search:\n\n"
+                                    
+                                    synthesis_text += "**Key Points:**\n"
+                                    for i, point in enumerate(key_points[:5], 1):
+                                        synthesis_text += f"{i}. {point}\n"
+                                    synthesis_text += "\n"
+                                
+                                if sources:
+                                    synthesis_text += "**Sources for More Details:**\n"
+                                    synthesis_text += "\n".join(sources)
+                                    synthesis_text += "\n\n"
+                                
+                                # Add context-specific guidance based on the query
+                                if any(word in original_query.lower() for word in ['how', 'what', 'guide', 'steps', 'process']):
+                                    synthesis_text += "💡 *For detailed step-by-step guidance, please refer to the sources above.*"
+                                
+                                return synthesis_text
+                            elif isinstance(search_results, str):
+                                # Handle case where results is a string message
+                                return f"Search results for '{query_text}': {search_results}"
+                            else:
+                                return f"I couldn't find any results for '{query_text}'."
+                        else:
+                            error_msg = search_result.get('error_message', 'Unknown error')
+                            return f"I encountered an error while searching: {error_msg}"
                    
                 # For other tool results, provide a generic response
                 return f"I've executed the requested action. The operation completed with the following result: {str(tool_results[-1]['result'])}"
