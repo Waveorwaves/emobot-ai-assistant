@@ -1,1 +1,15 @@
-[]
+[
+  {
+    "task_id": "cc63c34b-fffd-4a86-b509-fe0539c7cbca",
+    "title": "go to grocery shopping tomorrow morning",
+    "description": "",
+    "priority": "medium",
+    "category": "other",
+    "status": "completed",
+    "due_date": null,
+    "tags": [],
+    "created_at": "2025-10-28T17:23:30.396669",
+    "updated_at": "2025-10-28T17:26:02.197438",
+    "completed_at": "2025-10-28T17:26:02.197438"
+  }
+]

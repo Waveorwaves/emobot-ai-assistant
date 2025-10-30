@@ -79,37 +79,34 @@ class GmailAuthManager:
     def _perform_oauth_flow(self) -> bool:
         """执行 OAuth 2.0 认证流程"""
         try:
-            # 创建 OAuth 流程
-            flow = InstalledAppFlow.from_client_config(
-                {
-                    "installed": {
-                        "client_id": self.config['client_id'],
-                        "client_secret": self.config['client_secret'],
-                        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                        "token_uri": "https://oauth2.googleapis.com/token",
-                        "redirect_uris": [self.config['redirect_uri']]
-                    }
-                },
-                self.config['scopes']
-            )
+            # 从 credentials 文件加载配置
+            credentials_file = self.config.get('credentials_file', 'gmail_credentials.json')
             
-            # 启动本地服务器进行认证，使用不同的端口避免冲突
-            import socket
-            # 找一个可用的端口
-            for port in range(8083, 8090):
-                try:
-                    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                        s.bind(('localhost', port))
-                        available_port = port
-                        break
-                except OSError:
-                    continue
+            if os.path.exists(credentials_file):
+                # 使用 credentials 文件创建流程
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    credentials_file,
+                    self.config['scopes']
+                )
             else:
-                available_port = 0  # Let the system choose
+                # 使用配置创建流程
+                flow = InstalledAppFlow.from_client_config(
+                    {
+                        "installed": {
+                            "client_id": self.config['client_id'],
+                            "client_secret": self.config['client_secret'],
+                            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                            "token_uri": "https://oauth2.googleapis.com/token",
+                            "redirect_uris": ["http://localhost"]
+                        }
+                    },
+                    self.config['scopes']
+                )
             
-            print(f"Using port {available_port} for OAuth authentication")
+            # 使用端口 0 让系统自动选择可用端口
+            print("Starting OAuth authentication...")
             self.credentials = flow.run_local_server(
-                port=available_port,
+                port=0,
                 open_browser=True
             )
             

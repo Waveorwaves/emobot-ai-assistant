@@ -6,7 +6,7 @@ Provides HTTP API and simple web interface
 import os
 import sys
 import logging
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, request, jsonify, render_template_string, send_from_directory
 
 # Try to import CORS, make it optional
 try:
@@ -31,7 +31,12 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
-app = Flask(__name__)
+# Get the directory where web_app.py is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# Path to the built React frontend
+FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(SCRIPT_DIR)), 'emobot', 'frontend', 'dist')
+
+app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path='')
 
 # Enable CORS if available
 if CORS_AVAILABLE:
@@ -1352,35 +1357,42 @@ HTML_TEMPLATE = """
         messageInput.focus();
         
         // Email functionality
+        let selectedEmail = null;
+        let currentEmailFolder = 'inbox';
+
         async function loadEmailPage() {
             await loadInbox();
             await loadLabels();
         }
-        
+
         async function loadInbox() {
+            currentEmailFolder = 'inbox';
             updateFolderSelection('inbox');
             await loadEmailsByQuery('in:inbox');
         }
-        
+
         async function loadSent() {
+            currentEmailFolder = 'sent';
             updateFolderSelection('sent');
             await loadEmailsByQuery('in:sent');
         }
-        
+
         async function loadDrafts() {
+            currentEmailFolder = 'drafts';
             updateFolderSelection('drafts');
             await loadEmailsByQuery('in:draft');
         }
-        
+
         async function loadTrash() {
+            currentEmailFolder = 'trash';
             updateFolderSelection('trash');
             await loadEmailsByQuery('in:trash');
         }
-        
+
         function updateFolderSelection(folderType) {
             // Remove active class from all folder items
             document.querySelectorAll('.folder-list li').forEach(li => li.classList.remove('active'));
-            
+
             // Add active class to selected folder
             const folderMap = {
                 'inbox': 0,
@@ -1388,27 +1400,26 @@ HTML_TEMPLATE = """
                 'drafts': 2,
                 'trash': 3
             };
-            
+
             const folderItems = document.querySelectorAll('.folder-list li');
             if (folderItems[folderMap[folderType]]) {
                 folderItems[folderMap[folderType]].classList.add('active');
             }
         }
-        
+
         async function loadEmailsByQuery(query = null) {
             const emailList = document.getElementById('emailList');
             emailList.innerHTML = '<div class="loading-email">Loading emails...</div>';
-            
+
             try {
                 let url = '/api/email/list';
                 if (query) {
-                    // Add query parameter to URL
                     url = `/api/email/list?query=${encodeURIComponent(query)}`;
                 }
-                
+
                 const response = await fetch(url);
                 const data = await response.json();
-                
+
                 if (data.success && data.emails && data.emails.length > 0) {
                     displayEmails(data.emails);
                 } else {
@@ -1428,19 +1439,19 @@ HTML_TEMPLATE = """
                 `;
             }
         }
-        
+
         function displayEmails(emails) {
             const emailList = document.getElementById('emailList');
-            
+
             const emailsHtml = emails.map(email => {
-                const isUnread = !email.is_read;
-                const sender = email.sender || 'Unknown Sender';
+                const isUnread = !email.is_read && !email.read;
+                const sender = email.sender || email.from || 'Unknown Sender';
                 const subject = email.subject || 'No Subject';
-                const snippet = email.snippet || email.body || '';
-                const date = email.date || '';
-                
+                const snippet = email.snippet || email.body || email.preview || '';
+                const date = email.date || email.timestamp || '';
+
                 return `
-                    <div class="email-item ${isUnread ? 'unread' : ''}" onclick="openEmail('${email.id}')">
+                    <div class="email-item ${isUnread ? 'unread' : ''}" onclick="selectEmail('${email.id}')" data-email-id="${email.id}">
                         <div class="email-sender">${escapeHtml(sender)}</div>
                         <div class="email-subject">${escapeHtml(subject)}</div>
                         <div class="email-snippet">${escapeHtml(snippet.substring(0, 100))}${snippet.length > 100 ? '...' : ''}</div>
@@ -1451,8 +1462,40 @@ HTML_TEMPLATE = """
                     </div>
                 `;
             }).join('');
-            
+
             emailList.innerHTML = emailsHtml;
+
+            // Store emails in memory for quick access
+            window.currentEmails = emails;
+        }
+
+        async function selectEmail(emailId) {
+            // Find the email in the current list
+            const email = window.currentEmails?.find(e => e.id === emailId);
+            if (!email) return;
+
+            selectedEmail = email;
+
+            // Mark as read if unread
+            if (!email.is_read && !email.read) {
+                markEmailAsRead(emailId);
+            }
+
+            // Display email details (you can enhance this further)
+            showEmailDetails(email);
+        }
+
+        function showEmailDetails(email) {
+            // For now, just show an alert with email details
+            // You can enhance this to show in a modal or dedicated panel
+            const details = `
+                From: ${email.sender || email.from}
+                Subject: ${email.subject}
+                Date: ${email.date || email.timestamp}
+
+                ${email.body || email.content || email.snippet || email.preview}
+            `;
+            alert(details);
         }
         
         async function loadLabels() {
@@ -1907,8 +1950,22 @@ def initialize_agent(model_id="gemini-2.5-flash"):
 
 @app.route('/')
 def index():
-    """Serve the web interface"""
+    """Serve the React frontend"""
+    return send_from_directory(FRONTEND_DIR, 'index.html')
+
+@app.route('/simple')
+def simple_ui():
+    """Serve the simple HTML UI for backend testing"""
     return render_template_string(HTML_TEMPLATE)
+
+@app.route('/<path:path>')
+def serve_static(path):
+    """Serve static files from React build"""
+    if os.path.exists(os.path.join(FRONTEND_DIR, path)):
+        return send_from_directory(FRONTEND_DIR, path)
+    else:
+        # For client-side routing, return index.html
+        return send_from_directory(FRONTEND_DIR, 'index.html')
 
 @app.route('/api/query', methods=['POST'])
 def query():
@@ -2207,16 +2264,24 @@ def read_email(email_id):
         if not reasoning_module:
             return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
         
-        # Use the email tool with read operation
+        # Use the email tool with get_email_details operation
         result = reasoning_module.action_executor.execute_action('email', {
-            'operation': 'read_inbox',
+            'operation': 'get_email_details',
             'message_id': email_id
         })
         
-        return jsonify({
-            'success': True,
-            'email': result
-        })
+        # Extract the email data from the result
+        if isinstance(result, dict) and result.get('status') == 'success':
+            email_data = result.get('result', {})
+            return jsonify({
+                'success': True,
+                'email': email_data
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': result.get('error_message', 'Failed to fetch email')
+            }), 500
     except Exception as e:
         logging.error(f"Read email error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -2513,7 +2578,8 @@ def main():
     print("\n" + "="*60)
     print(f"✅ Emobot Web App is running!")
     print(f"🌐 Open your browser and go to:")
-    print(f"   http://{args.host}:{args.port}")
+    print(f"   React Frontend:  http://{args.host}:{args.port}")
+    print(f"   Simple Test UI:  http://{args.host}:{args.port}/simple")
     print("="*60 + "\n")
     
     # Start Flask web server
