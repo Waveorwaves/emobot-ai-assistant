@@ -111,9 +111,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   // AI insights and recommendations - will be populated from backend/Gemini API
   const aiInsights: AIInsight[] = [];
 
-  const aiActions: AIAction[] = [];
-
-  const approvalItems: ApprovalItem[] = [];
+  const [aiActions, setAiActions] = useState<AIAction[]>([]);
+  const [approvalItems, setApprovalItems] = useState<ApprovalItem[]>([]);
+  const [isOptimizing, setIsOptimizing] = useState(false);
 
   // Helper function to create insight hash
   const getInsightHash = (insight: any) => {
@@ -142,7 +142,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         const lastRefresh = localStorage.getItem('insightsLastRefresh');
         const now = Date.now();
         const fiveMinutes = 5 * 60 * 1000;
-        
+
         // If no last refresh time or it's been more than 5 minutes, refresh
         if (!lastRefresh || (now - parseInt(lastRefresh)) > fiveMinutes) {
           console.log('🔄 Insights are stale, auto-refreshing...');
@@ -155,10 +155,63 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         console.error('Error checking insights freshness:', error);
       }
     };
-    
+
     // Only run on initial mount
     checkAndRefreshInsights();
+
+    // Also fetch schedule optimization data
+    fetchScheduleData();
   }, []); // Empty dependency array = run once on mount
+
+  // Fetch schedule optimization data
+  const fetchScheduleData = async () => {
+    try {
+      const [actionsRes, approvalsRes] = await Promise.all([
+        fetch('http://localhost:8000/api/schedule/actions'),
+        fetch('http://localhost:8000/api/schedule/approvals')
+      ]);
+
+      const actionsData = await actionsRes.json();
+      const approvalsData = await approvalsRes.json();
+
+      if (actionsData.success) {
+        setAiActions(actionsData.actions || []);
+      }
+
+      if (approvalsData.success) {
+        setApprovalItems(approvalsData.approvals || []);
+      }
+    } catch (error) {
+      console.error('Error fetching schedule data:', error);
+    }
+  };
+
+  // Optimize schedule
+  const optimizeSchedule = async () => {
+    setIsOptimizing(true);
+    try {
+      const response = await fetch('http://localhost:8000/api/schedule/optimize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        setAiActions(data.actions || []);
+        setApprovalItems(data.approvals || []);
+        showNotification(`✓ Found ${data.summary.total_approvals} optimization opportunities`, 'success');
+      } else {
+        showNotification('Failed to optimize schedule', 'error');
+      }
+    } catch (error) {
+      console.error('Error optimizing schedule:', error);
+      showNotification('Failed to optimize schedule', 'error');
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
 
   // Analyze insights function
   const analyzeInsights = async () => {
@@ -679,14 +732,55 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     } catch {}
   };
 
-  const handleApproveAction = (itemId: string) => {
+  const handleApproveAction = async (itemId: string) => {
     console.log('Approved action:', itemId);
-    // In real app, this would communicate with the backend
+    try {
+      const response = await fetch('http://localhost:8000/api/schedule/approve', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ approval_id: itemId })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setAiActions(data.actions || []);
+        setApprovalItems(data.approvals || []);
+        showNotification(data.message || '✓ Action approved', 'success');
+      } else {
+        showNotification('Failed to approve action', 'error');
+      }
+    } catch (error) {
+      console.error('Error approving action:', error);
+      showNotification('Failed to approve action', 'error');
+    }
   };
 
-  const handleRejectAction = (itemId: string) => {
+  const handleRejectAction = async (itemId: string) => {
     console.log('Rejected action:', itemId);
-    // In real app, this would communicate with the backend
+    try {
+      const response = await fetch('http://localhost:8000/api/schedule/reject', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ approval_id: itemId })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setApprovalItems(data.approvals || []);
+        showNotification('Action skipped', 'info');
+      } else {
+        showNotification('Failed to reject action', 'error');
+      }
+    } catch (error) {
+      console.error('Error rejecting action:', error);
+      showNotification('Failed to reject action', 'error');
+    }
   };
 
   return (
@@ -894,9 +988,28 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           {/* AI-Generated Schedule Optimization */}
           <div className="px-6 mb-6">
             <div className="bg-[#453f3b] rounded-lg p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Target className="w-5 h-5 text-green-400" />
-                <h2 className="text-lg font-semibold text-white">AI-Generated Schedule Optimization</h2>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-2">
+                  <Target className="w-5 h-5 text-green-400" />
+                  <h2 className="text-lg font-semibold text-white">AI-Generated Schedule Optimization</h2>
+                </div>
+                <button
+                  onClick={optimizeSchedule}
+                  disabled={isOptimizing}
+                  className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors text-sm font-medium"
+                >
+                  {isOptimizing ? (
+                    <>
+                      <Clock className="w-4 h-4 animate-spin" />
+                      <span>Optimizing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-4 h-4" />
+                      <span>Optimize Schedule</span>
+                    </>
+                  )}
+                </button>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -921,50 +1034,71 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 <div>
                   <h3 className="text-gray-300 font-medium mb-3">AI Actions Taken</h3>
                   <div className="space-y-2">
-                    {aiActions.map((action) => (
-                      <div key={action.id} className="flex items-center justify-between text-sm">
-                        <div className="flex items-center space-x-2">
-                          {getActionIcon(action.type)}
-                          <span className="text-gray-300">{action.description}</span>
+                    {aiActions.length > 0 ? (
+                      aiActions.map((action) => (
+                        <div key={action.id} className="flex items-center justify-between text-sm bg-[#1e1e1e] rounded-lg p-3">
+                          <div className="flex items-center space-x-2">
+                            {getActionIcon(action.type)}
+                            <span className="text-gray-300">{action.description}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-blue-400 font-medium">{action.count}</span>
+                            <div className={`w-2 h-2 rounded-full ${
+                              action.status === 'completed' ? 'bg-green-400' :
+                              action.status === 'in-progress' ? 'bg-yellow-400' : 'bg-gray-400'
+                            }`} />
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-blue-400">{action.count}</span>
-                          <div className={`w-2 h-2 rounded-full ${
-                            action.status === 'completed' ? 'bg-green-400' :
-                            action.status === 'in-progress' ? 'bg-yellow-400' : 'bg-gray-400'
-                          }`} />
-                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8">
+                        <Activity className="w-10 h-10 text-gray-600 mx-auto mb-2" />
+                        <p className="text-gray-500 text-sm">No actions yet</p>
+                        <p className="text-gray-600 text-xs mt-1">Click "Optimize Schedule" above</p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
 
                 {/* Your Approval Needed */}
                 <div>
-                  <h3 className="text-gray-300 font-medium mb-3">Your Approval Needed</h3>
+                  <h3 className="text-gray-300 font-medium mb-3">
+                    Your Approval Needed
+                    {approvalItems.length > 0 && (
+                      <span className="ml-2 bg-yellow-600 text-white text-xs px-2 py-0.5 rounded-full">{approvalItems.length}</span>
+                    )}
+                  </h3>
                   <div className="space-y-3">
-                    {approvalItems.map((item) => (
-                      <div key={item.id} className="bg-[#1e1e1e] rounded-lg p-3">
-                        <h4 className="text-white text-sm font-medium mb-1">{item.title}</h4>
-                        <p className="text-gray-400 text-xs mb-2">{item.description}</p>
-                        <p className="text-green-400 text-xs mb-3">{item.impact}</p>
-                        <div className="flex items-center space-x-2">
-                          <button 
-                            onClick={() => handleApproveAction(item.id)}
-                            className="flex items-center space-x-1 px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-colors"
-                          >
-                            <CheckCircle className="w-3 h-3" />
-                            <span>Approve</span>
-                          </button>
-                          <button 
-                            onClick={() => handleRejectAction(item.id)}
-                            className="px-2 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded transition-colors"
-                          >
-                            Skip
-                          </button>
+                    {approvalItems.length > 0 ? (
+                      approvalItems.map((item) => (
+                        <div key={item.id} className="bg-[#1e1e1e] rounded-lg p-3 border border-yellow-600/20">
+                          <h4 className="text-white text-sm font-medium mb-1">{item.title}</h4>
+                          <p className="text-gray-400 text-xs mb-2">{item.description}</p>
+                          <p className="text-green-400 text-xs mb-3">{item.impact}</p>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => handleApproveAction(item.id)}
+                              className="flex items-center space-x-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-colors font-medium"
+                            >
+                              <CheckCircle className="w-3 h-3" />
+                              <span>Approve</span>
+                            </button>
+                            <button
+                              onClick={() => handleRejectAction(item.id)}
+                              className="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded transition-colors font-medium"
+                            >
+                              Skip
+                            </button>
+                          </div>
                         </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8">
+                        <CheckCircle className="w-10 h-10 text-gray-600 mx-auto mb-2" />
+                        <p className="text-gray-500 text-sm">No approvals needed</p>
+                        <p className="text-gray-600 text-xs mt-1">You're all caught up!</p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               </div>
