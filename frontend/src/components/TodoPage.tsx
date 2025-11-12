@@ -21,14 +21,14 @@ const TodoPage: React.FC<TodoPageProps> = ({ onNavigate }) => {
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [showAddForm, setShowAddForm] = useState(false);
   const [showProjectForm, setShowProjectForm] = useState(false);
-  const [newTodo, setNewTodo] = useState<{ title: string; description: string; priority: 'low' | 'medium' | 'high'; category: string; dueDate: string; isProject: boolean }>({ title: '', description: '', priority: 'medium', category: 'personal', dueDate: '', isProject: false });
+  const [newTodo, setNewTodo] = useState<{ title: string; description: string; priority: 'low' | 'medium' | 'high'; category: string; dueDate: string; dueTime: string; isProject: boolean }>({ title: '', description: '', priority: 'medium', category: 'personal', dueDate: '', dueTime: '', isProject: false });
   const [editingTodo, setEditingTodo] = useState<string | null>(null);
-  const [editTodo, setEditTodo] = useState<{ title: string; description: string; priority: 'low' | 'medium' | 'high'; category: string; dueDate: string }>({ title: '', description: '', priority: 'medium', category: 'personal', dueDate: '' });
+  const [editTodo, setEditTodo] = useState<{ title: string; description: string; priority: 'low' | 'medium' | 'high'; category: string; dueDate: string; dueTime: string }>({ title: '', description: '', priority: 'medium', category: 'personal', dueDate: '', dueTime: '' });
   const [selectedTodoDetails, setSelectedTodoDetails] = useState<TodoItem | null>(null);
   const [completedTimeFilter, setCompletedTimeFilter] = useState<string>('all');
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [addingSubtaskTo, setAddingSubtaskTo] = useState<string | null>(null);
-  const [newSubtask, setNewSubtask] = useState({ title: '', description: '', priority: 'medium' as const, category: 'personal', dueDate: '' });
+  const [newSubtask, setNewSubtask] = useState({ title: '', description: '', priority: 'medium' as const, category: 'personal', dueDate: '', dueTime: '' });
   const [sortBy, setSortBy] = useState<'date' | 'priority'>('date');
   const [customStat, setCustomStat] = useState<string>('high');
   const [showStatDropdown, setShowStatDropdown] = useState(false);
@@ -266,14 +266,20 @@ const TodoPage: React.FC<TodoPageProps> = ({ onNavigate }) => {
 
   const handleAddTodo = () => {
     if (!newTodo.title.trim()) return;
-    
+
+    // Combine date and time if both are provided
+    let combinedDueDate = newTodo.dueDate;
+    if (newTodo.dueDate && newTodo.dueTime) {
+      combinedDueDate = `${newTodo.dueDate}T${newTodo.dueTime}`;
+    }
+
     const todo = {
       title: newTodo.title,
       description: newTodo.description,
       completed: false,
       priority: newTodo.priority,
       category: newTodo.category,
-      dueDate: newTodo.dueDate,
+      dueDate: combinedDueDate,
       createdAt: 'Just now',
       starred: false,
       isProject: newTodo.isProject,
@@ -281,7 +287,7 @@ const TodoPage: React.FC<TodoPageProps> = ({ onNavigate }) => {
     };
     
     addTodo(todo);
-    setNewTodo({ title: '', description: '', priority: 'medium', category: 'personal', dueDate: '', isProject: false });
+    setNewTodo({ title: '', description: '', priority: 'medium', category: 'personal', dueDate: '', dueTime: '', isProject: false });
     setShowAddForm(false);
     setShowProjectForm(false);
   };
@@ -299,22 +305,28 @@ const TodoPage: React.FC<TodoPageProps> = ({ onNavigate }) => {
 
   const handleSaveEdit = () => {
     if (!editTodo.title.trim() || !editingTodo) return;
-    
+
+    // Combine date and time if both are provided
+    let combinedDueDate = editTodo.dueDate;
+    if (editTodo.dueDate && editTodo.dueTime) {
+      combinedDueDate = `${editTodo.dueDate}T${editTodo.dueTime}`;
+    }
+
     updateTodo(editingTodo, {
       title: editTodo.title,
       description: editTodo.description,
       priority: editTodo.priority,
       category: editTodo.category,
-      dueDate: editTodo.dueDate
+      dueDate: combinedDueDate
     });
     
     setEditingTodo(null);
-    setEditTodo({ title: '', description: '', priority: 'medium', category: 'personal', dueDate: '' });
+    setEditTodo({ title: '', description: '', priority: 'medium', category: 'personal', dueDate: '', dueTime: '' });
   };
 
   const handleCancelEdit = () => {
     setEditingTodo(null);
-    setEditTodo({ title: '', description: '', priority: 'medium', category: 'personal', dueDate: '' });
+    setEditTodo({ title: '', description: '', priority: 'medium', category: 'personal', dueDate: '', dueTime: '' });
   };
 
   const toggleProjectExpansion = (projectId: string) => {
@@ -331,20 +343,26 @@ const TodoPage: React.FC<TodoPageProps> = ({ onNavigate }) => {
 
   const handleAddSubtask = (projectId: string) => {
     if (!newSubtask.title.trim()) return;
-    
+
+    // Combine date and time if both are provided
+    let combinedDueDate = newSubtask.dueDate;
+    if (newSubtask.dueDate && newSubtask.dueTime) {
+      combinedDueDate = `${newSubtask.dueDate}T${newSubtask.dueTime}`;
+    }
+
     const subtask = {
       title: newSubtask.title,
       description: newSubtask.description,
       completed: false,
       priority: newSubtask.priority,
       category: newSubtask.category,
-      dueDate: newSubtask.dueDate,
+      dueDate: combinedDueDate,
       createdAt: 'Just now',
       starred: false
     };
-    
+
     addSubtask(projectId, subtask);
-    setNewSubtask({ title: '', description: '', priority: 'medium', category: 'personal', dueDate: '' });
+    setNewSubtask({ title: '', description: '', priority: 'medium', category: 'personal', dueDate: '', dueTime: '' });
     setAddingSubtaskTo(null);
   };
 
@@ -845,15 +863,26 @@ const TodoPage: React.FC<TodoPageProps> = ({ onNavigate }) => {
                     </select>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="w-4 h-4 text-gray-400" />
-                    <input
-                      type="date"
-                      value={newTodo.dueDate}
-                      onChange={(e) => setNewTodo(prev => ({ ...prev, dueDate: e.target.value }))}
-                      className="p-2 bg-[#453f3b] border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <span className="text-xs text-gray-400">Due date (optional)</span>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="w-4 h-4 text-gray-400" />
+                      <span className="text-xs text-gray-400">Due date & time (optional)</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="date"
+                        value={newTodo.dueDate}
+                        onChange={(e) => setNewTodo(prev => ({ ...prev, dueDate: e.target.value }))}
+                        className="flex-1 p-2 bg-[#453f3b] border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <input
+                        type="time"
+                        value={newTodo.dueTime}
+                        onChange={(e) => setNewTodo(prev => ({ ...prev, dueTime: e.target.value }))}
+                        className="flex-1 p-2 bg-[#453f3b] border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="HH:MM"
+                      />
+                    </div>
                   </div>
                   
                   <div className="flex items-center space-x-3">
@@ -935,6 +964,13 @@ const TodoPage: React.FC<TodoPageProps> = ({ onNavigate }) => {
                               value={editTodo.dueDate}
                               onChange={(e) => setEditTodo(prev => ({ ...prev, dueDate: e.target.value }))}
                               className="p-1 bg-[#1e1e1e] border border-gray-600 rounded text-white text-xs focus:outline-none"
+                            />
+                            <input
+                              type="time"
+                              value={editTodo.dueTime}
+                              onChange={(e) => setEditTodo(prev => ({ ...prev, dueTime: e.target.value }))}
+                              className="p-1 bg-[#1e1e1e] border border-gray-600 rounded text-white text-xs focus:outline-none"
+                              placeholder="HH:MM"
                             />
                           </div>
                           <div className="flex items-center space-x-2">
@@ -1134,6 +1170,13 @@ const TodoPage: React.FC<TodoPageProps> = ({ onNavigate }) => {
                                       onChange={(e) => setEditTodo(prev => ({ ...prev, dueDate: e.target.value }))}
                                       className="p-1 bg-[#1e1e1e] border border-gray-600 rounded text-white text-xs focus:outline-none"
                                     />
+                                    <input
+                                      type="time"
+                                      value={editTodo.dueTime}
+                                      onChange={(e) => setEditTodo(prev => ({ ...prev, dueTime: e.target.value }))}
+                                      className="p-1 bg-[#1e1e1e] border border-gray-600 rounded text-white text-xs focus:outline-none"
+                                      placeholder="HH:MM"
+                                    />
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <button
@@ -1239,6 +1282,13 @@ const TodoPage: React.FC<TodoPageProps> = ({ onNavigate }) => {
                                   value={newSubtask.dueDate}
                                   onChange={(e) => setNewSubtask(prev => ({ ...prev, dueDate: e.target.value }))}
                                   className="p-1 bg-[#1e1e1e] border border-gray-600 rounded text-white text-xs focus:outline-none"
+                                />
+                                <input
+                                  type="time"
+                                  value={newSubtask.dueTime}
+                                  onChange={(e) => setNewSubtask(prev => ({ ...prev, dueTime: e.target.value }))}
+                                  className="p-1 bg-[#1e1e1e] border border-gray-600 rounded text-white text-xs focus:outline-none"
+                                  placeholder="HH:MM"
                                 />
                               </div>
                               <div className="flex items-center space-x-2">
