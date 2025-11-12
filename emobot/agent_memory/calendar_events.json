@@ -42,5 +42,16 @@
     "attendees": [],
     "created_at": "2025-10-29T18:58:04.431285",
     "status": "confirmed"
+  },
+  {
+    "id": "event_5",
+    "title": "Dinner with family",
+    "start_time": "2025-11-11T18:30:00",
+    "end_time": "2025-11-11T19:30:00",
+    "location": "",
+    "description": "",
+    "attendees": [],
+    "created_at": "2025-11-11T17:51:04.024803",
+    "status": "confirmed"
   }
 ]

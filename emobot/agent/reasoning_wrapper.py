@@ -40,20 +40,35 @@ class ReasoningWrapper:
         self.current_steps = []
         
         try:
-            # Add initial step
-            self._add_step("input", "Processing user query", {"query": query})
+            # Capture the agent's actual reasoning by intercepting the run method
+            import sys
+            import io
+            from contextlib import redirect_stdout, redirect_stderr
+            
+            # Capture stdout to parse reasoning steps
+            captured_output = io.StringIO()
             
             # Check for pending confirmation
             if self.reasoning_module.has_pending_confirmation():
-                self._add_step("confirmation", "Handling confirmation response")
+                self._add_step("confirmation", "Handling confirmation response", {"query": query})
                 response = self.reasoning_module.handle_confirmation_response(query)
             else:
                 # Process normal query
-                self._add_step("reasoning", "Analyzing query and planning actions")
                 response = self.reasoning_module.process_query(query)
+                
+                # Get reasoning steps from the module
+                if hasattr(self.reasoning_module, 'last_reasoning_steps') and self.reasoning_module.last_reasoning_steps:
+                    self.current_steps = self.reasoning_module.last_reasoning_steps
+                    self.logger.info(f"Retrieved {len(self.current_steps)} reasoning steps from module")
+                else:
+                    self.logger.warning("No reasoning steps found in module")
             
-            # Add final step
-            self._add_step("output", "Generated response", {"response": response})
+            # If no steps were captured, add generic ones
+            if len(self.current_steps) == 0:
+                self.logger.warning("Falling back to generic steps")
+                self._add_step("input", "Processing user query", {"query": query})
+                self._add_step("reasoning", "Analyzing query and planning actions")
+                self._add_step("output", "Generated response", {"response": response})
             
             return {
                 'success': True,
@@ -73,6 +88,92 @@ class ReasoningWrapper:
                 'reasoning_steps': self.current_steps,
                 'timestamp': datetime.now().isoformat()
             }
+    
+    def _parse_agent_output(self, output: str, query: str, response: str):
+        """
+        Parse agent output to extract reasoning steps
+        
+        Args:
+            output: Captured stdout from agent
+            query: Original user query
+            response: Final response
+        """
+        if not output or len(output) < 10:
+            self.logger.warning("No output captured from agent")
+            return
+            
+        lines = output.split('\n')
+        step_num = 1
+        current_block = []
+        current_type = None
+        
+        for line in lines:
+            line_stripped = line.strip()
+            if not line_stripped:
+                continue
+            
+            # Detect step type markers
+            if '**Thought**:' in line_stripped or 'Thought:' in line_stripped or line_stripped.startswith('Thinking'):
+                if current_block and current_type:
+                    self._add_step_simple(step_num, current_type, current_type.title(), ' '.join(current_block))
+                    step_num += 1
+                current_type = "thought"
+                current_block = [line_stripped.split(':', 1)[1].strip() if ':' in line_stripped else line_stripped]
+                
+            elif '**Action**:' in line_stripped or 'Action:' in line_stripped:
+                if current_block and current_type:
+                    self._add_step_simple(step_num, current_type, current_type.title(), ' '.join(current_block))
+                    step_num += 1
+                current_type = "tool_call"
+                current_block = [line_stripped.split(':', 1)[1].strip() if ':' in line_stripped else line_stripped]
+                
+            elif '**Observation**:' in line_stripped or 'Observation:' in line_stripped:
+                if current_block and current_type:
+                    self._add_step_simple(step_num, current_type, current_type.title(), ' '.join(current_block))
+                    step_num += 1
+                current_type = "observation"
+                current_block = [line_stripped.split(':', 1)[1].strip() if ':' in line_stripped else line_stripped]
+                
+            elif 'Final Answer:' in line_stripped:
+                if current_block and current_type:
+                    self._add_step_simple(step_num, current_type, current_type.title(), ' '.join(current_block))
+                    step_num += 1
+                answer = line_stripped.split(':', 1)[1].strip() if ':' in line_stripped else response
+                self._add_step_simple(step_num, "final_answer", "Final Answer", answer)
+                step_num += 1
+                current_block = []
+                current_type = None
+            else:
+                # Continue building current block
+                if current_type:
+                    current_block.append(line_stripped)
+        
+        # Add any remaining block
+        if current_block and current_type:
+            self._add_step_simple(step_num, current_type, current_type.title(), ' '.join(current_block))
+        
+        self.logger.info(f"Parsed {len(self.current_steps)} reasoning steps from output")
+    
+    def _add_step_simple(self, step_num: int, step_type: str, action: str, reasoning: str):
+        """
+        Add a simple reasoning step
+        
+        Args:
+            step_num: Step number
+            step_type: Type of step
+            action: Action description
+            reasoning: Reasoning text
+        """
+        step = {
+            'step': step_num,
+            'type': step_type,
+            'action': action,
+            'reasoning': reasoning,
+            'confidence': 0.8,
+            'timestamp': datetime.now().isoformat()
+        }
+        self.current_steps.append(step)
+        self.logger.debug(f"Added reasoning step: {step}")
     
     def _add_step(self, step_type: str, message: str, data: Optional[Dict] = None):
         """

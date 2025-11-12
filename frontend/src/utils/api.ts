@@ -64,11 +64,18 @@ export const reasoningApi = {
     const data = response.data;
     const text = data.response;
 
+    // Extract reasoning steps from backend response
+    const backendSteps = data.reasoning_steps || [];
+    
     return {
       interaction_id: Date.now(),
-      reasoning_steps: [
+      reasoning_steps: backendSteps.length > 0 ? backendSteps.map((step: any) => ({
+        ...step,
+        type: step.type || 'action'
+      })) : [
         {
           step: 1,
+          type: 'action',
           action: 'Agent Response',
           reasoning: text,
           confidence: data.success ? 0.9 : 0.4,
@@ -164,7 +171,7 @@ export const todoApi = {
     return response.data;
   },
 
-  async addTodo(todo: { title: string; description?: string; priority?: string }) {
+  async addTodo(todo: { title: string; description?: string; priority?: string; category?: string; due_date?: string; tags?: string[] }) {
     const response = await api.post('/api/todo/add', todo);
     return response.data;
   },

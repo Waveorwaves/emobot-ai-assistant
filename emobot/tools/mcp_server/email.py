@@ -197,31 +197,61 @@ class EmailTool(MCPToolBase):
             self.contacts_service = self.auth_manager.get_contacts_service()
         return self.contacts_service is not None
 
-    def _read_inbox(self, max_results: int = 10, **kwargs) -> Dict[str, Any]:
+    def _read_inbox(self, max_results: int = 10, unread_only: bool = False, **kwargs) -> Dict[str, Any]:
         """读取收件箱中的邮件"""
         try:
             # 确保服务可用
             if not self._ensure_service():
                 return {"status": "error", "error_message": "Gmail服务不可用"}
             
+            # Build label list based on unread_only parameter
+            label_ids = ['INBOX']
+            if unread_only:
+                label_ids.append('UNREAD')
+                print(f"📧 Fetching {max_results} UNREAD emails from Gmail API...")
+            else:
+                print(f"📧 Fetching {max_results} emails from Gmail API...")
+            
             # 获取收件箱中的邮件
             results = self.service.users().messages().list(
                 userId='me', 
-                labelIds=['INBOX'],
+                labelIds=label_ids,
                 maxResults=max_results
             ).execute()
 
             messages = results.get('messages', [])
+            print(f"📊 Gmail API returned {len(messages)} message IDs")
+            
             if not messages:
-                return {"status": "success", "result": "收件箱中没有邮件"}
+                return {"status": "success", "result": "收件箱中没有邮件", "emails": []}
 
             # 获取邮件详情
             email_list = []
-            for msg in messages:
+            skipped_count = 0
+            for i, msg in enumerate(messages):
+                print(f"  Fetching details for email {i+1}/{len(messages)}: {msg['id']}")
                 email_data = self._get_message_details(msg['id'])
                 if email_data:
+                    # If unread_only is True, double-check that email is actually unread
+                    if unread_only:
+                        labels = email_data.get('labels', [])
+                        is_read = email_data.get('is_read', True)
+                        has_unread_label = 'UNREAD' in labels
+                        
+                        print(f"    Labels: {labels}")
+                        print(f"    is_read: {is_read}, has_unread_label: {has_unread_label}")
+                        
+                        if is_read:
+                            print(f"    ⚠️  Skipping email {msg['id']} - marked as read despite UNREAD label")
+                            skipped_count += 1
+                            continue
                     email_list.append(email_data)
 
+            print(f"✅ Successfully fetched {len(email_list)} emails with details")
+            if unread_only:
+                print(f"   📊 Gmail API returned {len(messages)} emails with UNREAD label")
+                print(f"   📊 Skipped {skipped_count} emails that were actually read")
+                print(f"   📊 Final count: {len(email_list)} truly unread emails")
             return {
                 "status": "success", 
                 "emails": email_list,
@@ -349,7 +379,8 @@ class EmailTool(MCPToolBase):
                 'date': self._get_header_value(headers, 'Date'),
                 'snippet': message.get('snippet', ''),
                 'labels': message.get('labelIds', []),
-                'is_read': 'UNREAD' not in message.get('labelIds', [])
+                'is_read': 'UNREAD' not in message.get('labelIds', []),
+                'internal_date': message.get('internalDate', '0')  # Gmail's internal timestamp in milliseconds
             }
 
             # 获取邮件内容
@@ -381,12 +412,8 @@ class EmailTool(MCPToolBase):
             # 如果没有纯文本，尝试获取HTML内容
             html_content = self._extract_html_content(payload)
             if html_content:
-                # 简单的HTML到文本转换
-                import re
-                # 移除HTML标签
-                text_content = re.sub(r'<[^>]+>', '', html_content)
-                # 移除多余的空白字符
-                text_content = re.sub(r'\s+', ' ', text_content).strip()
+                # 使用更好的HTML到文本转换
+                text_content = self._html_to_text(html_content)
                 return text_content
             
             return ''
@@ -437,6 +464,48 @@ class EmailTool(MCPToolBase):
         except Exception as e:
             print(f"提取HTML内容失败: {e}")
             return ''
+    
+    def _html_to_text(self, html_content: str) -> str:
+        """Convert HTML to plain text with better formatting"""
+        import re
+        from html import unescape
+        
+        try:
+            # Remove style and script tags and their content
+            html_content = re.sub(r'<style[^>]*>.*?</style>', '', html_content, flags=re.DOTALL | re.IGNORECASE)
+            html_content = re.sub(r'<script[^>]*>.*?</script>', '', html_content, flags=re.DOTALL | re.IGNORECASE)
+            
+            # Convert common block elements to newlines
+            html_content = re.sub(r'<br\s*/?>', '\n', html_content, flags=re.IGNORECASE)
+            html_content = re.sub(r'</p>', '\n\n', html_content, flags=re.IGNORECASE)
+            html_content = re.sub(r'</div>', '\n', html_content, flags=re.IGNORECASE)
+            html_content = re.sub(r'</h[1-6]>', '\n\n', html_content, flags=re.IGNORECASE)
+            html_content = re.sub(r'</li>', '\n', html_content, flags=re.IGNORECASE)
+            html_content = re.sub(r'</tr>', '\n', html_content, flags=re.IGNORECASE)
+            
+            # Remove all remaining HTML tags
+            html_content = re.sub(r'<[^>]+>', '', html_content)
+            
+            # Unescape HTML entities
+            html_content = unescape(html_content)
+            
+            # Clean up whitespace
+            # Replace multiple spaces with single space
+            html_content = re.sub(r' +', ' ', html_content)
+            # Replace multiple newlines with max 2 newlines
+            html_content = re.sub(r'\n\s*\n\s*\n+', '\n\n', html_content)
+            # Remove leading/trailing whitespace from each line
+            lines = [line.strip() for line in html_content.split('\n')]
+            html_content = '\n'.join(line for line in lines if line)
+            
+            return html_content.strip()
+            
+        except Exception as e:
+            print(f"HTML to text conversion failed: {e}")
+            # Fallback to simple tag removal
+            text = re.sub(r'<[^>]+>', '', html_content)
+            text = re.sub(r'\s+', ' ', text).strip()
+            return text
 
     def _create_message(self, to: str, subject: str, body: str) -> Dict:
         """创建邮件消息"""

@@ -29,41 +29,8 @@ const MemoryPage: React.FC<MemoryPageProps> = ({ onNavigate }) => {
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState('');
 
-  // Sample memory data
-  const [memoryItems, setMemoryItems] = useState<MemoryItem[]>([
-    {
-      id: '1',
-      type: 'preference',
-      title: 'Communication Style',
-      content: 'Prefers direct, concise responses. Likes technical details but not lengthy explanations.',
-      createdAt: new Date('2024-01-15'),
-      lastUpdated: new Date('2024-01-20')
-    },
-    {
-      id: '2',
-      type: 'fact',
-      title: 'Professional Background',
-      content: 'Software engineer working on full-stack development. Experienced with React, TypeScript, and Node.js.',
-      createdAt: new Date('2024-01-10'),
-      lastUpdated: new Date('2024-01-15')
-    },
-    {
-      id: '3',
-      type: 'context',
-      title: 'Current Project',
-      content: 'Building an AI assistant frontend with calendar, email, and todo integrations. Working on dashboard redesign.',
-      createdAt: new Date('2024-01-25'),
-      lastUpdated: new Date('2024-01-25')
-    },
-    {
-      id: '4',
-      type: 'preference',
-      title: 'Work Schedule',
-      content: 'Usually works between 9 AM - 6 PM PST. Prefers morning meetings and focused afternoon work.',
-      createdAt: new Date('2024-01-12'),
-      lastUpdated: new Date('2024-01-18')
-    }
-  ]);
+  // Memory data - starts empty, will be populated from backend
+  const [memoryItems, setMemoryItems] = useState<MemoryItem[]>([]);
 
   const handleSidebarNavigation = (itemId: string) => {
     setActiveTab(itemId);

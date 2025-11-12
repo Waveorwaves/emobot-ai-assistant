@@ -54,75 +54,52 @@ const SystemLogPage: React.FC<SystemLogPageProps> = ({
   const [activeTab, setActiveTab] = useState<string>('systemlog');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Network and API connection states
+  // Network and API connection states - will be populated from backend
   const [networkMetrics, setNetworkMetrics] = useState<NetworkMetrics>({
-    downloadSpeed: 125.4,
-    uploadSpeed: 45.2,
-    ping: 12,
+    downloadSpeed: 0,
+    uploadSpeed: 0,
+    ping: 0,
     trend: 'stable'
   });
 
-  // Dashboard data for missions and stats
+  // Dashboard data for missions and stats - will be populated from backend
   const [dashboardData, setDashboardData] = useState<DashboardState>({
     status: {
       state: 'online',
       lastSeen: new Date(),
-      responseTime: 450,
+      responseTime: 0,
       version: '2.1.0',
-      uptime: 86400
+      uptime: 0
     },
     metrics: {
       runtime: {
-        uptime: 86400,
-        lastRestart: new Date(Date.now() - 86400000),
-        uptimePercentage: 99.8
+        uptime: 0,
+        lastRestart: new Date(),
+        uptimePercentage: 0
       },
       interactions: {
-        totalInteractions: 1247,
-        avgResponseTime: 450,
-        dailyInteractions: 43
+        totalInteractions: 0,
+        avgResponseTime: 0,
+        dailyInteractions: 0
       },
       accuracy: {
-        accuracy: 94.2,
-        userSatisfaction: 96.8,
-        errorRate: 2.1
+        accuracy: 0,
+        userSatisfaction: 0,
+        errorRate: 0
       }
     },
-    missions: [
-      {
-        id: '1',
-        title: 'Monitoring API connections',
-        status: 'in_progress',
-        progress: 85,
-        startTime: new Date(Date.now() - 1800000),
-        estimatedCompletion: new Date(Date.now() + 600000)
-      },
-      {
-        id: '2',
-        title: 'Network speed analysis',
-        status: 'completed',
-        progress: 100,
-        startTime: new Date(Date.now() - 3600000),
-      },
-      {
-        id: '3',
-        title: 'System health check',
-        status: 'pending',
-        progress: 0,
-        startTime: new Date(),
-      }
-    ],
+    missions: [],
     weeklyStats: {
-      onTimePercentage: 96.5,
-      totalTasks: 168,
-      completedTasks: 162,
-      averageResponseTime: 190,
-      trend: 'up'
+      onTimePercentage: 0,
+      totalTasks: 0,
+      completedTasks: 0,
+      averageResponseTime: 0,
+      trend: 'stable'
     },
     weeklyComparison: {
-      onTimeChange: 4.5,
-      taskChange: 15,
-      responseTimeChange: -25
+      onTimeChange: 0,
+      taskChange: 0,
+      responseTimeChange: 0
     },
     chatMessages: initialMessages,
     isLoading: false,
@@ -132,26 +109,26 @@ const SystemLogPage: React.FC<SystemLogPageProps> = ({
   const [apiConnections, setApiConnections] = useState<ConnectionStatus[]>([
     {
       name: 'Gemini API',
-      status: 'connected',
-      responseTime: 234,
+      status: 'disconnected',
+      responseTime: 0,
       lastCheck: new Date(),
-      uptime: 99.9,
+      uptime: 0,
       icon: Brain
     },
     {
       name: 'Email Service',
-      status: 'connected',
-      responseTime: 156,
+      status: 'disconnected',
+      responseTime: 0,
       lastCheck: new Date(),
-      uptime: 98.5,
+      uptime: 0,
       icon: Mail
     },
     {
       name: 'Calendar API',
-      status: 'connected',
-      responseTime: 189,
+      status: 'disconnected',
+      responseTime: 0,
       lastCheck: new Date(),
-      uptime: 99.2,
+      uptime: 0,
       icon: Calendar
     }
   ]);
@@ -184,26 +161,13 @@ const SystemLogPage: React.FC<SystemLogPageProps> = ({
     }, 1000);
   };
 
-  // Simulate real-time updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Randomly update metrics for demo
-      setNetworkMetrics(prev => ({
-        downloadSpeed: prev.downloadSpeed + (Math.random() - 0.5) * 10,
-        uploadSpeed: prev.uploadSpeed + (Math.random() - 0.5) * 5,
-        ping: Math.max(5, prev.ping + (Math.random() - 0.5) * 5),
-        trend: Math.random() > 0.5 ? 'up' : 'stable'
-      }));
-
-      setApiConnections(prev => prev.map(conn => ({
-        ...conn,
-        responseTime: Math.max(100, conn.responseTime + (Math.random() - 0.5) * 50),
-        lastCheck: new Date()
-      })));
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
+  // Real-time updates would be fetched from backend
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     // Fetch real metrics from backend
+  //   }, 5000);
+  //   return () => clearInterval(interval);
+  // }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {

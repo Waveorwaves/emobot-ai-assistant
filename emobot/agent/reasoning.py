@@ -39,6 +39,9 @@ class ReasoningModule:
         self.memory = MemoryManager()
         self.action_executor = ActionExecutor(server_url)
         
+        # Store reasoning steps for web interface
+        self.last_reasoning_steps = []
+        
         # Load system prompt
         self.system_prompt = self._load_system_prompt(system_prompt_path)
         
@@ -267,6 +270,9 @@ class ReasoningModule:
         Returns:
             Final response
         """
+        # Clear previous reasoning steps
+        self.last_reasoning_steps = []
+        
         tool_results = []
         current_thought = ""
         step = 1
@@ -293,6 +299,15 @@ class ReasoningModule:
                 
                 current_thought = str(thought_response)
                 logging.debug(f"Thought: {current_thought[:200]}...")
+                
+                # Store reasoning step
+                self.last_reasoning_steps.append({
+                    'step': step,
+                    'type': 'thought',
+                    'action': f'Thinking (Step {step})',
+                    'reasoning': current_thought[:500],  # Limit length
+                    'confidence': 0.8
+                })
                 
                 # Log any captured output for debugging
                 stdout_content = captured_stdout.getvalue()
@@ -401,11 +416,32 @@ class ReasoningModule:
                     
                     return confirmation_msg
                 
+                # Store tool call step
+                self.last_reasoning_steps.append({
+                    'step': len(self.last_reasoning_steps) + 1,
+                    'type': 'tool_call',
+                    'action': f'Action: {tool_call["tool_name"]}',
+                    'reasoning': f'Calling {tool_call["tool_name"]} with parameters: {json.dumps(tool_call["parameters"], indent=2)[:200]}',
+                    'confidence': 0.9,
+                    'tool_name': tool_call['tool_name'],
+                    'parameters': tool_call['parameters']
+                })
+                
                 # Execute tool (non-sensitive operations)
                 result = self.action_executor.execute_action(
                     tool_call['tool_name'], 
                     tool_call['parameters']
                 )
+                
+                # Store observation step
+                result_preview = str(result)[:300] if result else "No result"
+                self.last_reasoning_steps.append({
+                    'step': len(self.last_reasoning_steps) + 1,
+                    'type': 'observation',
+                    'action': f'Observation from {tool_call["tool_name"]}',
+                    'reasoning': result_preview,
+                    'confidence': 0.95
+                })
                 
                 # Track this execution
                 tool_signature = f"{tool_call['tool_name']}:{tool_call['parameters'].get('operation', '')}:{tool_call['parameters'].get('recipient', '')}"

@@ -233,8 +233,10 @@ const EmailPage: React.FC<EmailPageProps> = ({ onNavigate }) => {
           return a.subject.localeCompare(b.subject);
         case 'date':
         default:
-          // Simple date sorting by ID (newer first)
-          return parseInt(b.id) - parseInt(a.id);
+          // Sort by Gmail's internal timestamp - newer emails first
+          const aDate = parseInt(a.internalDate || '0');
+          const bDate = parseInt(b.internalDate || '0');
+          return bDate - aDate;  // Descending order (newest first)
       }
     });
 
@@ -358,13 +360,86 @@ const EmailPage: React.FC<EmailPageProps> = ({ onNavigate }) => {
   };
 
   const refreshEmails = async () => {
+    console.log('🔄 Refreshing emails...');
+    console.log('📊 Current email count:', emails.length);
     try {
       const response = await emailApi.listEmails();
+      console.log('📧 Refresh response:', response);
+      console.log('📊 New email count from API:', response.emails?.length || 0);
       if (response.success && response.emails) {
-        setEmails(response.emails);
+        // Transform backend email format to frontend format (same as DataContext)
+        const transformedEmails = response.emails.map((email: any) => {
+          // Parse sender from "Name <email@example.com>" format
+          const fromField = email.from || email.sender || '';
+          let senderName = fromField;
+          let senderEmail = '';
+          
+          // Extract name and email from "Name <email>" format
+          const emailMatch = fromField.match(/^(.+?)\s*<(.+?)>$/);
+          if (emailMatch) {
+            senderName = emailMatch[1].trim();
+            senderEmail = emailMatch[2].trim();
+          } else if (fromField.includes('@')) {
+            senderEmail = fromField;
+            senderName = fromField.split('@')[0];
+          }
+          
+          // Parse date to readable format
+          let timestamp = email.timestamp || email.date || '';
+          if (email.date && !email.timestamp) {
+            // Convert Gmail date format to relative time
+            try {
+              const emailDate = new Date(email.date);
+              const now = new Date();
+              const diffMs = now.getTime() - emailDate.getTime();
+              const diffMins = Math.floor(diffMs / 60000);
+              const diffHours = Math.floor(diffMs / 3600000);
+              const diffDays = Math.floor(diffMs / 86400000);
+              
+              if (diffMins < 60) {
+                timestamp = `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
+              } else if (diffHours < 24) {
+                timestamp = `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+              } else if (diffDays < 7) {
+                timestamp = `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+              } else {
+                timestamp = emailDate.toLocaleDateString();
+              }
+            } catch (e) {
+              timestamp = email.date;
+            }
+          }
+          
+          return {
+            id: email.id || Date.now().toString(),
+            sender: senderName || 'Unknown Sender',
+            senderEmail: senderEmail || '',
+            subject: email.subject || '(No Subject)',
+            preview: email.snippet || email.preview || '',
+            content: email.body || email.content || '',
+            timestamp: timestamp,
+            read: email.is_read !== undefined ? email.is_read : (email.read === true),
+            starred: email.starred || false,
+            important: email.important || false,
+            folder: email.folder || 'inbox',
+            tags: email.tags || [],
+            internalDate: email.internal_date || email.internalDate || '0'  // Gmail's internal timestamp
+          };
+        });
+        
+        console.log('📊 Transformed email count:', transformedEmails.length);
+        console.log('📧 First email:', transformedEmails[0]);
+        setEmails(transformedEmails);
+        console.log('✅ Emails updated in context');
+        alert(`✅ Emails refreshed successfully! Loaded ${transformedEmails.length} emails.`);
+      } else {
+        const errorMsg = response.error || 'Unknown error';
+        console.error('❌ Email refresh failed:', errorMsg);
+        alert(`Failed to refresh emails: ${errorMsg}\n\nPlease check:\n1. MCP server is running on port 8080\n2. Gmail API is configured\n3. Backend server is running on port 8000\n4. Check browser console for details`);
       }
     } catch (error) {
-      console.error('Error refreshing emails:', error);
+      console.error('❌ Error refreshing emails:', error);
+      alert(`Failed to connect to email service: ${error}\n\nPlease check:\n1. Backend server is running on port 8000\n2. MCP server is running on port 8080\n3. Network connection\n4. Check browser console for details`);
     }
   };
 
@@ -422,6 +497,45 @@ const EmailPage: React.FC<EmailPageProps> = ({ onNavigate }) => {
     setNewTag('');
   };
 
+  // Check for email draft from insights on component mount
+  React.useEffect(() => {
+    try {
+      const draftData = localStorage.getItem('emailDraft');
+      if (draftData) {
+        const draft = JSON.parse(draftData);
+
+        // Check if draft is recent (within last 5 minutes)
+        const now = Date.now();
+        const draftAge = now - draft.timestamp;
+        const fiveMinutes = 5 * 60 * 1000;
+
+        if (draftAge < fiveMinutes) {
+          console.log('📧 Found email draft from insights:', draft);
+
+          // Pre-fill compose form
+          setComposeForm({
+            to: draft.to || '',
+            subject: draft.subject || '',
+            content: draft.content || '',
+            attachments: []
+          });
+
+          // Open compose modal
+          setShowCompose(true);
+
+          // Clear the draft from localStorage
+          localStorage.removeItem('emailDraft');
+        } else {
+          // Draft is too old, remove it
+          console.log('📧 Email draft expired, removing...');
+          localStorage.removeItem('emailDraft');
+        }
+      }
+    } catch (error) {
+      console.error('Error loading email draft:', error);
+    }
+  }, []); // Run once on mount
+
   return (
     <div className="h-screen bg-[#0a0a0a] text-white">
       <Sidebar
@@ -476,9 +590,9 @@ const EmailPage: React.FC<EmailPageProps> = ({ onNavigate }) => {
           </div>
         </div>
 
-        <div className="flex-1 flex">
+        <div className="flex-1 flex overflow-hidden">
           {/* Left Sidebar - Email Folders */}
-          <div className="w-64 bg-[#0a0a0a] border-r border-gray-800">
+          <div className="w-64 flex-shrink-0 bg-[#0a0a0a] border-r border-gray-800 overflow-y-auto">
             {/* Compose Button */}
             <div className="p-4">
               <button 
@@ -548,7 +662,7 @@ const EmailPage: React.FC<EmailPageProps> = ({ onNavigate }) => {
           </div>
 
           {/* Middle - Email List */}
-          <div className="w-96 bg-[#0a0a0a] border-r border-gray-800 flex flex-col">
+          <div className="w-96 flex-shrink-0 bg-[#0a0a0a] border-r border-gray-800 flex flex-col">
             {/* Email List Header */}
             <div className="h-12 border-b border-gray-800 flex items-center justify-between px-4">
               <div className="flex items-center space-x-2">
@@ -731,8 +845,8 @@ const EmailPage: React.FC<EmailPageProps> = ({ onNavigate }) => {
                       </div>
                     </div>
                     
-                    {/* Action Buttons */}
-                    <div className="flex items-center space-x-1 ml-4">
+                    {/* Action Buttons - Consistent for all emails */}
+                    <div className="flex items-center space-x-1 ml-4 flex-shrink-0">
                       <button
                         onClick={() => handleEmailAction('star', selectedEmail.id)}
                         className={`p-2 rounded-lg transition-colors ${
@@ -762,42 +876,19 @@ const EmailPage: React.FC<EmailPageProps> = ({ onNavigate }) => {
                       >
                         <Tag className="w-4 h-4" />
                       </button>
-                      {selectedEmail.folder === 'trash' ? (
-                        <button
-                          onClick={() => handleEmailAction('restore', selectedEmail.id)}
-                          className="p-2 text-gray-400 hover:text-green-400 hover:bg-gray-800 rounded-lg transition-colors"
-                          title="Restore email"
-                        >
-                          <RotateCcw className="w-4 h-4" />
-                        </button>
-                      ) : selectedEmail.folder === 'archive' ? (
-                        <button
-                          onClick={() => handleEmailAction('move-to-inbox', selectedEmail.id)}
-                          className="p-2 text-gray-400 hover:text-green-400 hover:bg-gray-800 rounded-lg transition-colors"
-                          title="Move to Inbox"
-                        >
-                          <RotateCcw className="w-4 h-4" />
-                        </button>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => handleEmailAction('archive', selectedEmail.id)}
-                            className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-                            title="Archive email"
-                          >
-                            <Archive className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleEmailAction('delete', selectedEmail.id)}
-                            className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-colors"
-                            title="Delete email"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </>
-                      )}
-                      <button className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
-                        <MoreHorizontal className="w-4 h-4" />
+                      <button
+                        onClick={() => handleEmailAction('archive', selectedEmail.id)}
+                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+                        title="Archive email"
+                      >
+                        <Archive className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleEmailAction('delete', selectedEmail.id)}
+                        className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-colors"
+                        title="Delete email"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
@@ -821,7 +912,7 @@ const EmailPage: React.FC<EmailPageProps> = ({ onNavigate }) => {
                 </div>
 
                 {/* Reply Section */}
-                <div className="border-t border-gray-800 p-6">
+                <div className="border-t border-gray-800 p-6 pb-24">
                   <div className="flex space-x-3">
                     <button 
                       onClick={() => handleEmailAction('reply', selectedEmail.id)}

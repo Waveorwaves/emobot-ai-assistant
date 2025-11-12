@@ -6,6 +6,16 @@ export interface BackendQueryResponse {
   session_id: string;
   timestamp: string;
   memory_stats?: Record<string, any>;
+  reasoning_steps?: Array<{
+    step: number;
+    type?: string;
+    action: string;
+    reasoning: string;
+    confidence: number;
+    timestamp?: string;
+    tool_name?: string;
+    parameters?: any;
+  }>;
 }
 
 export interface BackendHealthResponse {
@@ -17,9 +27,13 @@ export interface BackendHealthResponse {
 
 export interface ReasoningStep {
   step: number;
+  type: string;
   action: string;
   reasoning: string;
   confidence: number;
+  timestamp?: string;
+  tool_name?: string;
+  parameters?: any;
 }
 
 export interface ReasoningRequest {

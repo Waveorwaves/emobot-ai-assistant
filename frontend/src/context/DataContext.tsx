@@ -20,6 +20,7 @@ export interface Email {
   preview: string;
   content?: string;
   timestamp: string;
+  internalDate?: string;
   read: boolean;
   starred: boolean;
   important: boolean;
@@ -766,8 +767,50 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.log('🔍 Full API Response:', JSON.stringify(response, null, 2));
 
       // Extract reasoning steps and final answer
-      const reasoningSteps: ReasoningStep[] = response.raw_response?.reasoning_steps || [];
+      const reasoningSteps: ReasoningStep[] = (response.raw_response?.reasoning_steps || []).map((step: any) => ({
+        ...step,
+        type: step.type || 'action'
+      }));
       let botText = response.raw_response?.response || 'No response received.';
+
+      // Extract clean, concise answer from verbose response
+      // Remove all the reasoning markers and metadata
+      let cleanText = botText;
+      
+      // Remove common reasoning patterns
+      cleanText = cleanText.replace(/\*\*Thought\*\*:.*?(?=\*\*|$)/gs, '');
+      cleanText = cleanText.replace(/\*\*Action\*\*:.*?(?=\*\*|$)/gs, '');
+      cleanText = cleanText.replace(/\*\*Observation\*\*:.*?(?=\*\*|$)/gs, '');
+      cleanText = cleanText.replace(/\*\*Summary:\*\*.*?(?=\*\*|$)/gs, '');
+      cleanText = cleanText.replace(/\*\*Key Points:\*\*.*?(?=\*\*|$)/gs, '');
+      cleanText = cleanText.replace(/\*\*Sources for More Details:\*\*.*?$/gs, '');
+      
+      // Look for "Final Answer:" pattern
+      const finalAnswerMatch = cleanText.match(/(?:\*\*)?Final Answer(?:\*\*)?:\s*(.+?)(?:\n\n|$)/s);
+      if (finalAnswerMatch) {
+        cleanText = finalAnswerMatch[1].trim();
+      }
+      
+      // Clean up extra whitespace and newlines
+      cleanText = cleanText.replace(/\n{3,}/g, '\n\n').trim();
+      
+      // If still too long or contains metadata, extract first meaningful paragraph
+      if (cleanText.length > 500 || cleanText.includes('**') || cleanText.includes('💡')) {
+        const sentences = cleanText.split(/[.!?]+/).filter(s => s.trim().length > 20);
+        // Take first 2-3 sentences that don't contain metadata markers
+        const goodSentences = sentences.filter(s => 
+          !s.includes('**') && 
+          !s.includes('💡') &&
+          !s.includes('[Search Information]') &&
+          !s.includes('http')
+        ).slice(0, 3);
+        
+        if (goodSentences.length > 0) {
+          cleanText = goodSentences.join('. ').trim() + '.';
+        }
+      }
+      
+      botText = cleanText || botText; // Fallback to original if cleaning failed
 
       console.log('📬 Bot response:', botText);
       console.log('🧠 Reasoning steps:', reasoningSteps.length);

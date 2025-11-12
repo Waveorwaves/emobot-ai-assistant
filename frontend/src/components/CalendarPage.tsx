@@ -150,7 +150,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
       top: number;
       height: number;
       left: number;
-      width: number;
+      width: string | number;
       zIndex: number;
     }> = [];
 

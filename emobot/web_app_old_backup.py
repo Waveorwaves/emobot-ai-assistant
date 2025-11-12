@@ -33,8 +33,8 @@ logging.basicConfig(
 
 # Get the directory where web_app.py is located
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-# Path to the built React frontend (go up one level from emobot/ to emobot1/, then to frontend/dist)
-FRONTEND_DIR = os.path.join(os.path.dirname(SCRIPT_DIR), 'frontend', 'dist')
+# Path to the built React frontend
+FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(SCRIPT_DIR)), 'emobot', 'frontend', 'dist')
 
 app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path='')
 
@@ -917,241 +917,6 @@ HTML_TEMPLATE = """
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
-        /* Insights Page Styles */
-        .insight-card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            border-left: 4px solid #667eea;
-            transition: transform 0.2s;
-        }
-        
-        .insight-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-        }
-        
-        .insight-card.warning {
-            border-left-color: #ffc107;
-            background: #fffbf0;
-        }
-        
-        .insight-card.error {
-            border-left-color: #dc3545;
-            background: #fff5f5;
-        }
-        
-        .insight-card.success {
-            border-left-color: #28a745;
-            background: #f0fff4;
-        }
-        
-        .insight-card.info {
-            border-left-color: #17a2b8;
-            background: #f0f9ff;
-        }
-        
-        .insight-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        
-        .insight-icon {
-            font-size: 24px;
-        }
-        
-        .insight-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            flex: 1;
-        }
-        
-        .insight-content {
-            color: #555;
-            line-height: 1.6;
-            margin-bottom: 10px;
-        }
-        
-        .insight-suggestion {
-            background: rgba(102, 126, 234, 0.1);
-            padding: 10px;
-            border-radius: 6px;
-            margin-top: 10px;
-            font-size: 14px;
-            color: #333;
-        }
-        
-        .insight-suggestion strong {
-            color: #667eea;
-        }
-        
-        .insight-actions {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid rgba(0,0,0,0.1);
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .insight-action-btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .insight-action-btn.primary {
-            background: #667eea;
-            color: white;
-        }
-        
-        .insight-action-btn.primary:hover {
-            background: #5a6fd8;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-        }
-        
-        .insight-action-btn.secondary {
-            background: #f0f0f0;
-            color: #333;
-        }
-        
-        .insight-action-btn.secondary:hover {
-            background: #e0e0e0;
-        }
-        
-        .insight-action-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .insight-action-btn.success {
-            background: #28a745;
-            color: white;
-        }
-        
-        .insight-action-btn.success:hover {
-            background: #218838;
-        }
-        
-        /* Notification animations */
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        @keyframes slideOut {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-        }
-        
-        .notification {
-            animation: slideIn 0.3s ease;
-        }
-        
-        .insights-summary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        
-        .insights-summary h3 {
-            margin: 0 0 15px 0;
-            font-size: 18px;
-        }
-        
-        .insights-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-        }
-        
-        .stat-item {
-            background: rgba(255,255,255,0.2);
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        
-        .stat-value {
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .stat-label {
-            font-size: 12px;
-            opacity: 0.9;
-        }
-        
-        .loading-insights {
-            text-align: center;
-            padding: 40px;
-            color: #667eea;
-        }
-        
-        .loading-insights .loading-spinner {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .auto-refresh-indicator {
-            display: inline-block;
-            padding: 5px 12px;
-            background: rgba(102, 126, 234, 0.1);
-            border-radius: 15px;
-            font-size: 12px;
-            color: #667eea;
-            margin-left: 10px;
-        }
-        
-        .auto-refresh-indicator.active {
-            animation: pulse-indicator 2s infinite;
-        }
-        
-        @keyframes pulse-indicator {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-        
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -1201,11 +966,6 @@ HTML_TEMPLATE = """
                 <li class="nav-tab">
                     <button onclick="switchPage('todo')" class="nav-btn" data-page="todo">
                         ✅ Todo
-                    </button>
-                </li>
-                <li class="nav-tab">
-                    <button onclick="switchPage('insights')" class="nav-btn" data-page="insights">
-                        💡 Insights
                     </button>
                 </li>
             </ul>
@@ -1344,38 +1104,6 @@ HTML_TEMPLATE = """
                 </div>
             </div>
             
-            <!-- Insights Page -->
-            <div id="insightsPage" class="page">
-                <div class="todo-container">
-                    <div class="todo-header">
-                        <div class="todo-title">
-                            💡 Smart Insights Dashboard
-                        </div>
-                        <div class="todo-actions">
-                            <button class="action-btn" onclick="refreshInsights()" id="refreshInsightsBtn">
-                                🔄 Analyze Now
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div id="insightsContent" class="todo-content">
-                        <div class="no-todos">
-                            <h3>💡 Smart Insights</h3>
-                            <p>Analysis will start automatically when you open this page.</p>
-                            <p style="margin-top: 10px; color: #666; font-size: 14px;">
-                                The system will analyze:<br>
-                                • Unread emails for meeting requests<br>
-                                • Calendar events for scheduling conflicts<br>
-                                • Todo items for priority recommendations
-                            </p>
-                            <p style="margin-top: 15px; color: #667eea; font-size: 13px;">
-                                💡 Each insight includes actionable buttons to help you respond quickly
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
             <!-- Add/Edit Todo Modal -->
             <div id="todoModal" class="modal">
                 <div class="modal-content">
@@ -1461,8 +1189,6 @@ HTML_TEMPLATE = """
                 loadEmailPage();
             } else if (pageName === 'todo') {
                 loadTodoList();
-            } else if (pageName === 'insights') {
-                // Don't auto-load insights, wait for user to click refresh
             }
         }
         
@@ -1631,35 +1357,42 @@ HTML_TEMPLATE = """
         messageInput.focus();
         
         // Email functionality
+        let selectedEmail = null;
+        let currentEmailFolder = 'inbox';
+
         async function loadEmailPage() {
             await loadInbox();
             await loadLabels();
         }
-        
+
         async function loadInbox() {
+            currentEmailFolder = 'inbox';
             updateFolderSelection('inbox');
             await loadEmailsByQuery('in:inbox');
         }
-        
+
         async function loadSent() {
+            currentEmailFolder = 'sent';
             updateFolderSelection('sent');
             await loadEmailsByQuery('in:sent');
         }
-        
+
         async function loadDrafts() {
+            currentEmailFolder = 'drafts';
             updateFolderSelection('drafts');
             await loadEmailsByQuery('in:draft');
         }
-        
+
         async function loadTrash() {
+            currentEmailFolder = 'trash';
             updateFolderSelection('trash');
             await loadEmailsByQuery('in:trash');
         }
-        
+
         function updateFolderSelection(folderType) {
             // Remove active class from all folder items
             document.querySelectorAll('.folder-list li').forEach(li => li.classList.remove('active'));
-            
+
             // Add active class to selected folder
             const folderMap = {
                 'inbox': 0,
@@ -1667,27 +1400,26 @@ HTML_TEMPLATE = """
                 'drafts': 2,
                 'trash': 3
             };
-            
+
             const folderItems = document.querySelectorAll('.folder-list li');
             if (folderItems[folderMap[folderType]]) {
                 folderItems[folderMap[folderType]].classList.add('active');
             }
         }
-        
+
         async function loadEmailsByQuery(query = null) {
             const emailList = document.getElementById('emailList');
             emailList.innerHTML = '<div class="loading-email">Loading emails...</div>';
-            
+
             try {
                 let url = '/api/email/list';
                 if (query) {
-                    // Add query parameter to URL
                     url = `/api/email/list?query=${encodeURIComponent(query)}`;
                 }
-                
+
                 const response = await fetch(url);
                 const data = await response.json();
-                
+
                 if (data.success && data.emails && data.emails.length > 0) {
                     displayEmails(data.emails);
                 } else {
@@ -1707,19 +1439,19 @@ HTML_TEMPLATE = """
                 `;
             }
         }
-        
+
         function displayEmails(emails) {
             const emailList = document.getElementById('emailList');
-            
+
             const emailsHtml = emails.map(email => {
-                const isUnread = !email.is_read;
-                const sender = email.sender || 'Unknown Sender';
+                const isUnread = !email.is_read && !email.read;
+                const sender = email.sender || email.from || 'Unknown Sender';
                 const subject = email.subject || 'No Subject';
-                const snippet = email.snippet || email.body || '';
-                const date = email.date || '';
-                
+                const snippet = email.snippet || email.body || email.preview || '';
+                const date = email.date || email.timestamp || '';
+
                 return `
-                    <div class="email-item ${isUnread ? 'unread' : ''}" onclick="openEmail('${email.id}')">
+                    <div class="email-item ${isUnread ? 'unread' : ''}" onclick="selectEmail('${email.id}')" data-email-id="${email.id}">
                         <div class="email-sender">${escapeHtml(sender)}</div>
                         <div class="email-subject">${escapeHtml(subject)}</div>
                         <div class="email-snippet">${escapeHtml(snippet.substring(0, 100))}${snippet.length > 100 ? '...' : ''}</div>
@@ -1730,8 +1462,40 @@ HTML_TEMPLATE = """
                     </div>
                 `;
             }).join('');
-            
+
             emailList.innerHTML = emailsHtml;
+
+            // Store emails in memory for quick access
+            window.currentEmails = emails;
+        }
+
+        async function selectEmail(emailId) {
+            // Find the email in the current list
+            const email = window.currentEmails?.find(e => e.id === emailId);
+            if (!email) return;
+
+            selectedEmail = email;
+
+            // Mark as read if unread
+            if (!email.is_read && !email.read) {
+                markEmailAsRead(emailId);
+            }
+
+            // Display email details (you can enhance this further)
+            showEmailDetails(email);
+        }
+
+        function showEmailDetails(email) {
+            // For now, just show an alert with email details
+            // You can enhance this to show in a modal or dedicated panel
+            const details = `
+                From: ${email.sender || email.from}
+                Subject: ${email.subject}
+                Date: ${email.date || email.timestamp}
+
+                ${email.body || email.content || email.snippet || email.preview}
+            `;
+            alert(details);
         }
         
         async function loadLabels() {
@@ -2136,818 +1900,35 @@ HTML_TEMPLATE = """
                 closeTodoModal();
             }
         };
-        
-        // ============================================================================
-        // Insights Functionality
-        // ============================================================================
-        
-        async function refreshInsights() {
-            const insightsContent = document.getElementById('insightsContent');
-            const refreshBtn = document.getElementById('refreshInsightsBtn');
-            
-            // Disable button and show loading
-            refreshBtn.disabled = true;
-            refreshBtn.textContent = '⏳ Analyzing...';
-            
-            insightsContent.innerHTML = `
-                <div class="loading-insights">
-                    <div class="loading-spinner"></div>
-                    <p>Analyzing your emails, calendar, and tasks...</p>
-                    <p style="font-size: 14px; color: #999; margin-top: 10px;">This may take a few moments</p>
-                </div>
-            `;
-            
-            try {
-                const response = await fetch('/api/insights/analyze', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    displayInsights(data.insights, data.summary);
-                } else {
-                    insightsContent.innerHTML = `
-                        <div class="error-message">
-                            ❌ Failed to generate insights: ${data.error || 'Unknown error'}
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('Error refreshing insights:', error);
-                insightsContent.innerHTML = `
-                    <div class="error-message">
-                        ❌ Failed to generate insights: ${error.message}
-                    </div>
-                `;
-            } finally {
-                // Re-enable button
-                refreshBtn.disabled = false;
-                refreshBtn.textContent = '🔄 Analyze Now';
-            }
-        }
-        
-        function displayInsights(insights, summary) {
-            const insightsContent = document.getElementById('insightsContent');
-            
-            if (!insights || insights.length === 0) {
-                insightsContent.innerHTML = `
-                    <div class="no-todos">
-                        <h3>✅ All Clear!</h3>
-                        <p>No scheduling conflicts or urgent items detected.</p>
-                        <p style="margin-top: 10px; color: #666; font-size: 14px;">
-                            Your calendar and tasks are well organized.
-                        </p>
-                        <button class="action-btn" onclick="viewInsightHistory()" style="margin-top: 15px;">
-                            📊 View History
-                        </button>
-                    </div>
-                `;
-                return;
-            }
-            
-            // Store insights for later reference
-            setCurrentInsights(insights);
-            
-            // Filter out processed insights
-            const insightStates = getInsightStates();
-            const now = Date.now();
-            const filteredInsights = insights.filter((insight, index) => {
-                const hash = getInsightHash(insight);
-                const state = insightStates[hash];
-                
-                // Skip if already completed
-                if (state && state.status === 'completed') {
-                    console.log('Filtering out completed insight:', insight.title);
-                    return false;
-                }
-                
-                // Skip if marked as not useful
-                if (state && state.status === 'not_useful') {
-                    console.log('Filtering out not useful insight:', insight.title);
-                    return false;
-                }
-                
-                // Skip if snoozed and not yet time
-                if (state && state.status === 'snoozed' && state.snoozeUntil > now) {
-                    console.log('Filtering out snoozed insight:', insight.title);
-                    return false;
-                }
-                
-                return true;
-            });
-            
-            // Log filtering results
-            if (insights.length !== filteredInsights.length) {
-                console.log(`Filtered ${insights.length - filteredInsights.length} insights, showing ${filteredInsights.length}`);
-            }
-            
-            // Build summary section with actual filtered count
-            let summaryHtml = '';
-            if (summary) {
-                const actualCount = filteredInsights.length;
-                summaryHtml = `
-                    <div class="insights-summary">
-                        <h3>📊 Overview</h3>
-                        <div class="insights-stats">
-                            <div class="stat-item">
-                                <div class="stat-value">${summary.unread_emails || 0}</div>
-                                <div class="stat-label">Unread Emails</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">${summary.upcoming_events || 0}</div>
-                                <div class="stat-label">Upcoming Events</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">${summary.pending_tasks || 0}</div>
-                                <div class="stat-label">Pending Tasks</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">${actualCount}</div>
-                                <div class="stat-label">Insights Found</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // Build insights cards
-            const insightsHtml = filteredInsights.map((insight, index) => {
-                const typeClass = insight.type || 'info';
-                const icon = getInsightIcon(insight.type);
-                
-                // Generate action buttons based on insight type and content
-                const actions = generateInsightActions(insight, index);
-                
-                return `
-                    <div class="insight-card ${typeClass}" data-insight-id="${index}">
-                        <div class="insight-header">
-                            <span class="insight-icon">${icon}</span>
-                            <span class="insight-title">${escapeHtml(insight.title)}</span>
-                        </div>
-                        <div class="insight-content">
-                            ${escapeHtml(insight.content)}
-                        </div>
-                        ${insight.suggestion ? `
-                            <div class="insight-suggestion">
-                                <strong>💡 Suggestion:</strong> ${escapeHtml(insight.suggestion)}
-                            </div>
-                        ` : ''}
-                        ${actions ? `
-                            <div class="insight-actions">
-                                ${actions}
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
-            }).join('');
-            
-            insightsContent.innerHTML = summaryHtml + insightsHtml;
-        }
-        
-        function generateInsightActions(insight, index) {
-            const actions = [];
-            const content = insight.content.toLowerCase();
-            const suggestion = (insight.suggestion || '').toLowerCase();
-            const combined = content + ' ' + suggestion;
-            
-            // Detect if this is about email reply
-            if (combined.includes('reply') || combined.includes('respond') || combined.includes('email')) {
-                const emailMatch = combined.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
-                const recipient = emailMatch ? emailMatch[1] : '';
-                
-                actions.push(`
-                    <button class="insight-action-btn primary" onclick="handleReplyEmail('${recipient}', ${index})">
-                        📧 Reply to Email
-                    </button>
-                `);
-            }
-            
-            // Detect if this is about scheduling/calendar
-            if (combined.includes('schedule') || combined.includes('meeting') || combined.includes('calendar') || combined.includes('reschedule')) {
-                actions.push(`
-                    <button class="insight-action-btn primary" onclick="handleScheduleAction(${index})">
-                        📅 Open Calendar
-                    </button>
-                `);
-            }
-            
-            // Detect if this is about tasks
-            if (combined.includes('task') || combined.includes('todo') || combined.includes('priority')) {
-                actions.push(`
-                    <button class="insight-action-btn primary" onclick="handleTaskAction(${index})">
-                        ✅ View Tasks
-                    </button>
-                `);
-            }
-            
-            // Add management actions
-            actions.push(`
-                <button class="insight-action-btn success" onclick="markInsightComplete(${index})" title="Mark as completed">
-                    ✓ Complete
-                </button>
-            `);
-            
-            actions.push(`
-                <button class="insight-action-btn secondary" onclick="markInsightNotUseful(${index})" title="Mark as not useful">
-                    ✗ Not Useful
-                </button>
-            `);
-            
-            actions.push(`
-                <button class="insight-action-btn secondary" onclick="snoozeInsight(${index})" title="Snooze for later">
-                    ⏰ Snooze
-                </button>
-            `);
-            
-            return actions.join('');
-        }
-        
-        // ============================================================================
-        // Insight Action Handlers
-        // ============================================================================
-        
-        async function handleReplyEmail(recipient, insightId) {
-            console.log('Handling email reply action:', recipient, insightId);
-            
-            // Get the insight card
-            const card = document.querySelector(`[data-insight-id="${insightId}"]`);
-            const button = card.querySelector('.insight-action-btn.primary');
-            
-            // Disable button
-            button.disabled = true;
-            button.textContent = '⏳ Processing...';
-            
-            try {
-                // Extract email details from the insight
-                const insightContent = card.querySelector('.insight-content').textContent;
-                const insightSuggestion = card.querySelector('.insight-suggestion')?.textContent || '';
-                
-                // Generate email subject and body using LLM
-                const response = await fetch('/api/insights/generate-reply', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        recipient: recipient,
-                        context: insightContent,
-                        suggestion: insightSuggestion
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    // Open compose modal with pre-filled content
-                    document.getElementById('composeTo').value = data.recipient || recipient;
-                    document.getElementById('composeSubject').value = data.subject || 'Re: Meeting Request';
-                    document.getElementById('composeBody').value = data.body || '';
-                    showComposeModal();
-                    
-                    // Update button
-                    button.className = 'insight-action-btn success';
-                    button.textContent = '✓ Email Draft Ready';
-                } else {
-                    throw new Error(data.error || 'Failed to generate reply');
-                }
-            } catch (error) {
-                console.error('Error handling email reply:', error);
-                
-                // Show detailed error
-                const errorMsg = error.message || 'Unknown error';
-                showNotification('❌ Failed to generate email: ' + errorMsg, 'error');
-                
-                // Offer manual compose option
-                if (confirm('Failed to generate email automatically. Would you like to compose manually?')) {
-                    document.getElementById('composeTo').value = recipient;
-                    document.getElementById('composeSubject').value = 'Re: Meeting Request';
-                    document.getElementById('composeBody').value = '';
-                    showComposeModal();
-                    button.className = 'insight-action-btn success';
-                    button.textContent = '✓ Compose Opened';
-                } else {
-                    button.disabled = false;
-                    button.textContent = '📧 Reply to Email';
-                }
-            }
-        }
-        
-        function handleScheduleAction(insightId) {
-            console.log('Handling schedule action:', insightId);
-            
-            // Show notification
-            showNotification('📅 Opening Calendar...', 'info');
-            
-            // Switch to calendar page
-            switchPage('calendar');
-            
-            // Mark as handled
-            const card = document.querySelector(`[data-insight-id="${insightId}"]`);
-            if (card) {
-                const button = card.querySelector('.insight-action-btn.primary');
-                if (button) {
-                    button.className = 'insight-action-btn success';
-                    button.textContent = '✓ Opened Calendar';
-                    button.disabled = true;
-                }
-            }
-            
-            // Show success notification
-            setTimeout(() => {
-                showNotification('✓ Calendar opened', 'success');
-            }, 500);
-        }
-        
-        function handleTaskAction(insightId) {
-            console.log('Handling task action:', insightId);
-            
-            // Show notification
-            showNotification('✅ Opening Tasks...', 'info');
-            
-            // Switch to todo page
-            switchPage('todo');
-            
-            // Mark as handled
-            const card = document.querySelector(`[data-insight-id="${insightId}"]`);
-            if (card) {
-                const button = card.querySelector('.insight-action-btn.primary');
-                if (button) {
-                    button.className = 'insight-action-btn success';
-                    button.textContent = '✓ Opened Tasks';
-                    button.disabled = true;
-                }
-            }
-            
-            // Show success notification
-            setTimeout(() => {
-                showNotification('✓ Tasks opened', 'success');
-            }, 500);
-        }
-        
-        // ============================================================================
-        // Insight Management Functions
-        // ============================================================================
-        
-        // Local storage for insight states
-        const INSIGHT_STORAGE_KEY = 'emobot_insight_states';
-        
-        function getInsightStates() {
-            const stored = localStorage.getItem(INSIGHT_STORAGE_KEY);
-            return stored ? JSON.parse(stored) : {};
-        }
-        
-        function saveInsightState(insightHash, state) {
-            const states = getInsightStates();
-            states[insightHash] = {
-                state: state,
-                timestamp: Date.now(),
-                ...state
-            };
-            localStorage.setItem(INSIGHT_STORAGE_KEY, JSON.stringify(states));
-        }
-        
-        function getInsightHash(insight) {
-            // Create a simple hash from insight content
-            const str = insight.title + insight.content;
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                const char = str.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash;
-            }
-            return 'insight_' + Math.abs(hash);
-        }
-        
-        function markInsightComplete(insightId) {
-            console.log('Marking insight as complete:', insightId);
-            
-            const card = document.querySelector(`[data-insight-id="${insightId}"]`);
-            if (!card) return;
-            
-            // Get insight data
-            const insight = getCurrentInsights()[insightId];
-            if (insight) {
-                const hash = getInsightHash(insight);
-                saveInsightState(hash, {
-                    status: 'completed',
-                    completedAt: new Date().toISOString()
-                });
-            }
-            
-            // Show notification first
-            showNotification('✓ Insight marked as complete', 'success');
-            
-            // Fade out and remove the card automatically
-            card.style.transition = 'opacity 0.5s, transform 0.5s';
-            card.style.opacity = '0';
-            card.style.transform = 'translateX(20px)';
-            
-            setTimeout(() => {
-                card.remove();
-                checkRemainingInsights();
-                updateInsightsSummary();
-            }, 500);
-        }
-        
-        function markInsightNotUseful(insightId) {
-            console.log('Marking insight as not useful:', insightId);
-            
-            const card = document.querySelector(`[data-insight-id="${insightId}"]`);
-            if (!card) return;
-            
-            // Get insight data
-            const insight = getCurrentInsights()[insightId];
-            if (insight) {
-                const hash = getInsightHash(insight);
-                saveInsightState(hash, {
-                    status: 'not_useful',
-                    markedAt: new Date().toISOString()
-                });
-            }
-            
-            // Show notification
-            showNotification('✗ Insight marked as not useful', 'info');
-            
-            // Fade out and remove the card automatically
-            card.style.transition = 'opacity 0.5s, transform 0.5s';
-            card.style.opacity = '0';
-            card.style.transform = 'translateX(20px)';
-            
-            setTimeout(() => {
-                card.remove();
-                checkRemainingInsights();
-                updateInsightsSummary();
-            }, 500);
-        }
-        
-        function snoozeInsight(insightId) {
-            console.log('Snoozing insight:', insightId);
-            
-            const card = document.querySelector(`[data-insight-id="${insightId}"]`);
-            if (!card) return;
-            
-            // Get insight data
-            const insight = getCurrentInsights()[insightId];
-            if (insight) {
-                const hash = getInsightHash(insight);
-                const snoozeUntil = Date.now() + (60 * 60 * 1000); // 1 hour
-                saveInsightState(hash, {
-                    status: 'snoozed',
-                    snoozeUntil: snoozeUntil,
-                    snoozedAt: new Date().toISOString()
-                });
-            }
-            
-            // Fade out and remove
-            card.style.transition = 'opacity 0.3s, transform 0.3s';
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(-10px)';
-            
-            setTimeout(() => {
-                card.remove();
-                updateInsightsSummary();
-                checkRemainingInsights();
-            }, 300);
-            
-            // Show notification
-            showNotification('⏰ Insight snoozed for 1 hour', 'info');
-        }
-        
-        function undoMarkNotUseful(insightId) {
-            const card = document.querySelector(`[data-insight-id="${insightId}"]`);
-            if (!card) return;
-            
-            // Get insight data
-            const insight = getCurrentInsights()[insightId];
-            if (insight) {
-                const hash = getInsightHash(insight);
-                const states = getInsightStates();
-                delete states[hash];
-                localStorage.setItem(INSIGHT_STORAGE_KEY, JSON.stringify(states));
-            }
-            
-            // Restore card
-            card.style.opacity = '1';
-            
-            // Regenerate actions
-            const actionsDiv = card.querySelector('.insight-actions');
-            if (actionsDiv) {
-                actionsDiv.innerHTML = generateInsightActions(insight, insightId);
-            }
-            
-            showNotification('↩️ Undo successful', 'success');
-        }
-        
-        function removeInsight(insightId) {
-            const card = document.querySelector(`[data-insight-id="${insightId}"]`);
-            if (card) {
-                card.style.transition = 'opacity 0.3s, transform 0.3s';
-                card.style.opacity = '0';
-                card.style.transform = 'translateX(20px)';
-                
-                setTimeout(() => {
-                    card.remove();
-                    updateInsightsSummary();
-                    checkRemainingInsights();
-                }, 300);
-            }
-        }
-        
-        function checkRemainingInsights() {
-            const remainingInsights = document.querySelectorAll('.insight-card').length;
-            if (remainingInsights === 0) {
-                // Update the overview count to 0
-                const statValue = document.querySelector('.insights-summary .stat-item:last-child .stat-value');
-                if (statValue) {
-                    statValue.textContent = '0';
-                }
-                
-                // Remove all insight cards but keep the overview
-                const insightCards = document.querySelectorAll('.insight-card');
-                insightCards.forEach(card => card.remove());
-                
-                // Add "All Clear" message after the overview
-                const insightsContent = document.getElementById('insightsContent');
-                const overview = insightsContent.querySelector('.insights-summary');
-                
-                // Remove any existing "All Clear" message
-                const existingMessage = insightsContent.querySelector('.no-todos');
-                if (existingMessage) {
-                    existingMessage.remove();
-                }
-                
-                // Add new "All Clear" message
-                const clearMessage = document.createElement('div');
-                clearMessage.className = 'no-todos';
-                clearMessage.innerHTML = `
-                    <h3>✅ All Clear!</h3>
-                    <p>All insights have been addressed.</p>
-                    <p style="margin-top: 10px; color: #666; font-size: 14px;">
-                        The system will continue to monitor and provide new insights.
-                    </p>
-                    <button class="action-btn" onclick="viewInsightHistory()" style="margin-top: 15px;">
-                        📊 View History
-                    </button>
-                `;
-                
-                if (overview) {
-                    // Insert after overview
-                    overview.parentNode.insertBefore(clearMessage, overview.nextSibling);
-                } else {
-                    // No overview, just append
-                    insightsContent.appendChild(clearMessage);
-                }
-            }
-        }
-        
-        // Update insights summary statistics
-        function updateInsightsSummary() {
-            const remainingCards = document.querySelectorAll('.insight-card').length;
-            const summaryElement = document.querySelector('.insights-summary');
-            
-            if (summaryElement) {
-                const insightsCountElement = summaryElement.querySelector('.stat-item:last-child .stat-value');
-                if (insightsCountElement) {
-                    // Animate the number change
-                    insightsCountElement.style.transition = 'all 0.3s';
-                    insightsCountElement.style.transform = 'scale(1.2)';
-                    insightsCountElement.textContent = remainingCards;
-                    
-                    setTimeout(() => {
-                        insightsCountElement.style.transform = 'scale(1)';
-                    }, 300);
-                }
-            }
-            
-            console.log('Updated summary: remaining insights =', remainingCards);
-        }
-        
-        // Store current insights for reference
-        let currentInsights = [];
-        
-        function getCurrentInsights() {
-            return currentInsights;
-        }
-        
-        function setCurrentInsights(insights) {
-            currentInsights = insights;
-        }
-        
-        // Notification system
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `notification notification-${type}`;
-            notification.textContent = message;
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 15px 20px;
-                background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#667eea'};
-                color: white;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-                z-index: 10000;
-                animation: slideIn 0.3s ease;
-            `;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }
-        
-        // View insight history
-        function viewInsightHistory() {
-            const states = getInsightStates();
-            const historyItems = Object.entries(states).map(([hash, state]) => {
-                const date = new Date(state.timestamp).toLocaleString();
-                const statusEmoji = {
-                    'completed': '✓',
-                    'not_useful': '✗',
-                    'snoozed': '⏰'
-                }[state.status] || '•';
-                
-                return `
-                    <div style="padding: 10px; border-left: 3px solid #667eea; margin: 10px 0; background: #f8f9fa; border-radius: 5px;">
-                        <div style="font-weight: 600;">${statusEmoji} ${state.status.replace('_', ' ').toUpperCase()}</div>
-                        <div style="font-size: 12px; color: #666; margin-top: 5px;">${date}</div>
-                    </div>
-                `;
-            }).join('');
-            
-            const insightsContent = document.getElementById('insightsContent');
-            insightsContent.innerHTML = `
-                <div style="padding: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3>📊 Insight History</h3>
-                        <button class="action-btn" onclick="refreshInsights()">← Back</button>
-                    </div>
-                    ${historyItems.length > 0 ? historyItems : '<p style="color: #666;">No history yet</p>'}
-                    <button class="action-btn" onclick="clearInsightHistory()" style="margin-top: 20px; background: #dc3545;">
-                        🗑️ Clear History
-                    </button>
-                </div>
-            `;
-        }
-        
-        function clearInsightHistory() {
-            if (confirm('Are you sure you want to clear all insight history?')) {
-                localStorage.removeItem(INSIGHT_STORAGE_KEY);
-                showNotification('🗑️ History cleared', 'success');
-                refreshInsights();
-            }
-        }
-        
-        // Clear processed insights and refresh
-        function clearProcessedInsights() {
-            const states = getInsightStates();
-            const processedCount = Object.values(states).filter(s => 
-                s.status === 'completed' || s.status === 'not_useful'
-            ).length;
-            
-            if (processedCount === 0) {
-                showNotification('ℹ️ No processed insights to clear', 'info');
-                return;
-            }
-            
-            if (confirm(`Clear ${processedCount} processed insight(s) from history?`)) {
-                // Remove completed and not_useful insights from storage
-                const newStates = {};
-                Object.entries(states).forEach(([hash, state]) => {
-                    if (state.status !== 'completed' && state.status !== 'not_useful') {
-                        newStates[hash] = state;
-                    }
-                });
-                
-                localStorage.setItem(INSIGHT_STORAGE_KEY, JSON.stringify(newStates));
-                showNotification(`🗑️ Cleared ${processedCount} processed insights`, 'success');
-                
-                // Refresh to show all insights again
-                refreshInsights();
-            }
-        }
-        
-        function getInsightIcon(type) {
-            const icons = {
-                'warning': '⚠️',
-                'error': '🚨',
-                'success': '✅',
-                'info': 'ℹ️',
-                'conflict': '⏰',
-                'suggestion': '💡',
-                'task': '📋',
-                'email': '📧',
-                'calendar': '📅'
-            };
-            return icons[type] || 'ℹ️';
-        }
-        
-        // ============================================================================
-        // Auto-refresh Insights Functionality
-        // ============================================================================
-        
-        let insightsAutoRefreshInterval = null;
-        let insightsInitialLoadDone = false;
-        const REFRESH_INTERVAL_MS = 300000; // 5 minutes
-        
-        // Auto-refresh insights every 5 minutes (background only, no UI display)
-        function startInsightsAutoRefresh() {
-            // Clear any existing interval
-            if (insightsAutoRefreshInterval) {
-                clearInterval(insightsAutoRefreshInterval);
-            }
-            
-            // Set up 5-minute auto-refresh
-            insightsAutoRefreshInterval = setInterval(() => {
-                // Only auto-refresh if insights page is active
-                const insightsPage = document.getElementById('insightsPage');
-                if (insightsPage && insightsPage.classList.contains('active')) {
-                    console.log('🔄 Auto-refreshing insights...');
-                    refreshInsights();
-                }
-            }, REFRESH_INTERVAL_MS);
-            
-            console.log('✅ Insights auto-refresh enabled (every 5 minutes, background)');
-        }
-        
-        function stopInsightsAutoRefresh() {
-            if (insightsAutoRefreshInterval) {
-                clearInterval(insightsAutoRefreshInterval);
-                insightsAutoRefreshInterval = null;
-                console.log('⏸️ Insights auto-refresh disabled');
-            }
-        }
-        
-        // Override switchPage to handle insights auto-load
-        const originalSwitchPage = switchPage;
-        switchPage = function(pageName) {
-            // Call original function
-            originalSwitchPage(pageName);
-            
-            // If switching to insights page and haven't loaded yet, auto-load
-            if (pageName === 'insights' && !insightsInitialLoadDone) {
-                console.log('🚀 Auto-loading insights on first visit...');
-                // Small delay to ensure page is rendered
-                setTimeout(() => {
-                    refreshInsights();
-                    insightsInitialLoadDone = true;
-                }, 500);
-            }
-        };
-        
-        // Start auto-refresh when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('📱 Emobot Web App loaded');
-            startInsightsAutoRefresh();
-            
-            // Optional: Show notification about auto-refresh
-            console.log('💡 Tip: Insights will auto-refresh every 5 minutes when the page is active');
-        });
-        
-        // Clean up on page unload
-        window.addEventListener('beforeunload', function() {
-            stopInsightsAutoRefresh();
-        });
     </script>
 </body>
 </html>
 """
 
 def start_mcp_server():
-    """Start MCP server on port 8080"""
+    """Start MCP server in background thread"""
     try:
         script_dir = os.path.dirname(os.path.abspath(__file__))
         os.chdir(script_dir)
-
+        
         config_path = "configs/mcp.yaml"
-        
-        # Load config to get server settings
-        with open(config_path, 'r') as f:
-            config = yaml.safe_load(f)
-        
-        server_config = config.get("server", {})
-        host = server_config.get("host", "127.0.0.1")
-        port = server_config.get("port", 8080)
-        
         server = MCPToolServer(config_path)
         
-        print(f"✅ MCP server initialized with {len(server.tools)} tools")
-        print(f"🚀 Starting MCP server at http://{host}:{port}")
+        with open(config_path, "r") as f:
+            config = yaml.safe_load(f)
+        server_config = config.get("server", {})
         
-        # Start the Flask server on port 8080
-        server.run(host=host, port=port)
-
+        print(f"✅ MCP server initialized with {len(server.tools)} tools")
+        
+        server.app.run(
+            host=server_config.get("host", "127.0.0.1"),
+            port=server_config.get("port", 8080),
+            debug=False,
+            use_reloader=False,
+            threaded=True
+        )
     except Exception as e:
         print(f"❌ MCP server error: {e}")
-        import traceback
-        traceback.print_exc()
 
 def initialize_agent(model_id="gemini-2.5-flash"):
     """Initialize the reasoning module"""
@@ -3209,14 +2190,10 @@ def list_emails():
     """List emails"""
     try:
         if not reasoning_module:
-            error_msg = 'Agent not initialized - MCP server may not be running'
-            logging.error(error_msg)
-            return jsonify({'success': False, 'error': error_msg, 'emails': []}), 500
+            return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
         
         # Get query parameter for filtering (e.g., 'in:sent', 'in:draft')
         search_query = request.args.get('query', '')
-        
-        logging.info(f"Fetching emails with query: '{search_query}'")
         
         if search_query:
             # Use search_emails operation for specific queries
@@ -3232,8 +2209,6 @@ def list_emails():
                 'max_results': 20
             })
         
-        logging.info(f"Email fetch result: {result}")
-        
         if result and result.get('status') == 'success':
             emails = result.get('emails', result.get('result', []))
             return jsonify({
@@ -3241,27 +2216,21 @@ def list_emails():
                 'emails': emails if isinstance(emails, list) else []
             })
         else:
-            error_msg = result.get('error_message', 'Failed to fetch emails')
-            logging.error(f"Email fetch failed: {error_msg}")
             return jsonify({
                 'success': False,
-                'error': error_msg,
+                'error': result.get('error_message', 'Failed to fetch emails'),
                 'emails': []
-            }), 500
+            })
     except Exception as e:
         logging.error(f"List emails error: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'success': False, 'error': str(e), 'emails': []}), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/email/send', methods=['POST'])
 def send_email():
     """Send email"""
     try:
         if not reasoning_module:
-            error_msg = 'Agent not initialized - MCP server may not be running'
-            logging.error(error_msg)
-            return jsonify({'success': False, 'error': error_msg}), 500
+            return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
         
         data = request.json
         to = data.get('to')
@@ -3271,8 +2240,6 @@ def send_email():
         if not to or not subject or not body:
             return jsonify({'success': False, 'error': 'To, subject, and body required'}), 400
         
-        logging.info(f"Sending email to: {to}, subject: {subject}")
-        
         # Use the email tool with send operation
         result = reasoning_module.action_executor.execute_action('email', {
             'operation': 'send_email',
@@ -3281,25 +2248,13 @@ def send_email():
             'body': body
         })
         
-        logging.info(f"Send email result: {result}")
-        
-        if result and result.get('status') == 'success':
-            return jsonify({
-                'success': True,
-                'message': 'Email sent successfully',
-                'result': result
-            })
-        else:
-            error_msg = result.get('error_message', 'Failed to send email')
-            logging.error(f"Send email failed: {error_msg}")
-            return jsonify({
-                'success': False,
-                'error': error_msg
-            }), 500
+        return jsonify({
+            'success': True,
+            'message': 'Email sent',
+            'result': result
+        })
     except Exception as e:
         logging.error(f"Send email error: {e}")
-        import traceback
-        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/email/read/<email_id>', methods=['GET'])
@@ -3307,11 +2262,7 @@ def read_email(email_id):
     """Read specific email"""
     try:
         if not reasoning_module:
-            error_msg = 'Agent not initialized - MCP server may not be running'
-            logging.error(error_msg)
-            return jsonify({'success': False, 'error': error_msg}), 500
-        
-        logging.info(f"Reading email: {email_id}")
+            return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
         
         # Use the email tool with get_email_details operation
         result = reasoning_module.action_executor.execute_action('email', {
@@ -3319,24 +2270,20 @@ def read_email(email_id):
             'message_id': email_id
         })
         
-        logging.info(f"Read email result: {result}")
-        
-        if result and result.get('status') == 'success':
+        # Extract the email data from the result
+        if isinstance(result, dict) and result.get('status') == 'success':
+            email_data = result.get('result', {})
             return jsonify({
                 'success': True,
-                'email': result.get('result', {})
+                'email': email_data
             })
         else:
-            error_msg = result.get('error_message', 'Failed to read email')
-            logging.error(f"Read email failed: {error_msg}")
             return jsonify({
                 'success': False,
-                'error': error_msg
+                'error': result.get('error_message', 'Failed to fetch email')
             }), 500
     except Exception as e:
         logging.error(f"Read email error: {e}")
-        import traceback
-        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/email/contacts', methods=['GET'])
@@ -3599,444 +2546,6 @@ def delete_todo(todo_id):
     except Exception as e:
         logging.error(f"Delete todo error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
-# Insights API Endpoint
-@app.route('/api/insights/analyze', methods=['POST'])
-def analyze_insights():
-    """Analyze emails, calendar, and todos to provide intelligent insights"""
-    try:
-        if not reasoning_module:
-            return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
-        
-        logging.info("Starting insights analysis...")
-        
-        # Step 1: Fetch unread emails
-        email_result = reasoning_module.action_executor.execute_action('email', {
-            'operation': 'read_inbox',
-            'max_results': 50,
-            'unread_only': True
-        })
-        
-        unread_emails = []
-        if email_result and email_result.get('status') == 'success':
-            unread_emails = email_result.get('emails', [])
-        
-        logging.info(f"Found {len(unread_emails)} unread emails")
-        
-        # Step 2: Fetch calendar events
-        calendar_result = reasoning_module.action_executor.execute_action('calendar', {
-            'operation': 'list_events'
-        })
-        
-        calendar_events = []
-        if calendar_result and calendar_result.get('status') == 'success':
-            calendar_events = calendar_result.get('events', [])
-        
-        logging.info(f"Found {len(calendar_events)} calendar events")
-        
-        # Step 3: Fetch todo tasks
-        todo_result = reasoning_module.action_executor.execute_action('todo_list', {
-            'operation': 'view_list'
-        })
-        
-        todo_tasks = []
-        if todo_result and todo_result.get('status') == 'success':
-            todo_tasks = todo_result.get('tasks', [])
-        
-        logging.info(f"Found {len(todo_tasks)} todo tasks")
-        
-        # Step 4: Build analysis prompt for LLM
-        analysis_prompt = _build_insights_prompt(unread_emails, calendar_events, todo_tasks)
-        
-        logging.info("Sending data to LLM for analysis...")
-        
-        # Step 5: Use LLM to analyze and generate insights
-        import sys
-        import io
-        from contextlib import redirect_stdout, redirect_stderr
-        
-        captured_stdout = io.StringIO()
-        captured_stderr = io.StringIO()
-        
-        with redirect_stdout(captured_stdout), redirect_stderr(captured_stderr):
-            llm_response = reasoning_module.agent.run(analysis_prompt)
-        
-        logging.info("LLM analysis complete")
-        
-        # Step 6: Parse LLM response into structured insights
-        insights, summary = _parse_insights_response(
-            str(llm_response), 
-            len(unread_emails), 
-            len(calendar_events), 
-            len(todo_tasks)
-        )
-        
-        logging.info(f"Generated {len(insights)} insights")
-        
-        return jsonify({
-            'success': True,
-            'insights': insights,
-            'summary': summary,
-            'generated_at': time.time()  # Add timestamp
-        })
-        
-    except Exception as e:
-        logging.error(f"Insights analysis error: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-def _build_insights_prompt(emails, events, tasks):
-    """Build prompt for LLM to analyze data and generate insights"""
-
-    # Get current date/time for context
-    from datetime import datetime
-    current_datetime = datetime.now()
-    current_datetime_str = current_datetime.strftime("%B %d, %Y at %I:%M %p")
-
-    # Format emails
-    emails_text = ""
-    if emails:
-        emails_text = "UNREAD EMAILS:\n"
-        for i, email in enumerate(emails[:20], 1):  # Limit to 20 emails
-            subject = email.get('subject', 'No Subject')
-            sender = email.get('from', email.get('sender', 'Unknown'))
-            date = email.get('date', 'Unknown date')
-            body_preview = email.get('body', email.get('snippet', ''))[:200]
-            emails_text += f"{i}. From: {sender}\n   Subject: {subject}\n   Date: {date}\n   Preview: {body_preview}...\n\n"
-    else:
-        emails_text = "UNREAD EMAILS: None\n\n"
-
-    # Format calendar events - separate upcoming vs past
-    from datetime import datetime as dt
-    import re
-
-    def parse_event_time(time_str):
-        """Try to parse event time using common formats"""
-        if not time_str:
-            return None
-
-        # Common datetime formats
-        formats = [
-            "%Y-%m-%d %H:%M:%S",
-            "%Y-%m-%dT%H:%M:%S",
-            "%Y-%m-%dT%H:%M:%SZ",
-            "%B %d, %Y, %I:%M %p",
-            "%B %d, %Y at %I:%M %p",
-            "%m/%d/%Y %H:%M",
-            "%m/%d/%Y %I:%M %p",
-        ]
-
-        for fmt in formats:
-            try:
-                return dt.strptime(time_str, fmt)
-            except:
-                continue
-
-        # Try to extract date if only date is present
-        date_match = re.search(r'(\d{4})-(\d{2})-(\d{2})', time_str)
-        if date_match:
-            try:
-                return dt.strptime(date_match.group(0), "%Y-%m-%d")
-            except:
-                pass
-
-        return None
-
-    upcoming_events = []
-    past_events = []
-
-    for event in events:
-        try:
-            title = event.get('title', event.get('summary', 'Untitled'))
-            time_str = event.get('time', event.get('start_time', event.get('datetime', '')))
-            description = event.get('description', event.get('details', ''))
-
-            # Try to parse the event time
-            if time_str:
-                event_time = parse_event_time(time_str)
-                if event_time:
-                    if event_time > current_datetime:
-                        upcoming_events.append((title, time_str, description))
-                    else:
-                        past_events.append((title, time_str, description))
-                else:
-                    # If parsing fails, assume it's upcoming to be safe
-                    upcoming_events.append((title, time_str, description))
-            else:
-                upcoming_events.append((title, time_str, description))
-        except:
-            continue
-
-    events_text = ""
-    if upcoming_events:
-        events_text = "UPCOMING CALENDAR EVENTS:\n"
-        for i, (title, time_str, description) in enumerate(upcoming_events, 1):
-            events_text += f"{i}. {title}\n   Time: {time_str}\n   Details: {description}\n\n"
-    else:
-        events_text = "UPCOMING CALENDAR EVENTS: None\n\n"
-    
-    # Format tasks
-    tasks_text = ""
-    if tasks:
-        tasks_text = "TODO TASKS:\n"
-        for i, task in enumerate(tasks, 1):
-            title = task.get('title', 'Untitled')
-            priority = task.get('priority', 'medium')
-            status = task.get('status', 'pending')
-            due_date = task.get('due_date', 'No due date')
-            tasks_text += f"{i}. {title}\n   Priority: {priority}, Status: {status}, Due: {due_date}\n\n"
-    else:
-        tasks_text = "TODO TASKS: None\n\n"
-    
-    prompt = f"""You are an intelligent assistant analyzing a user's emails, calendar, and tasks to provide actionable insights.
-
-CURRENT DATE AND TIME: {current_datetime_str}
-
-IMPORTANT: Only analyze UPCOMING events that are in the future. Ignore any events that have already occurred before {current_datetime_str}.
-
-{emails_text}
-
-{events_text}
-
-{tasks_text}
-
-Please analyze the above information and provide insights in the following format:
-
-INSIGHT: [Type: warning/error/success/info/conflict]
-Title: [Brief title]
-Content: [Detailed description of the insight]
-Suggestion: [Actionable suggestion for the user]
-SenderEmail: [ONLY for email-related insights - include the sender's email address from the email data above]
----
-
-Focus on:
-1. **Scheduling Conflicts**: Check if any emails request meetings at times that conflict with existing UPCOMING calendar events
-2. **Urgent Items**: Identify emails or tasks that require immediate attention
-3. **Overdue Tasks**: Highlight tasks that are past their due date
-4. **Meeting Requests**: Identify emails that contain meeting invitations or scheduling requests for FUTURE dates/times
-5. **Priority Recommendations**: Suggest which tasks should be prioritized based on deadlines and importance
-6. **Time Management**: Provide suggestions for better time management based on the schedule
-
-CRITICAL: Do NOT provide insights about events that have already passed. Only focus on upcoming events and current/future tasks.
-
-**IMPORTANT - For Meeting Request Insights:**
-When generating suggestions for meeting requests, be SPECIFIC and ACTIONABLE:
-- If the calendar shows NO CONFLICT: Say "You are available at this time. Reply to confirm your availability and the meeting will be added to your calendar."
-- If there IS a conflict: Say "You have [conflicting event] at this time. Reply to propose an alternative time such as [suggest alternative]."
-- Always make the suggestion immediate and clear about what action to take.
-
-Example format:
-INSIGHT: [Type: info]
-Title: New Capstone Meeting Request
-Content: You have received an email from Jason Huang requesting a Capstone meeting on November 15th at 1:30 PM for about an hour. Your calendar currently shows no conflicting events.
-Suggestion: You are available at this time. Click 'Reply to Email' to confirm your availability and the meeting will be added to your calendar.
-SenderEmail: sender@example.com
----
-
-INSIGHT: [Type: conflict]
-Title: Scheduling Conflict Detected
-Content: You have a dinner scheduled at 6:00 PM on November 3rd, but received an email requesting a meeting at the same time.
-Suggestion: You have a conflict at this time. Click 'Reply to Email' to propose an alternative time such as November 4th at 2:00 PM.
-SenderEmail: sender@example.com
----
-
-INSIGHT: [Type: warning]
-Title: Urgent Email Requires Response
-Content: Email from John Doe about project deadline needs immediate attention.
-Suggestion: Review and respond to this email within the next 2 hours.
-SenderEmail: john.doe@company.com
----
-
-Please provide 3-7 insights based on the data above. If there are no conflicts or urgent items, provide positive feedback and general recommendations.
-
-**CRITICAL - Avoid Duplicates:**
-- Do NOT create multiple insights for the same email or event
-- Each insight should be about a DIFFERENT item (different email, different task, different event)
-- If an email is about a meeting request, create ONE insight about it, not multiple
-"""
-    
-    return prompt
-
-@app.route('/api/insights/generate-reply', methods=['POST'])
-def generate_email_reply():
-    """Generate email reply based on insight context"""
-    try:
-        if not reasoning_module:
-            return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
-        
-        data = request.json
-        recipient = data.get('recipient', '')
-        context = data.get('context', '')
-        suggestion = data.get('suggestion', '')
-        
-        logging.info(f"Generating email reply for: {recipient}")
-        
-        # Build prompt for LLM to generate email
-        prompt = f"""Generate a professional email reply based on the following context:
-
-Context: {context}
-Suggestion: {suggestion}
-Recipient: {recipient}
-
-Please generate:
-1. A suitable email subject line
-2. A professional and friendly email body
-
-The email should:
-- Be polite and professional
-- Address the scheduling conflict or request mentioned
-- Suggest alternative times if needed
-- Be concise (2-3 paragraphs maximum)
-
-Format your response as:
-SUBJECT: [subject line]
-BODY: [email body]
-"""
-        
-        # Use LLM to generate email
-        import sys
-        import io
-        from contextlib import redirect_stdout, redirect_stderr
-        
-        captured_stdout = io.StringIO()
-        captured_stderr = io.StringIO()
-        
-        with redirect_stdout(captured_stdout), redirect_stderr(captured_stderr):
-            llm_response = reasoning_module.agent.run(prompt)
-        
-        response_text = str(llm_response)
-        
-        # Parse response
-        subject = ''
-        body = ''
-        
-        if 'SUBJECT:' in response_text:
-            subject_part = response_text.split('SUBJECT:')[1].split('BODY:')[0].strip()
-            subject = subject_part
-        
-        if 'BODY:' in response_text:
-            body_part = response_text.split('BODY:')[1].strip()
-            body = body_part
-        
-        # Fallback if parsing fails
-        if not subject:
-            subject = 'Re: Meeting Request'
-        if not body:
-            body = response_text
-        
-        return jsonify({
-            'success': True,
-            'recipient': recipient,
-            'subject': subject,
-            'body': body
-        })
-        
-    except Exception as e:
-        logging.error(f"Generate reply error: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-def _parse_insights_response(response, email_count, event_count, task_count):
-    """Parse LLM response into structured insights"""
-    insights = []
-    
-    # Split response by insight delimiter
-    insight_blocks = response.split('---')
-    
-    for block in insight_blocks:
-        block = block.strip()
-        if not block or 'INSIGHT:' not in block:
-            continue
-        
-        try:
-            # Extract type
-            insight_type = 'info'
-            if '[Type:' in block:
-                type_match = block.split('[Type:')[1].split(']')[0].strip()
-                insight_type = type_match.lower()
-            
-            # Extract title
-            title = ''
-            if 'Title:' in block:
-                title_line = [line for line in block.split('\n') if line.strip().startswith('Title:')]
-                if title_line:
-                    title = title_line[0].replace('Title:', '').strip()
-            
-            # Extract content
-            content = ''
-            if 'Content:' in block:
-                content_line = [line for line in block.split('\n') if line.strip().startswith('Content:')]
-                if content_line:
-                    content = content_line[0].replace('Content:', '').strip()
-            
-            # Extract suggestion
-            suggestion = ''
-            if 'Suggestion:' in block:
-                suggestion_line = [line for line in block.split('\n') if line.strip().startswith('Suggestion:')]
-                if suggestion_line:
-                    suggestion = suggestion_line[0].replace('Suggestion:', '').strip()
-
-            # Extract sender email if present
-            sender_email = ''
-            if 'SenderEmail:' in block:
-                sender_line = [line for line in block.split('\n') if line.strip().startswith('SenderEmail:')]
-                if sender_line:
-                    sender_email = sender_line[0].replace('SenderEmail:', '').strip()
-
-            # Fallback: Try to extract email from content or title
-            if not sender_email:
-                import re
-                combined_text = title + ' ' + content + ' ' + suggestion
-                email_match = re.search(r'([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', combined_text)
-                if email_match:
-                    sender_email = email_match.group(1)
-
-            if title and content:
-                insight_data = {
-                    'type': insight_type,
-                    'title': title,
-                    'content': content,
-                    'suggestion': suggestion
-                }
-
-                # Add sender_email if it's an email-related insight
-                if sender_email:
-                    insight_data['sender_email'] = sender_email
-
-                insights.append(insight_data)
-        except Exception as e:
-            logging.warning(f"Failed to parse insight block: {e}")
-            continue
-    
-    # If no insights were parsed, create a default one
-    if not insights:
-        insights.append({
-            'type': 'info',
-            'title': 'Analysis Complete',
-            'content': 'Your schedule and tasks have been analyzed. Everything looks good!',
-            'suggestion': 'Keep up the good work with your organization.'
-        })
-    
-    # Count pending tasks
-    pending_tasks = task_count  # Simplified, could filter by status
-    
-    # Build summary
-    summary = {
-        'unread_emails': email_count,
-        'upcoming_events': event_count,
-        'pending_tasks': pending_tasks,
-        'insights_count': len(insights)
-    }
-    
-    return insights, summary
 
 def main():
     """Main entry point"""

@@ -21,9 +21,9 @@ const TodoPage: React.FC<TodoPageProps> = ({ onNavigate }) => {
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [showAddForm, setShowAddForm] = useState(false);
   const [showProjectForm, setShowProjectForm] = useState(false);
-  const [newTodo, setNewTodo] = useState({ title: '', description: '', priority: 'medium' as const, category: 'personal', dueDate: '', isProject: false });
+  const [newTodo, setNewTodo] = useState<{ title: string; description: string; priority: 'low' | 'medium' | 'high'; category: string; dueDate: string; isProject: boolean }>({ title: '', description: '', priority: 'medium', category: 'personal', dueDate: '', isProject: false });
   const [editingTodo, setEditingTodo] = useState<string | null>(null);
-  const [editTodo, setEditTodo] = useState({ title: '', description: '', priority: 'medium' as const, category: 'personal', dueDate: '' });
+  const [editTodo, setEditTodo] = useState<{ title: string; description: string; priority: 'low' | 'medium' | 'high'; category: string; dueDate: string }>({ title: '', description: '', priority: 'medium', category: 'personal', dueDate: '' });
   const [selectedTodoDetails, setSelectedTodoDetails] = useState<TodoItem | null>(null);
   const [completedTimeFilter, setCompletedTimeFilter] = useState<string>('all');
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
@@ -291,7 +291,7 @@ const TodoPage: React.FC<TodoPageProps> = ({ onNavigate }) => {
     setEditTodo({
       title: todo.title,
       description: todo.description || '',
-      priority: todo.priority,
+      priority: todo.priority as 'low' | 'medium' | 'high',
       category: todo.category,
       dueDate: todo.dueDate || ''
     });

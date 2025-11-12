@@ -111,34 +111,44 @@ const MainPage: React.FC<MainPageProps> = ({ initialMessages = [], onNavigate })
               /* Messages List - shown when messages exist */
               <div className="space-y-4 max-w-4xl mx-auto">
                 {chatMessages.map(message => (
-                  <div
-                    key={message.id}
-                    className={`flex items-start gap-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    {/* Show EmoBot avatar for bot messages */}
-                    {message.sender === 'bot' && (
-                      <Avatar
-                        src={emobotAvatar}
-                        alt={emobotName}
-                        size="sm"
-                        className="flex-shrink-0 mt-1"
-                      />
-                    )}
-
+                  <div key={message.id} className="space-y-2">
+                    {/* Message bubble with avatar */}
                     <div
-                      className={`max-w-xs lg:max-w-md px-4 py-3 rounded-lg text-sm ${
-                        message.sender === 'user'
-                          ? 'bg-[#453f3b] text-white'
-                          : 'bg-[#453f3b]/70 text-white'
-                      }`}
+                      className={`flex items-start gap-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
-                      {message.content}
-
-                      {/* Show reasoning steps for bot messages */}
-                      {message.sender === 'bot' && message.reasoningSteps && message.reasoningSteps.length > 0 && (
-                        <InlineReasoningDisplay steps={message.reasoningSteps} />
+                      {/* Show EmoBot avatar for bot messages */}
+                      {message.sender === 'bot' && (
+                        <Avatar
+                          src={emobotAvatar}
+                          alt={emobotName}
+                          size="sm"
+                          className="flex-shrink-0 mt-1"
+                        />
                       )}
+
+                      {/* Response text */}
+                      <div
+                        className={`px-4 py-3 rounded-lg text-sm max-w-xs lg:max-w-md ${
+                          message.sender === 'user'
+                            ? 'bg-[#453f3b] text-white'
+                            : 'bg-[#453f3b]/70 text-white'
+                        }`}
+                      >
+                        {message.content}
+                      </div>
                     </div>
+
+                    {/* Show reasoning steps below as a separate section for bot messages */}
+                    {message.sender === 'bot' && message.reasoningSteps && message.reasoningSteps.length > 0 && (
+                      <div className="flex items-start gap-3">
+                        {/* Empty space for avatar alignment */}
+                        <div className="w-8 flex-shrink-0"></div>
+                        {/* Reasoning section with same max-width as message */}
+                        <div className="max-w-xs lg:max-w-md">
+                          <InlineReasoningDisplay steps={message.reasoningSteps} />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
