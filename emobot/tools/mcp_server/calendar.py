@@ -118,14 +118,28 @@ class CalendarTool(MCPToolBase):
         location = params.get("location", "")
         description = params.get("description", "")
         attendees = params.get("attendees", [])
-        
+
         # Parse time strings
         start_dt = self._parse_time(start_time)
         if not start_dt:
             return {"status": "error", "error_message": "Invalid start time format"}
-        
+
         end_dt = self._parse_time(end_time) if end_time else start_dt + timedelta(hours=1)
-        
+
+        # Check for duplicate events (same title and start time within 5 minutes)
+        for existing_event in self.events:
+            existing_start = self._parse_time(existing_event["start_time"])
+            if existing_start:
+                time_diff = abs((existing_start - start_dt).total_seconds())
+                # If same title and within 5 minutes, consider it a duplicate
+                if existing_event["title"] == title and time_diff < 300:  # 5 minutes = 300 seconds
+                    return {
+                        "status": "success",
+                        "result": f"Event '{title}' already exists at this time",
+                        "event": existing_event,
+                        "duplicate": True
+                    }
+
         event = {
             "id": f"event_{len(self.events) + 1}",
             "title": title,
@@ -137,10 +151,10 @@ class CalendarTool(MCPToolBase):
             "created_at": datetime.now().isoformat(),
             "status": "confirmed"
         }
-        
+
         self.events.append(event)
         self._save_calendar()
-        
+
         return {
             "status": "success",
             "result": f"Event '{title}' created successfully",
@@ -238,12 +252,32 @@ class CalendarTool(MCPToolBase):
         """Parse time string to datetime object"""
         if not time_str:
             return None
-        
+
         # Try ISO format first
         try:
             return datetime.fromisoformat(time_str.replace('Z', '+00:00'))
         except ValueError:
             pass
+
+        # Try common datetime formats with full month names
+        common_formats = [
+            "%B %d, %Y at %I:%M %p",     # November 15, 2025 at 1:30 PM
+            "%B %d, %Y %I:%M %p",        # November 15, 2025 1:30 PM
+            "%B %d %Y at %I:%M %p",      # November 15 2025 at 1:30 PM
+            "%b %d, %Y at %I:%M %p",     # Nov 15, 2025 at 1:30 PM
+            "%B %d at %I:%M %p",         # November 15 at 1:30 PM (current year)
+            "%b %d at %I:%M %p",         # Nov 15 at 1:30 PM (current year)
+        ]
+
+        for fmt in common_formats:
+            try:
+                parsed = datetime.strptime(time_str, fmt)
+                # If year is not in format, use current year
+                if parsed.year == 1900:
+                    parsed = parsed.replace(year=datetime.now().year)
+                return parsed
+            except ValueError:
+                continue
         
         # Try natural language parsing
         now = datetime.now()

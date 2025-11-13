@@ -299,7 +299,8 @@ const TodoPage: React.FC<TodoPageProps> = ({ onNavigate }) => {
       description: todo.description || '',
       priority: todo.priority as 'low' | 'medium' | 'high',
       category: todo.category,
-      dueDate: todo.dueDate || ''
+      dueDate: todo.dueDate || '',
+      dueTime: ''
     });
   };
 
@@ -896,7 +897,7 @@ const TodoPage: React.FC<TodoPageProps> = ({ onNavigate }) => {
                       onClick={() => {
                         setShowAddForm(false);
                         setShowProjectForm(false);
-                        setNewTodo({ title: '', description: '', priority: 'medium', category: 'personal', dueDate: '', isProject: false });
+                        setNewTodo({ title: '', description: '', priority: 'medium', category: 'personal', dueDate: '', dueTime: '', isProject: false });
                       }}
                       className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
                     >
@@ -1301,7 +1302,7 @@ const TodoPage: React.FC<TodoPageProps> = ({ onNavigate }) => {
                                 <button
                                   onClick={() => {
                                     setAddingSubtaskTo(null);
-                                    setNewSubtask({ title: '', description: '', priority: 'medium', category: 'personal', dueDate: '' });
+                                    setNewSubtask({ title: '', description: '', priority: 'medium', category: 'personal', dueDate: '', dueTime: '' });
                                   }}
                                   className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm transition-colors"
                                 >

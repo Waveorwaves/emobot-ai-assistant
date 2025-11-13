@@ -99,6 +99,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     subject: '',
     content: ''
   });
+  const [showCalendarConfirmation, setShowCalendarConfirmation] = useState(false);
+  const [calendarEventData, setCalendarEventData] = useState<any>(null);
   
   // Get real data from context
   const { getCalendarSummary, getEmailSummary, getTodoSummary, todos, emails } = useData();
@@ -640,6 +642,305 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     }
   };
 
+  // Handle confirm button - automates email reply and calendar scheduling
+  const handleConfirmAction = async (insight: any, index: number) => {
+    try {
+      // Step 1: Extract email recipient
+      let recipient = insight.sender_email || '';
+
+      if (!recipient) {
+        const combined = (insight.content || '') + ' ' + (insight.suggestion || '') + ' ' + (insight.title || '');
+        const fromPattern = combined.match(/from\s+([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
+        if (fromPattern) {
+          recipient = fromPattern[1];
+        } else {
+          const emailPattern = combined.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+          if (emailPattern) {
+            recipient = emailPattern[1];
+          } else {
+            const namePattern = combined.match(/(?:from|received.*from|email from)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i);
+            if (namePattern) {
+              const senderName = namePattern[1];
+              const senderEmail = emails.find(email =>
+                email.sender.toLowerCase().includes(senderName.toLowerCase())
+              );
+              if (senderEmail) {
+                const emailMatch = senderEmail.sender.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+                if (emailMatch) {
+                  recipient = emailMatch[1];
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if (!recipient) {
+        showNotification('❌ Could not extract sender email', 'error');
+        return;
+      }
+
+      showNotification('⏳ Generating email draft...', 'info');
+
+      // Step 2: Generate email reply
+      const emailResponse = await fetch('http://localhost:8000/api/insights/generate-reply', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          recipient: recipient,
+          context: insight.content,
+          suggestion: insight.suggestion || ''
+        })
+      });
+
+      const emailData = await emailResponse.json();
+
+      if (!emailData.success) {
+        showNotification('❌ Failed to generate email: ' + (emailData.error || 'Unknown error'), 'error');
+        return;
+      }
+
+      const finalRecipient = recipient || emailData.recipient || emailData.to;
+      let cleanedBody = cleanEmailBody(emailData.body || emailData.content || '');
+
+      if (!cleanedBody || cleanedBody.trim().length === 0) {
+        cleanedBody = `Dear ${recipient.split('@')[0]},\n\nThank you for your email. I confirm my availability for the meeting on the proposed date and time.\n\nLooking forward to it.\n\nBest regards`;
+      }
+
+      // Show compose modal first
+      setComposeForm({
+        to: finalRecipient,
+        subject: emailData.subject || 'Re: Meeting Request',
+        content: cleanedBody
+      });
+      setShowComposeModal(true);
+
+      // Extract calendar event info from insight
+      const combined = (insight.content || '') + ' ' + (insight.suggestion || '') + ' ' + (insight.title || '');
+
+      // Extract date - look for patterns like "November 15th", "Nov 15", etc.
+      const today = new Date();
+      const defaultDate = today.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+      let extractedDate = defaultDate;
+
+      const datePattern1 = combined.match(/(?:on|for|date:?)\s+([A-Z][a-z]+\s+\d{1,2}(?:st|nd|rd|th)?)/i);
+      const datePattern2 = combined.match(/([A-Z][a-z]+\s+\d{1,2}(?:st|nd|rd|th)?)/i);
+
+      if (datePattern1 && datePattern1[1]) {
+        extractedDate = datePattern1[1];
+      } else if (datePattern2 && datePattern2[1]) {
+        extractedDate = datePattern2[1];
+      }
+
+      // Extract time
+      let extractedTime = '1:30 PM';
+      const timePattern = combined.match(/(\d{1,2}:\d{2}\s*(?:AM|PM))/i);
+      if (timePattern && timePattern[1]) {
+        extractedTime = timePattern[1];
+      }
+
+      // Extract duration
+      let extractedDuration = '1 hour';
+      const durationPattern = combined.match(/(?:for|about)\s+(?:an?\s+)?(\d+)\s*(hour|minute)/i);
+      if (durationPattern) {
+        extractedDuration = `${durationPattern[1]} ${durationPattern[2]}`;
+      }
+
+      console.log('Extracted calendar data:', { date: extractedDate, time: extractedTime, duration: extractedDuration });
+
+      // Store calendar event data for later
+      setCalendarEventData({
+        title: insight.title || 'Meeting',
+        date: extractedDate,
+        time: extractedTime,
+        duration: extractedDuration,
+        recipient: finalRecipient,
+        insightIndex: index
+      });
+
+      showNotification('✓ Email draft ready!', 'success');
+
+    } catch (error) {
+      console.error('Error in confirm action:', error);
+      showNotification('❌ Failed to process action: ' + error, 'error');
+    }
+  };
+
+  // Handle sending email and showing calendar confirmation
+  const handleSendAndSchedule = async () => {
+    if (!composeForm.to.trim() || !composeForm.subject.trim() || !composeForm.content.trim()) {
+      showNotification('❌ Please fill in all fields', 'error');
+      return;
+    }
+
+    try {
+      showNotification('⏳ Sending email...', 'info');
+
+      const response = await fetch('http://localhost:8000/api/email/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: composeForm.to,
+          subject: composeForm.subject,
+          body: composeForm.content
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showNotification('✅ Email sent successfully!', 'success');
+        setShowComposeModal(false);
+
+        // Track email sent in history if we have insight data
+        if (calendarEventData && calendarEventData.insightIndex !== undefined) {
+          const insight = insights[calendarEventData.insightIndex];
+          if (insight) {
+            const hash = getInsightHash(insight);
+            const newStates = {
+              ...insightStates,
+              [hash]: {
+                ...insightStates[hash],
+                status: 'email_sent',
+                timestamp: Date.now(),
+                emailSentAt: new Date().toISOString(),
+                title: insight.title || 'Insight',
+                content: insight.content || '',
+                suggestion: insight.suggestion || '',
+                emailTo: composeForm.to,
+                emailSubject: composeForm.subject
+              }
+            };
+            saveInsightStates(newStates);
+          }
+        }
+
+        // Show calendar confirmation instead of navigating
+        setShowCalendarConfirmation(true);
+      } else {
+        showNotification('❌ Failed to send email: ' + (data.error || 'Unknown error'), 'error');
+      }
+    } catch (error) {
+      console.error('Error sending email:', error);
+      showNotification('❌ Failed to send email: ' + error, 'error');
+    }
+  };
+
+  // Handle adding event to calendar
+  const handleAddToCalendar = async () => {
+    if (!calendarEventData) return;
+
+    try {
+      showNotification('⏳ Adding to calendar...', 'info');
+
+      // Parse date and time into ISO format that the backend expects
+      const eventDate = calendarEventData.date; // e.g., "November 15th at 1:30 PM" or just "November 15th"
+      const eventTime = calendarEventData.time; // e.g., "1:30 PM"
+
+      // Remove ordinal suffixes (st, nd, rd, th)
+      const cleanDate = eventDate.replace(/(\d+)(st|nd|rd|th)/g, '$1');
+
+      // Parse the date string
+      const year = new Date().getFullYear();
+      let dateTimeStr = '';
+
+      // Check if time is already in the date string
+      if (cleanDate.includes('at') || cleanDate.match(/\d{1,2}:\d{2}/)) {
+        dateTimeStr = `${cleanDate} ${year}`;
+      } else {
+        // Combine date and time
+        dateTimeStr = `${cleanDate}, ${year} at ${eventTime}`;
+      }
+
+      console.log('Parsed datetime string:', dateTimeStr);
+
+      // Call calendar API to add event - use start_time instead of datetime
+      const payload = {
+        title: calendarEventData.title,
+        start_time: dateTimeStr,  // Changed from 'datetime' to 'start_time'
+        duration: calendarEventData.duration,
+        description: calendarEventData.recipient ? `Attendees: ${calendarEventData.recipient}` : '',
+        attendees: calendarEventData.recipient ? [calendarEventData.recipient] : []
+      };
+
+      console.log('Sending calendar request:', JSON.stringify(payload, null, 2));
+
+      const response = await fetch('http://localhost:8000/api/calendar/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showNotification('✅ Event added to calendar!', 'success');
+
+        // Track calendar added in history
+        if (calendarEventData && calendarEventData.insightIndex !== undefined) {
+          const insight = insights[calendarEventData.insightIndex];
+          if (insight) {
+            const hash = getInsightHash(insight);
+            const currentState = insightStates[hash] || {};
+            const newStates = {
+              ...insightStates,
+              [hash]: {
+                ...currentState,
+                status: 'calendar_added',
+                timestamp: Date.now(),
+                calendarAddedAt: new Date().toISOString(),
+                title: insight.title || 'Insight',
+                content: insight.content || '',
+                suggestion: insight.suggestion || '',
+                eventTitle: calendarEventData.title,
+                eventDate: calendarEventData.date,
+                eventTime: calendarEventData.time
+              }
+            };
+            saveInsightStates(newStates);
+
+            // Remove from active insights
+            const newInsights = insights.filter((_, i) => i !== calendarEventData.insightIndex);
+            setInsights(newInsights);
+
+            // Update summary count
+            if (insightsSummary) {
+              const updatedSummary = {
+                ...insightsSummary,
+                insights_count: newInsights.length
+              };
+              setInsightsSummary(updatedSummary);
+              try {
+                localStorage.setItem('cachedInsightsSummary', JSON.stringify(updatedSummary));
+                localStorage.setItem('cachedInsights', JSON.stringify(newInsights));
+              } catch (error) {
+                console.error('Error updating cached data:', error);
+              }
+            }
+          }
+        }
+
+        setShowCalendarConfirmation(false);
+        setCalendarEventData(null);
+        setComposeForm({ to: '', subject: '', content: '' });
+
+        // Refresh the page or trigger a calendar refresh
+        // You might want to add a callback here to refresh calendar data
+      } else {
+        showNotification('❌ Failed to add to calendar: ' + (data.error || 'Unknown error'), 'error');
+      }
+    } catch (error) {
+      console.error('Error adding to calendar:', error);
+      showNotification('❌ Failed to add to calendar: ' + error, 'error');
+    }
+  };
+
   // Generate smart action buttons based on insight content
   const generateSmartActions = (insight: any, index: number) => {
     const actions = [];
@@ -652,6 +953,19 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     const isEmailInsight = insight.sender_email ||
                           title.includes('email') && (combined.includes('reply') || combined.includes('respond') || combined.includes('from'));
 
+    // Detect if this is about scheduling/calendar
+    const isSchedulingInsight = combined.includes('schedule') || combined.includes('meeting') || combined.includes('calendar') || combined.includes('reschedule');
+
+    // If it's both an email and scheduling insight, add a Confirm button for automation
+    if (isEmailInsight && isSchedulingInsight) {
+      actions.push({
+        label: '✅ Confirm',
+        onClick: () => handleConfirmAction(insight, index),
+        type: 'confirm',
+        priority: true
+      });
+    }
+
     if (isEmailInsight) {
       actions.push({
         label: '📧 Reply to Email',
@@ -660,8 +974,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
       });
     }
 
-    // Detect if this is about scheduling/calendar
-    if (combined.includes('schedule') || combined.includes('meeting') || combined.includes('calendar') || combined.includes('reschedule')) {
+    if (isSchedulingInsight) {
       actions.push({
         label: '📅 Open Calendar',
         onClick: () => {
@@ -949,16 +1262,22 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                             <button
                               key={actionIndex}
                               onClick={action.onClick}
-                              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                              className={`${
+                                action.type === 'confirm'
+                                  ? 'bg-green-600 hover:bg-green-700'
+                                  : 'bg-blue-600 hover:bg-blue-700'
+                              } text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                                action.priority ? 'ring-2 ring-green-400 ring-opacity-50' : ''
+                              }`}
                             >
                               {action.label}
                             </button>
                           ))}
-                          
+
                           {/* Management Actions */}
-                          <button 
+                          <button
                             onClick={() => markInsightComplete(index)}
-                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                            className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
                             title="Mark as completed"
                           >
                             ✓ Complete
@@ -1226,7 +1545,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
             {/* History Filter Tabs */}
             {Object.keys(insightStates).length > 0 && (
-              <div className="flex items-center space-x-2 px-6 pt-4 border-b border-gray-700 pb-4">
+              <div className="flex items-center flex-wrap gap-2 px-6 pt-4 border-b border-gray-700 pb-4">
                 <button
                   onClick={() => setHistoryFilter('all')}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
@@ -1236,6 +1555,26 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                   }`}
                 >
                   All
+                </button>
+                <button
+                  onClick={() => setHistoryFilter('email_sent')}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    historyFilter === 'email_sent'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }`}
+                >
+                  📧 Email Sent
+                </button>
+                <button
+                  onClick={() => setHistoryFilter('calendar_added')}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    historyFilter === 'calendar_added'
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }`}
+                >
+                  📅 Calendar Added
                 </button>
                 <button
                   onClick={() => setHistoryFilter('completed')}
@@ -1277,16 +1616,28 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                     .sort(([, a]: [string, any], [, b]: [string, any]) => b.timestamp - a.timestamp)
                     .map(([hash, state]: [string, any]) => {
                     const statusEmoji = {
+                      'email_sent': '📧',
+                      'calendar_added': '📅',
                       'completed': '✓',
                       'not_useful': '✗',
                       'snoozed': '⏰'
                     }[state.status] || '•';
 
                     const statusColor = {
+                      'email_sent': 'border-blue-600/20 bg-blue-900/20',
+                      'calendar_added': 'border-purple-600/20 bg-purple-900/20',
                       'completed': 'border-green-600/20 bg-green-900/20',
                       'not_useful': 'border-gray-600/20 bg-gray-900/20',
                       'snoozed': 'border-blue-600/20 bg-blue-900/20'
                     }[state.status] || 'border-gray-600/20 bg-gray-900/20';
+
+                    const statusLabel = {
+                      'email_sent': 'EMAIL SENT',
+                      'calendar_added': 'CALENDAR ADDED',
+                      'completed': 'COMPLETED',
+                      'not_useful': 'NOT USEFUL',
+                      'snoozed': 'SNOOZED'
+                    }[state.status] || state.status.replace('_', ' ').toUpperCase();
 
                     const date = new Date(state.timestamp).toLocaleString();
 
@@ -1300,11 +1651,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                             {/* Status badge */}
                             <div className="flex items-center space-x-2 mb-2">
                               <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                state.status === 'email_sent' ? 'bg-blue-500 text-white' :
+                                state.status === 'calendar_added' ? 'bg-purple-600 text-white' :
                                 state.status === 'completed' ? 'bg-green-600 text-white' :
                                 state.status === 'not_useful' ? 'bg-gray-600 text-white' :
                                 'bg-blue-600 text-white'
                               }`}>
-                                {statusEmoji} {state.status.replace('_', ' ').toUpperCase()}
+                                {statusEmoji} {statusLabel}
                               </span>
                               <span className="text-gray-400 text-xs">{date}</span>
                             </div>
@@ -1329,6 +1682,32 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                                 <p className="text-blue-300 text-xs">
                                   <strong className="text-blue-400">💡 Suggestion:</strong> {state.suggestion}
                                 </p>
+                              </div>
+                            )}
+
+                            {/* Email Sent Details */}
+                            {state.status === 'email_sent' && state.emailTo && (
+                              <div className="bg-blue-900/30 border border-blue-500/20 rounded-lg p-2 mb-2">
+                                <p className="text-blue-300 text-xs mb-1">
+                                  <strong className="text-blue-400">📧 Email Sent:</strong>
+                                </p>
+                                <p className="text-gray-300 text-xs">To: {state.emailTo}</p>
+                                {state.emailSubject && (
+                                  <p className="text-gray-300 text-xs">Subject: {state.emailSubject}</p>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Calendar Added Details */}
+                            {state.status === 'calendar_added' && state.eventTitle && (
+                              <div className="bg-purple-900/30 border border-purple-500/20 rounded-lg p-2 mb-2">
+                                <p className="text-purple-300 text-xs mb-1">
+                                  <strong className="text-purple-400">📅 Calendar Event:</strong>
+                                </p>
+                                <p className="text-gray-300 text-xs">{state.eventTitle}</p>
+                                {state.eventDate && state.eventTime && (
+                                  <p className="text-gray-300 text-xs">{state.eventDate} at {state.eventTime}</p>
+                                )}
                               </div>
                             )}
                           </div>
@@ -1416,19 +1795,103 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
             </div>
 
             {/* Compose Footer */}
-            <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-700">
+            <div className="flex items-center justify-between p-6 border-t border-gray-700">
               <button
                 onClick={() => setShowComposeModal(false)}
                 className="px-4 py-2 text-gray-300 hover:text-white transition-colors"
               >
                 Cancel
               </button>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={handleSendEmail}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors font-medium"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>Send</span>
+                </button>
+                {calendarEventData && (
+                  <button
+                    onClick={handleSendAndSchedule}
+                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors font-medium ring-2 ring-green-400 ring-opacity-50"
+                  >
+                    <Calendar className="w-4 h-4" />
+                    <span>Send & Schedule</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Calendar Confirmation Modal */}
+      {showCalendarConfirmation && calendarEventData && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-[#1a1a1a] border border-gray-700 rounded-lg w-[500px] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-700">
+              <div className="flex items-center space-x-2">
+                <Calendar className="w-5 h-5 text-green-400" />
+                <h2 className="text-lg font-medium text-white">Add to Calendar</h2>
+              </div>
               <button
-                onClick={handleSendEmail}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors font-medium"
+                onClick={() => setShowCalendarConfirmation(false)}
+                className="text-gray-400 hover:text-white p-1"
               >
-                <Send className="w-4 h-4" />
-                <span>Send</span>
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Event Details */}
+            <div className="p-6 space-y-4">
+              <div className="bg-green-900/20 border border-green-600/20 rounded-lg p-4">
+                <p className="text-green-400 text-sm mb-3">✅ Email sent successfully!</p>
+                <p className="text-gray-300 text-sm">Would you like to add this meeting to your calendar?</p>
+              </div>
+
+              {/* Event Information */}
+              <div className="bg-[#0a0a0a] border border-gray-700 rounded-lg p-4 space-y-3">
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-20 text-gray-400 text-sm">Title:</div>
+                  <div className="text-white text-sm font-medium">{calendarEventData.title}</div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-20 text-gray-400 text-sm">Date:</div>
+                  <div className="text-white text-sm">{calendarEventData.date}</div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-20 text-gray-400 text-sm">Time:</div>
+                  <div className="text-white text-sm">{calendarEventData.time}</div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-20 text-gray-400 text-sm">Duration:</div>
+                  <div className="text-white text-sm">{calendarEventData.duration}</div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-20 text-gray-400 text-sm">Attendees:</div>
+                  <div className="text-white text-sm">{calendarEventData.recipient}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-700">
+              <button
+                onClick={() => {
+                  setShowCalendarConfirmation(false);
+                  setCalendarEventData(null);
+                }}
+                className="px-4 py-2 text-gray-300 hover:text-white transition-colors"
+              >
+                Skip
+              </button>
+              <button
+                onClick={handleAddToCalendar}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors font-medium"
+              >
+                <Calendar className="w-4 h-4" />
+                <span>Add to Calendar</span>
               </button>
             </div>
           </div>

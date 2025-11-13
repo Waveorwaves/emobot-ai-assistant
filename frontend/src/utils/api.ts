@@ -153,6 +153,11 @@ export const emailApi = {
     return response.data;
   },
 
+  async listSentEmails() {
+    const response = await api.get('/api/email/sent');
+    return response.data;
+  },
+
   async sendEmail(email: { to: string; subject: string; body: string }) {
     const response = await api.post('/api/email/send', email);
     return response.data;

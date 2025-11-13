@@ -312,16 +312,16 @@ def create_calendar_event():
     try:
         if not reasoning_module:
             return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
-        
+
         data = request.json
         title = data.get('title')
         time = data.get('time')
         duration = data.get('duration', '1 hour')
         description = data.get('description', '')
-        
+
         if not title or not time:
             return jsonify({'success': False, 'error': 'Title and time required'}), 400
-        
+
         # Use the calendar tool with create_event operation
         result = reasoning_module.action_executor.execute_action('calendar', {
             'operation': 'create_event',
@@ -329,7 +329,7 @@ def create_calendar_event():
             'start_time': time,
             'description': description
         })
-        
+
         return jsonify({
             'success': True,
             'message': 'Event created',
@@ -337,6 +337,61 @@ def create_calendar_event():
         })
     except Exception as e:
         logging.error(f"Create event error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/calendar/add', methods=['POST'])
+def add_calendar_event():
+    """Add calendar event (alternative endpoint for frontend)"""
+    try:
+        if not reasoning_module:
+            return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
+
+        data = request.json
+        title = data.get('title')
+        # Accept both 'datetime' and 'start_time' parameters
+        start_time = data.get('start_time') or data.get('datetime')
+        duration = data.get('duration', '1 hour')
+        attendees = data.get('attendees', [])
+        description = data.get('description', '')
+
+        if not title or not start_time:
+            return jsonify({'success': False, 'error': 'Title and start_time required'}), 400
+
+        logging.info(f"Adding calendar event: {title} at {start_time}")
+
+        # Build description from attendees if not provided
+        if not description and attendees:
+            description = f"Attendees: {', '.join(attendees)}"
+
+        # Use the calendar tool with create_event operation
+        result = reasoning_module.action_executor.execute_action('calendar', {
+            'operation': 'create_event',
+            'title': title,
+            'start_time': start_time,
+            'description': description,
+            'attendees': attendees
+        })
+
+        logging.info(f"Calendar add result: {result}")
+
+        if result and result.get('status') == 'success':
+            return jsonify({
+                'success': True,
+                'message': 'Event added to calendar',
+                'result': result,
+                'event': result.get('event')
+            })
+        else:
+            error_msg = result.get('error_message', 'Failed to add event')
+            logging.error(f"Calendar add failed: {error_msg}")
+            return jsonify({
+                'success': False,
+                'error': error_msg
+            }), 500
+    except Exception as e:
+        logging.error(f"Add calendar event error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # Email API Endpoints
@@ -365,7 +420,7 @@ def list_emails():
             # Default to inbox
             result = reasoning_module.action_executor.execute_action('email', {
                 'operation': 'read_inbox',
-                'max_results': 20
+                'max_results': 10
             })
         
         logging.info(f"Email fetch result: {result}")
@@ -390,6 +445,45 @@ def list_emails():
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e), 'emails': []}), 500
 
+@app.route('/api/email/sent', methods=['GET'])
+def list_sent_emails():
+    """List sent emails"""
+    try:
+        if not reasoning_module:
+            error_msg = 'Agent not initialized - MCP server may not be running'
+            logging.error(error_msg)
+            return jsonify({'success': False, 'error': error_msg, 'emails': []}), 500
+
+        logging.info("Fetching sent emails")
+
+        # Use the email tool with read_sent operation
+        result = reasoning_module.action_executor.execute_action('email', {
+            'operation': 'read_sent',
+            'max_results': 10
+        })
+
+        logging.info(f"Sent email fetch result: {result}")
+
+        if result and result.get('status') == 'success':
+            emails = result.get('emails', result.get('result', []))
+            return jsonify({
+                'success': True,
+                'emails': emails if isinstance(emails, list) else []
+            })
+        else:
+            error_msg = result.get('error_message', 'Failed to fetch sent emails')
+            logging.error(f"Sent email fetch failed: {error_msg}")
+            return jsonify({
+                'success': False,
+                'error': error_msg,
+                'emails': []
+            }), 500
+    except Exception as e:
+        logging.error(f"List sent emails error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e), 'emails': []}), 500
+
 @app.route('/api/email/send', methods=['POST'])
 def send_email():
     """Send email"""
@@ -398,17 +492,17 @@ def send_email():
             error_msg = 'Agent not initialized - MCP server may not be running'
             logging.error(error_msg)
             return jsonify({'success': False, 'error': error_msg}), 500
-        
+
         data = request.json
         to = data.get('to')
         subject = data.get('subject')
         body = data.get('body')
-        
+
         if not to or not subject or not body:
             return jsonify({'success': False, 'error': 'To, subject, and body required'}), 400
-        
+
         logging.info(f"Sending email to: {to}, subject: {subject}")
-        
+
         # Use the email tool with send operation
         result = reasoning_module.action_executor.execute_action('email', {
             'operation': 'send_email',
@@ -416,9 +510,9 @@ def send_email():
             'subject': subject,
             'body': body
         })
-        
+
         logging.info(f"Send email result: {result}")
-        
+
         if result and result.get('status') == 'success':
             return jsonify({
                 'success': True,

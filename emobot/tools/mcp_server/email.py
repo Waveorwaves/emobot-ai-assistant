@@ -27,7 +27,7 @@ class EmailTool(MCPToolBase):
             "description": "要执行的操作",
             "enum": [
                 # 邮件操作
-                "read_inbox", "send_email", "search_emails", "mark_read", "get_unread_count",
+                "read_inbox", "read_sent", "send_email", "search_emails", "mark_read", "get_unread_count",
                 "delete_email", "archive_email", "reply_email", "forward_email",
                 "get_email_details", "get_attachments", "create_draft", "send_draft",
                 # 联系人操作
@@ -129,6 +129,8 @@ class EmailTool(MCPToolBase):
             # 邮件操作
             if operation == "read_inbox":
                 return self._read_inbox(**kwargs)
+            elif operation == "read_sent":
+                return self._read_sent(**kwargs)
             elif operation == "send_email":
                 return self._send_email(**kwargs)
             elif operation == "search_emails":
@@ -260,6 +262,48 @@ class EmailTool(MCPToolBase):
 
         except Exception as e:
             return {"status": "error", "error_message": f"读取收件箱失败: {str(e)}"}
+
+    def _read_sent(self, max_results: int = 10, **kwargs) -> Dict[str, Any]:
+        """读取发件箱中的邮件"""
+        try:
+            # 确保服务可用
+            if not self._ensure_service():
+                return {"status": "error", "error_message": "Gmail服务不可用"}
+
+            print(f"📧 Fetching {max_results} sent emails from Gmail API...")
+
+            # 获取发件箱中的邮件
+            results = self.service.users().messages().list(
+                userId='me',
+                labelIds=['SENT'],
+                maxResults=max_results
+            ).execute()
+
+            messages = results.get('messages', [])
+            print(f"📊 Gmail API returned {len(messages)} sent message IDs")
+
+            if not messages:
+                return {"status": "success", "result": "发件箱中没有邮件", "emails": []}
+
+            # 获取邮件详情
+            email_list = []
+            for i, msg in enumerate(messages):
+                print(f"  Fetching details for sent email {i+1}/{len(messages)}: {msg['id']}")
+                email_data = self._get_message_details(msg['id'])
+                if email_data:
+                    # Mark email as sent folder
+                    email_data['folder'] = 'sent'
+                    email_list.append(email_data)
+
+            print(f"✅ Successfully fetched {len(email_list)} sent emails with details")
+            return {
+                "status": "success",
+                "emails": email_list,
+                "total_count": len(email_list)
+            }
+
+        except Exception as e:
+            return {"status": "error", "error_message": f"读取发件箱失败: {str(e)}"}
 
     def _send_email(self, recipient: str, subject: str, body: str, **kwargs) -> Dict[str, Any]:
         """发送邮件"""

@@ -255,16 +255,37 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     try {
-      // Fetch emails from backend
-      const emailResponse = await emailApi.listEmails();
-      if (emailResponse.success && emailResponse.emails) {
+      // Fetch inbox emails first, then sent emails sequentially to avoid overwhelming the server
+      const allEmails: any[] = [];
+
+      // Fetch inbox emails
+      try {
+        const emailResponse = await emailApi.listEmails();
+        if (emailResponse.success && emailResponse.emails) {
+          allEmails.push(...emailResponse.emails);
+        }
+      } catch (error) {
+        console.log('Inbox email fetch failed:', error);
+      }
+
+      // Fetch sent emails separately
+      try {
+        const sentEmailResponse = await emailApi.listSentEmails();
+        if (sentEmailResponse.success && sentEmailResponse.emails) {
+          allEmails.push(...sentEmailResponse.emails);
+        }
+      } catch (error) {
+        console.log('Sent email fetch failed:', error);
+      }
+
+      if (allEmails.length > 0) {
         // Transform backend email format to frontend format
-        const transformedEmails = emailResponse.emails.map((email: any) => {
+        const transformedEmails = allEmails.map((email: any) => {
           // Parse sender from "Name <email@example.com>" format
           const fromField = email.from || email.sender || '';
           let senderName = fromField;
           let senderEmail = '';
-          
+
           // Extract name and email from "Name <email>" format
           const emailMatch = fromField.match(/^(.+?)\s*<(.+?)>$/);
           if (emailMatch) {
@@ -274,7 +295,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             senderEmail = fromField;
             senderName = fromField.split('@')[0];
           }
-          
+
           // Parse date to readable format
           let timestamp = email.timestamp || email.date || '';
           if (email.date && !email.timestamp) {
@@ -286,7 +307,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               const diffMins = Math.floor(diffMs / 60000);
               const diffHours = Math.floor(diffMs / 3600000);
               const diffDays = Math.floor(diffMs / 86400000);
-              
+
               if (diffMins < 60) {
                 timestamp = `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
               } else if (diffHours < 24) {
@@ -300,7 +321,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               timestamp = email.date;
             }
           }
-          
+
           return {
             id: email.id || Date.now().toString(),
             sender: senderName || 'Unknown Sender',
@@ -316,7 +337,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             tags: email.tags || []
           };
         });
-        
+
+        // Sort by internal date if available, otherwise by timestamp
+        transformedEmails.sort((a: any, b: any) => {
+          const aDate = a.internalDate || new Date(a.timestamp).getTime();
+          const bDate = b.internalDate || new Date(b.timestamp).getTime();
+          return Number(bDate) - Number(aDate);
+        });
+
         setEmails(transformedEmails);
       }
     } catch (error) {

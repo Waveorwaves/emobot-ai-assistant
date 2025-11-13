@@ -483,21 +483,36 @@ class ReasoningModule:
                 tools_info.append(f"- {tool_name}")
         return "\n        ".join(tools_info)
     
-    def _build_thought_prompt(self, query: str, step: int, current_thought: str, 
+    def _build_thought_prompt(self, query: str, step: int, current_thought: str,
                             tool_results: list, plan: dict, conversation_history: str = "") -> str:
         """Build thought prompt for current step with conversation context"""
-        
+
+        # Get current date/time for context
+        from datetime import datetime
+        current_datetime = datetime.now()
+        current_date_str = current_datetime.strftime("%A, %B %d, %Y")  # e.g., "Tuesday, November 12, 2025"
+        current_time_str = current_datetime.strftime("%I:%M %p")  # e.g., "4:30 PM"
+
         # Add enhanced context if available (includes both conversation history and episodic memory)
-        context_section = ""
+        context_section = f"""
+
+        CURRENT DATE AND TIME: {current_date_str} at {current_time_str}
+
+        IMPORTANT: When the user asks about "today", "tomorrow", "this week", etc., use the current date above to calculate the correct dates.
+        - Today is {current_date_str}
+        - Tomorrow is {(current_datetime + timedelta(days=1)).strftime("%A, %B %d, %Y")}
+        - This week starts on {(current_datetime - timedelta(days=current_datetime.weekday())).strftime("%B %d, %Y")}
+        """
+
         if conversation_history and conversation_history != "No history records.":
-            context_section = f"""
-        
+            context_section += f"""
+
         Context Information:
         {conversation_history}
-        
+
         IMPORTANT: Consider both the recent conversation history and any relevant past experiences when making decisions. If the user is continuing a previous task or providing additional information (like an email address after asking to send an email), use that context to understand what they want. Past experiences can help you understand user preferences and patterns.
         """
-        
+
         prompt = f"""
         You are in step {step} of the ReAct loop (max {self.max_steps} steps).
 
