@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Clock, MapPin, AlignLeft, X, Calendar } from 'lucide-react';
 import Sidebar from './ui/Sidebar';
 import ChatBox from './ui/ChatBox';
 import EventModal from './ui/EventModal';
@@ -29,14 +29,14 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
     const diff = today.getDate() - day;
     return new Date(today.setDate(diff));
   });
-  
+
   // Modal and preview states
   const [showEventModal, setShowEventModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | undefined>(undefined);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [previewEvent, setPreviewEvent] = useState<CalendarEvent | undefined>(undefined);
   const [previewPosition, setPreviewPosition] = useState({ x: 0, y: 0 });
-  
+
   // Get real data from context
   const { getEventsForDate, addEvent, updateEvent, deleteEvent, todayEvents, detectConflicts, allEvents } = useData();
 
@@ -52,16 +52,16 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
   const hasEventPassed = (event: CalendarEvent) => {
     const now = new Date();
     const today = formatDateLocal(now);
-    
+
     // If event is not today, compare dates
     if (event.date !== today) {
       return event.date ? event.date < today : false;
     }
-    
+
     // If event is today, compare times
     const [eventHours, eventMinutes] = event.time.split(':').map(Number);
     const eventTimeInMinutes = eventHours * 60 + eventMinutes;
-    
+
     // Add duration to get end time
     const durationMinutes = (() => {
       if (event.duration.includes('hour')) {
@@ -73,10 +73,10 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
       }
       return 60; // Default 1 hour
     })();
-    
+
     const eventEndTimeInMinutes = eventTimeInMinutes + durationMinutes;
     const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
-    
+
     return eventEndTimeInMinutes <= currentTimeInMinutes;
   };
 
@@ -93,7 +93,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
     startOfWeek.setDate(today.getDate() - today.getDay());
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
-    
+
     let count = 0;
     for (let d = new Date(startOfWeek); d <= endOfWeek; d.setDate(d.getDate() + 1)) {
       const dayEvents = getEventsForDate(d);
@@ -109,7 +109,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
     startOfNextWeek.setDate(today.getDate() - today.getDay() + 7);
     const endOfNextWeek = new Date(startOfNextWeek);
     endOfNextWeek.setDate(startOfNextWeek.getDate() + 6);
-    
+
     let count = 0;
     for (let d = new Date(startOfNextWeek); d <= endOfNextWeek; d.setDate(d.getDate() + 1)) {
       const dayEvents = getEventsForDate(d);
@@ -124,15 +124,15 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
       meeting: 'bg-blue-500',
       task: 'bg-green-500',
       reminder: 'bg-yellow-500',
-      personal: 'bg-purple-500',
+      personal: 'bg-sky-500',
       default: 'bg-gray-500'
     };
-    
+
     if (hasConflict) {
       // Add red stripe or border for conflicts
       return `${baseColors[type] || baseColors.default} border-2 border-red-500 bg-stripes`;
     }
-    
+
     return baseColors[type] || baseColors.default;
   };
 
@@ -177,10 +177,10 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
       // Check if this event conflicts with others
       const eventConflicts = conflicts.find(c => c.eventId === event.id);
       const conflictingEventIds = eventConflicts ? eventConflicts.conflictsWith : [];
-      
+
       // Find all events that conflict with this one (including this event)
-      const conflictGroup = events.filter(e => 
-        e.id === event.id || 
+      const conflictGroup = events.filter(e =>
+        e.id === event.id ||
         conflictingEventIds.includes(e.id) ||
         conflicts.some(c => c.eventId === e.id && c.conflictsWith.includes(event.id))
       );
@@ -199,7 +199,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
           // Tighter layout for week view
           const widthPerEvent = 90 / totalInGroup;
           const leftOffset = positionInGroup * 8; // Smaller offset for week view
-          
+
           left = leftOffset;
           width = `${Math.min(widthPerEvent + 15, 95)}%`; // Constrain max width
           zIndex = 10 + positionInGroup;
@@ -207,7 +207,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
           // Day view layout
           const widthPerEvent = 85 / totalInGroup;
           const leftOffset = positionInGroup * 12;
-          
+
           left = leftOffset;
           width = `${widthPerEvent + 20}%`;
           zIndex = 10 + positionInGroup;
@@ -238,9 +238,9 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
   const handleToggleCollapse = () => {
     const next = !isCollapsed;
     setIsCollapsed(next);
-    try { 
-      localStorage.setItem('sidebarCollapsed', String(next)); 
-    } catch {}
+    try {
+      localStorage.setItem('sidebarCollapsed', String(next));
+    } catch { }
   };
 
   // Mini calendar helper functions
@@ -273,29 +273,28 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
     const daysInMonth = getDaysInMonth(miniCalendarDate);
     const firstDay = getFirstDayOfMonth(miniCalendarDate);
     const days = [];
-    
+
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < firstDay; i++) {
       days.push(<div key={`empty-${i}`} className="w-8 h-8"></div>);
     }
-    
+
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(
         <button
           key={day}
           onClick={() => handleDateClick(day)}
-          className={`w-8 h-8 text-sm rounded transition-colors ${
-            isToday(day)
-              ? 'bg-blue-600 text-white'
-              : 'text-gray-300 hover:bg-[#453f3b] hover:text-white'
-          }`}
+          className={`w-8 h-8 text-sm rounded transition-colors ${isToday(day)
+            ? 'bg-primary-500 text-white shadow-[0_0_10px_rgba(6,182,212,0.4)]'
+            : 'text-gray-300 hover:bg-white/10 hover:text-white'
+            }`}
         >
           {day}
         </button>
       );
     }
-    
+
     return days;
   };
 
@@ -362,7 +361,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
   const handleDateClick = (day: number) => {
     // Create a new date for the clicked day
     const clickedDate = new Date(miniCalendarDate.getFullYear(), miniCalendarDate.getMonth(), day);
-    
+
     // If we're in week mode, show centered 7-day view around the clicked date
     if (viewMode === 'week') {
       // Center the clicked date - calculate 3 days before
@@ -376,7 +375,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
       weekStart.setDate(clickedDate.getDate() - dayOfWeek);
       setWeekStartDate(weekStart);
     }
-    
+
     // Update the current date
     setCurrentDate(clickedDate);
   };
@@ -402,9 +401,9 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
     const startDay = firstDay.getDay();
-    
+
     const days = [];
-    
+
     // Previous month's trailing days
     const prevMonth = new Date(year, month - 1, 0);
     for (let i = startDay - 1; i >= 0; i--) {
@@ -414,7 +413,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
         fullDate: new Date(year, month - 1, prevMonth.getDate() - i)
       });
     }
-    
+
     // Current month's days
     for (let day = 1; day <= daysInMonth; day++) {
       days.push({
@@ -423,7 +422,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
         fullDate: new Date(year, month, day)
       });
     }
-    
+
     // Next month's leading days
     const remainingSlots = 42 - days.length; // 6 rows × 7 days
     for (let day = 1; day <= remainingSlots; day++) {
@@ -433,13 +432,13 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
         fullDate: new Date(year, month + 1, day)
       });
     }
-    
+
     return days;
   };
 
   const navigateDate = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate);
-    
+
     if (viewMode === 'day') {
       newDate.setDate(currentDate.getDate() + (direction === 'next' ? 1 : -1));
     } else if (viewMode === 'week') {
@@ -450,17 +449,17 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
     } else if (viewMode === 'month') {
       newDate.setMonth(currentDate.getMonth() + (direction === 'next' ? 1 : -1));
     }
-    
+
     setCurrentDate(newDate);
   };
 
   const formatDateHeader = () => {
     if (viewMode === 'day') {
-      return currentDate.toLocaleDateString('en-US', { 
-        weekday: 'long', 
-        month: 'long', 
-        day: 'numeric', 
-        year: 'numeric' 
+      return currentDate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
       });
     } else if (viewMode === 'week') {
       const endDate = new Date(weekStartDate);
@@ -472,7 +471,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
   };
 
   return (
-    <div className="h-screen bg-[#1e1e1e]">
+    <div className="h-screen bg-transparent">
       <Sidebar
         isCollapsed={isCollapsed}
         onToggleCollapse={handleToggleCollapse}
@@ -481,37 +480,44 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
       />
 
       {/* Main Content Area */}
-      <div className={`${isCollapsed ? 'ml-20' : 'ml-72'} transition-all duration-300 flex flex-col h-screen`}>
+      <div className={`${isCollapsed ? 'ml-20' : 'ml-64'} transition-all duration-300 flex flex-col h-screen`}>
         {/* Calendar Content Area */}
-        <div className="flex-1 bg-[#1e1e1e] overflow-y-auto">
+        <div className="flex-1 bg-transparent overflow-y-auto">
           {/* Calendar Header */}
-          <div className="p-6 border-b border-[#453f3b]/30">
+          <div className="p-6 border-b border-primary-500/60">
             <div className="flex items-center justify-between">
-              <h1 className="text-white text-2xl font-medium">Calendar</h1>
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-primary-500/10 border border-primary-500/60 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+                  <Calendar className="w-6 h-6 text-primary-400" />
+                </div>
+                <div>
+                  <h1 className="text-white text-2xl font-display font-bold tracking-tight">Calendar</h1>
+                </div>
+              </div>
               <div className="flex items-center space-x-4">
-                <div className="flex bg-[#453f3b] rounded-lg p-1">
-                  <button 
+                <div className="flex glass-panel rounded-lg p-1">
+                  <button
                     onClick={() => setViewMode('day')}
-                    className={`px-4 py-2 rounded text-sm transition-colors ${viewMode === 'day' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:text-white'}`}
+                    className={`px-4 py-2 rounded font-display font-semibold uppercase tracking-wide text-xs transition-colors ${viewMode === 'day' ? 'bg-primary-500/20 text-white border border-primary-500 shadow-[0_0_10px_rgba(6,182,212,0.2)]' : 'text-white/70 hover:text-white'}`}
                   >
                     Day
                   </button>
-                  <button 
+                  <button
                     onClick={() => setViewMode('week')}
-                    className={`px-4 py-2 rounded text-sm transition-colors ${viewMode === 'week' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:text-white'}`}
+                    className={`px-4 py-2 rounded font-display font-semibold uppercase tracking-wide text-xs transition-colors ${viewMode === 'week' ? 'bg-primary-500/20 text-white border border-primary-500 shadow-[0_0_10px_rgba(6,182,212,0.2)]' : 'text-white/70 hover:text-white'}`}
                   >
                     Week
                   </button>
-                  <button 
+                  <button
                     onClick={() => setViewMode('month')}
-                    className={`px-4 py-2 rounded text-sm transition-colors ${viewMode === 'month' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:text-white'}`}
+                    className={`px-4 py-2 rounded font-display font-semibold uppercase tracking-wide text-xs transition-colors ${viewMode === 'month' ? 'bg-primary-500/20 text-white border border-primary-500 shadow-[0_0_10px_rgba(6,182,212,0.2)]' : 'text-white/70 hover:text-white'}`}
                   >
                     Month
                   </button>
                 </div>
-                <button 
+                <button
                   onClick={handleNewEvent}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                  className="btn-neon-flow text-white px-4 py-2 rounded-lg flex items-center space-x-2 font-display font-semibold uppercase tracking-wide text-xs"
                 >
                   <Plus className="w-4 h-4" />
                   <span>New Event</span>
@@ -529,14 +535,14 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
                 <div className="flex items-center space-x-4">
                   <button
                     onClick={() => navigateDate('prev')}
-                    className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-[#453f3b]"
+                    className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/10"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
-                  <h2 className="text-2xl font-semibold text-white">{formatDateHeader()}</h2>
+                  <h2 className="font-display font-bold tracking-tight text-2xl text-white">{formatDateHeader()}</h2>
                   <button
                     onClick={() => navigateDate('next')}
-                    className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-[#453f3b]"
+                    className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/10"
                   >
                     <ChevronRight className="w-5 h-5" />
                   </button>
@@ -549,238 +555,236 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
                     weekStart.setDate(today.getDate() - today.getDay());
                     setWeekStartDate(weekStart);
                   }}
-                  className="px-4 py-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-[#453f3b] border border-[#453f3b]"
+                  className="px-4 py-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/10 border border-primary-500/60 font-display font-semibold uppercase tracking-wide text-xs"
                 >
                   Today
                 </button>
               </div>
 
               {/* Calendar Content */}
-              <div className="bg-[#1e1e1e] rounded-lg overflow-hidden">
-              {/* Day View */}
-              {viewMode === 'day' && (
-                <div className="h-[600px] overflow-y-auto">
-                  {/* Day Header */}
-                  <div className="sticky top-0 bg-[#1e1e1e] z-10 border-b border-gray-700 p-4">
-                    <div className="text-center">
-                      <div className="text-sm text-gray-400">
-                        {currentDate.toLocaleDateString('en-US', { weekday: 'long' })}
-                      </div>
-                      <div className="text-3xl font-light text-white">
-                        {currentDate.getDate()}
+              <div className="glass-panel rounded-lg overflow-hidden">
+                {/* Day View */}
+                {viewMode === 'day' && (
+                  <div className="h-[600px] overflow-y-auto">
+                    {/* Day Header */}
+                    <div className="sticky top-0 bg-surface-900/95 backdrop-blur-sm z-10 border-b border-primary-500/60 p-4">
+                      <div className="text-center">
+                        <div className="text-sm text-gray-400">
+                          {currentDate.toLocaleDateString('en-US', { weekday: 'long' })}
+                        </div>
+                        <div className="text-3xl font-light text-white">
+                          {currentDate.getDate()}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  {/* All-day events */}
-                  <div className="border-b border-gray-700 p-4">
-                    <div className="text-xs text-gray-400 mb-2">all-day</div>
-                  </div>
-                  
-                  {/* Time slots */}
-                  <div className="relative">
-                    {getTimeSlots().map((slot) => {
-                      const dayEvents = getEventsForDate(currentDate);
-                      const slotEvents = dayEvents.filter(event => {
-                        const eventTime = event.time;
-                        const eventHour = parseInt(eventTime.split(':')[0]);
-                        return eventHour === slot.hour;
-                      });
-                      
-                      const eventLayouts = calculateEventLayout(slotEvents, 'day');
-                      
-                      return (
-                        <div key={slot.hour} className="flex border-b border-gray-800 h-16">
-                          <div className="w-16 flex-shrink-0 p-2 text-xs text-gray-400 text-right">
-                            {slot.display}
-                          </div>
-                          <div className="flex-1 relative border-l border-gray-700">
-                            {eventLayouts.map((layout) => {
-                              const hasConflict = hasEventConflict(layout.event.id, dayEvents);
-                              return (
-                                <div
-                                  key={layout.event.id}
-                                  onClick={(e) => handleEventClick(layout.event, e)}
-                                  className={`absolute ${getEventTypeColor(layout.event.type, hasConflict)} rounded text-xs p-2 cursor-pointer hover:opacity-90 transition-all ${hasConflict ? 'ring-1 ring-red-400' : ''}`}
-                                  style={{ 
-                                    top: `${layout.top}px`,
-                                    height: `${layout.height}px`,
-                                    left: `${layout.left}%`,
-                                    width: layout.width,
-                                    zIndex: layout.zIndex
-                                  }}
-                                  title={hasConflict ? 'This event conflicts with another event' : ''}
-                                >
-                                  <div className="text-white font-medium truncate text-xs">
-                                    {layout.event.title}
-                                  </div>
-                                  <div className="text-white/80 text-xs">{layout.event.time}</div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
 
-              {/* Week View */}
-              {viewMode === 'week' && (
-                <div className="h-[600px] overflow-y-auto">
-                  {/* Week headers */}
-                  <div className="sticky top-0 bg-[#1e1e1e] z-10 border-b border-gray-700">
-                    <div className="flex">
-                      <div className="w-16 flex-shrink-0"></div>
-                      {getWeekDays().map((date, index) => {
-                        const isToday = date.toDateString() === new Date().toDateString();
+                    {/* All-day events */}
+                    <div className="border-b border-primary-500/20 p-4">
+                      <div className="text-xs text-gray-400 mb-2">all-day</div>
+                    </div>
+
+                    {/* Time slots */}
+                    <div className="relative">
+                      {getTimeSlots().map((slot) => {
+                        const dayEvents = getEventsForDate(currentDate);
+                        const slotEvents = dayEvents.filter(event => {
+                          const eventTime = event.time;
+                          const eventHour = parseInt(eventTime.split(':')[0]);
+                          return eventHour === slot.hour;
+                        });
+
+                        const eventLayouts = calculateEventLayout(slotEvents, 'day');
+
                         return (
-                          <div key={index} className="flex-1 text-center p-4 border-l border-gray-700">
-                            <div className={`text-xs ${isToday ? 'text-red-500' : 'text-gray-400'}`}>
-                              {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                          <div key={slot.hour} className="flex border-b border-primary-500/20 h-16">
+                            <div className="w-16 flex-shrink-0 p-2 text-xs text-gray-400 text-right">
+                              {slot.display}
                             </div>
-                            <div className={`text-2xl font-light ${isToday ? 'text-red-500' : 'text-white'}`}>
-                              {date.getDate()}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    
-                    {/* All-day events row */}
-                    <div className="flex border-t border-gray-700">
-                      <div className="w-16 flex-shrink-0 p-2 text-xs text-gray-400">all-day</div>
-                      {getWeekDays().map((date, index) => (
-                        <div key={index} className="flex-1 border-l border-gray-700 p-1 min-h-[40px]">
-                          {/* All-day events would go here */}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Time slots */}
-                  <div className="relative">
-                    {getTimeSlots().map((slot) => (
-                      <div key={slot.hour} className="flex h-16 border-b border-gray-800">
-                        <div className="w-16 flex-shrink-0 p-2 text-xs text-gray-400 text-right">
-                          {slot.display}
-                        </div>
-                        {getWeekDays().map((date, dayIndex) => {
-                          const dayEvents = getEventsForDate(date);
-                          const slotEvents = dayEvents.filter(event => {
-                            const eventTime = event.time;
-                            const eventHour = parseInt(eventTime.split(':')[0]);
-                            return eventHour === slot.hour;
-                          });
-                          
-                          const eventLayouts = calculateEventLayout(slotEvents, 'week');
-                          const isToday = date.toDateString() === new Date().toDateString();
-                          
-                          return (
-                            <div key={dayIndex} className={`flex-1 relative border-l border-gray-700 ${isToday ? 'bg-red-900/5' : ''}`}>
+                            <div className="flex-1 relative border-l border-primary-500/20">
                               {eventLayouts.map((layout) => {
                                 const hasConflict = hasEventConflict(layout.event.id, dayEvents);
                                 return (
                                   <div
                                     key={layout.event.id}
                                     onClick={(e) => handleEventClick(layout.event, e)}
-                                    className={`absolute ${getEventTypeColor(layout.event.type, hasConflict)} rounded cursor-pointer hover:opacity-90 transition-all ${hasConflict ? 'ring-1 ring-red-400' : ''}`}
-                                    style={{ 
+                                    className={`absolute ${getEventTypeColor(layout.event.type, hasConflict)} rounded text-xs p-2 cursor-pointer hover:opacity-90 transition-all ${hasConflict ? 'ring-1 ring-red-400' : ''}`}
+                                    style={{
                                       top: `${layout.top}px`,
-                                      height: `${Math.max(layout.height, 14)}px`, // Minimum height for week view
+                                      height: `${layout.height}px`,
                                       left: `${layout.left}%`,
                                       width: layout.width,
-                                      zIndex: layout.zIndex,
-                                      fontSize: '10px',
-                                      padding: '1px 2px'
+                                      zIndex: layout.zIndex
                                     }}
                                     title={hasConflict ? 'This event conflicts with another event' : ''}
                                   >
-                                    <div className="text-white font-medium truncate leading-tight">
+                                    <div className="text-white font-medium truncate text-xs">
                                       {layout.event.title}
                                     </div>
+                                    <div className="text-white/80 text-xs">{layout.event.time}</div>
                                   </div>
                                 );
                               })}
                             </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Week View */}
+                {viewMode === 'week' && (
+                  <div className="h-[600px] overflow-y-auto">
+                    {/* Week headers */}
+                    <div className="sticky top-0 bg-surface-900/95 backdrop-blur-sm z-10 border-b border-primary-500/20">
+                      <div className="flex">
+                        <div className="w-16 flex-shrink-0"></div>
+                        {getWeekDays().map((date, index) => {
+                          const isToday = date.toDateString() === new Date().toDateString();
+                          return (
+                            <div key={index} className="flex-1 text-center p-4 border-l border-primary-500/20">
+                              <div className={`text-xs ${isToday ? 'text-red-500' : 'text-gray-400'}`}>
+                                {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                              </div>
+                              <div className={`text-2xl font-light ${isToday ? 'text-red-500' : 'text-white'}`}>
+                                {date.getDate()}
+                              </div>
+                            </div>
                           );
                         })}
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
-              {/* Month View */}
-              {viewMode === 'month' && (
-                <div>
-                  {/* Month headers */}
-                  <div className="grid grid-cols-7 border-b border-gray-700">
-                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                      <div key={day} className="p-4 text-center text-sm font-medium text-gray-400 border-r border-gray-700 last:border-r-0">
-                        {day}
+                      {/* All-day events row */}
+                      <div className="flex border-t border-primary-500/20">
+                        <div className="w-16 flex-shrink-0 p-2 text-xs text-gray-400">all-day</div>
+                        {getWeekDays().map((date, index) => (
+                          <div key={index} className="flex-1 border-l border-primary-500/20 p-1 min-h-[40px]">
+                            {/* All-day events would go here */}
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                  
-                  {/* Month grid */}
-                  <div className="grid grid-cols-7" style={{ height: '600px' }}>
-                    {getMonthDays().map((day, index) => {
-                      const isToday = day.fullDate.toDateString() === new Date().toDateString();
-                      const dayEvents = getEventsForDate(day.fullDate);
-                      
-                      return (
-                        <div 
-                          key={index} 
-                          className={`border-r border-b border-gray-700 last:border-r-0 p-2 h-24 overflow-hidden ${
-                            day.isCurrentMonth ? 'bg-[#1e1e1e]' : 'bg-[#151515]'
-                          }`}
-                          onClick={() => {
-                            setCurrentDate(day.fullDate);
-                            setViewMode('day');
-                          }}
-                        >
-                          <div className={`text-sm mb-1 ${
-                            isToday ? 'w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center font-medium' :
-                            day.isCurrentMonth ? 'text-white' : 'text-gray-500'
-                          }`}>
-                            {day.date}
+                    </div>
+
+                    {/* Time slots */}
+                    <div className="relative">
+                      {getTimeSlots().map((slot) => (
+                        <div key={slot.hour} className="flex h-16 border-b border-primary-500/20">
+                          <div className="w-16 flex-shrink-0 p-2 text-xs text-gray-400 text-right">
+                            {slot.display}
                           </div>
-                          <div className="space-y-1">
-                            {dayEvents.slice(0, 3).map((event) => {
-                              const hasConflict = hasEventConflict(event.id, dayEvents);
-                              return (
-                                <div
-                                  key={event.id}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEventClick(event, e);
-                                  }}
-                                  className={`${getEventTypeColor(event.type, hasConflict)} rounded px-1 py-0.5 text-xs text-white truncate cursor-pointer hover:opacity-80 transition-opacity ${hasConflict ? 'ring-1 ring-red-400' : ''}`}
-                                  title={hasConflict ? 'This event conflicts with another event' : ''}
-                                >
-                                  {hasConflict && '⚠️ '}{event.title}
-                                </div>
-                              );
-                            })}
-                            {dayEvents.length > 3 && (
-                              <div className="text-xs text-gray-400">+{dayEvents.length - 3} more</div>
-                            )}
-                          </div>
+                          {getWeekDays().map((date, dayIndex) => {
+                            const dayEvents = getEventsForDate(date);
+                            const slotEvents = dayEvents.filter(event => {
+                              const eventTime = event.time;
+                              const eventHour = parseInt(eventTime.split(':')[0]);
+                              return eventHour === slot.hour;
+                            });
+
+                            const eventLayouts = calculateEventLayout(slotEvents, 'week');
+                            const isToday = date.toDateString() === new Date().toDateString();
+
+                            return (
+                              <div key={dayIndex} className={`flex-1 relative border-l border-primary-500/20 ${isToday ? 'bg-red-900/5' : ''}`}>
+                                {eventLayouts.map((layout) => {
+                                  const hasConflict = hasEventConflict(layout.event.id, dayEvents);
+                                  return (
+                                    <div
+                                      key={layout.event.id}
+                                      onClick={(e) => handleEventClick(layout.event, e)}
+                                      className={`absolute ${getEventTypeColor(layout.event.type, hasConflict)} rounded cursor-pointer hover:opacity-90 transition-all ${hasConflict ? 'ring-1 ring-red-400' : ''}`}
+                                      style={{
+                                        top: `${layout.top}px`,
+                                        height: `${Math.max(layout.height, 14)}px`, // Minimum height for week view
+                                        left: `${layout.left}%`,
+                                        width: layout.width,
+                                        zIndex: layout.zIndex,
+                                        fontSize: '10px',
+                                        padding: '1px 2px'
+                                      }}
+                                      title={hasConflict ? 'This event conflicts with another event' : ''}
+                                    >
+                                      <div className="text-white font-medium truncate leading-tight">
+                                        {layout.event.title}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })}
                         </div>
-                      );
-                    })}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+
+                {/* Month View */}
+                {viewMode === 'month' && (
+                  <div>
+                    {/* Month headers */}
+                    <div className="grid grid-cols-7 border-b border-primary-500/20">
+                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                        <div key={day} className="p-4 text-center text-sm font-medium text-gray-400 border-r border-primary-500/20 last:border-r-0">
+                          {day}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Month grid */}
+                    <div className="grid grid-cols-7" style={{ height: '600px' }}>
+                      {getMonthDays().map((day, index) => {
+                        const isToday = day.fullDate.toDateString() === new Date().toDateString();
+                        const dayEvents = getEventsForDate(day.fullDate);
+
+                        return (
+                          <div
+                            key={index}
+                            className={`border-r border-b border-primary-500/20 last:border-r-0 p-2 h-24 overflow-hidden ${day.isCurrentMonth ? 'bg-transparent' : 'bg-black/20'
+                              }`}
+                            onClick={() => {
+                              setCurrentDate(day.fullDate);
+                              setViewMode('day');
+                            }}
+                          >
+                            <div className={`text-sm mb-1 ${isToday ? 'w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center font-medium' :
+                              day.isCurrentMonth ? 'text-white' : 'text-gray-500'
+                              }`}>
+                              {day.date}
+                            </div>
+                            <div className="space-y-1">
+                              {dayEvents.slice(0, 3).map((event) => {
+                                const hasConflict = hasEventConflict(event.id, dayEvents);
+                                return (
+                                  <div
+                                    key={event.id}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleEventClick(event, e);
+                                    }}
+                                    className={`${getEventTypeColor(event.type, hasConflict)} rounded px-1 py-0.5 text-xs text-white truncate cursor-pointer hover:opacity-80 transition-opacity ${hasConflict ? 'ring-1 ring-red-400' : ''}`}
+                                    title={hasConflict ? 'This event conflicts with another event' : ''}
+                                  >
+                                    {hasConflict && '⚠️ '}{event.title}
+                                  </div>
+                                );
+                              })}
+                              {dayEvents.length > 3 && (
+                                <div className="text-xs text-gray-400">+{dayEvents.length - 3} more</div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Quick Overview Sidebar */}
             <div className="space-y-6">
               {/* Stats */}
-              <div className="bg-[#453f3b] rounded-lg p-6">
+              <div className="glass-panel rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-white mb-4">Overview</h3>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
@@ -799,7 +803,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
               </div>
 
               {/* Mini Calendar */}
-              <div className="bg-[#453f3b] rounded-lg p-6">
+              <div className="glass-panel rounded-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-white">
                     {miniCalendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
@@ -819,7 +823,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
                     </button>
                   </div>
                 </div>
-                
+
                 {/* Day headers */}
                 <div className="grid grid-cols-7 gap-1 mb-2">
                   {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day) => (
@@ -828,7 +832,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ onNavigate }) => {
                     </div>
                   ))}
                 </div>
-                
+
                 {/* Calendar grid */}
                 <div className="grid grid-cols-7 gap-1">
                   {renderMiniCalendar()}

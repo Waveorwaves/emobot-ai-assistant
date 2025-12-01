@@ -151,9 +151,9 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ onNavigate }) => {
   const handleToggleCollapse = () => {
     const next = !isCollapsed;
     setIsCollapsed(next);
-    try { 
-      localStorage.setItem('sidebarCollapsed', String(next)); 
-    } catch {}
+    try {
+      localStorage.setItem('sidebarCollapsed', String(next));
+    } catch { }
   };
 
   const handleSidebarNavigation = (itemId: string) => {
@@ -188,7 +188,7 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ onNavigate }) => {
       case 'task':
         return 'bg-green-500';
       case 'email':
-        return 'bg-purple-500';
+        return 'bg-sky-500';
       case 'calendar':
         return 'bg-orange-500';
     }
@@ -211,7 +211,7 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ onNavigate }) => {
     if (!selectedItem) return null;
 
     return (
-      <div className="bg-[#453f3b] rounded-lg p-6">
+      <div className="glass-panel rounded-lg p-6">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-semibold text-white">Activity Details</h3>
           <button
@@ -242,18 +242,17 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ onNavigate }) => {
           </div>
 
           {selectedItem.details && (
-            <div className="bg-[#1e1e1e] rounded-lg p-4 mt-4">
+            <div className="bg-black/20 rounded-lg p-4 mt-4">
               <h5 className="text-white font-medium mb-3">Details</h5>
-              
+
               {selectedItem.type === 'chat' && selectedItem.details.messages && (
                 <div className="space-y-3">
                   {selectedItem.details.messages.map((msg: any, idx: number) => (
                     <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
-                        msg.sender === 'user' 
-                          ? 'bg-blue-600 text-white' 
-                          : 'bg-gray-700 text-gray-300'
-                      }`}>
+                      <div className={`max-w-xs px-3 py-2 rounded-lg text-sm ${msg.sender === 'user'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-700 text-gray-300'
+                        }`}>
                         <div className="flex items-center space-x-2 mb-1">
                           {msg.sender === 'user' ? <User className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
                           <span className="text-xs capitalize">{msg.sender}</span>
@@ -335,7 +334,7 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ onNavigate }) => {
   };
 
   return (
-    <div className="h-screen bg-[#1e1e1e]">
+    <div className="h-screen bg-transparent">
       <Sidebar
         isCollapsed={isCollapsed}
         onToggleCollapse={handleToggleCollapse}
@@ -344,14 +343,14 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ onNavigate }) => {
       />
 
       {/* Main Content Area */}
-      <div className={`${isCollapsed ? 'ml-20' : 'ml-72'} transition-all duration-300 flex flex-col h-screen`}>
+      <div className={`${isCollapsed ? 'ml-20' : 'ml-64'} transition-all duration-300 flex flex-col h-screen`}>
 
         {/* History Content Area */}
-        <div className="flex-1 bg-[#1e1e1e] flex pb-20">
+        <div className="flex-1 bg-transparent flex pb-20">
           {/* History Filters Sidebar */}
-          <div className="w-64 bg-[#1e1e1e] border-r border-[#453f3b]/30 p-4">
+          <div className="w-64 glass-panel border-r border-white/10 p-4">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-white text-lg font-medium">Activity History</h2>
+              <h1 className="text-2xl font-display font-bold tracking-tight text-white">Activity History</h1>
               <div className="flex space-x-1">
                 <button className="text-gray-400 hover:text-white p-1" title="Export History">
                   <Download className="w-4 h-4" />
@@ -361,10 +360,10 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ onNavigate }) => {
                 </button>
               </div>
             </div>
-            
+
             {/* Activity Stats */}
-            <div className="bg-[#453f3b] rounded-lg p-4 mb-6">
-              <h3 className="text-white font-medium mb-3">This Week</h3>
+            <div className="glass-panel rounded-lg p-4 mb-6">
+              <h3 className="text-white font-display font-bold tracking-tight mb-3">This Week</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-400">Conversations</span>
@@ -376,7 +375,7 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ onNavigate }) => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Emails Processed</span>
-                  <span className="text-purple-400">15</span>
+                  <span className="text-sky-400">15</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Events Scheduled</span>
@@ -391,11 +390,10 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ onNavigate }) => {
                 <button
                   key={filter.id}
                   onClick={() => setActiveFilter(filter.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors text-sm ${
-                    activeFilter === filter.id
-                      ? 'bg-[#453f3b] text-white'
-                      : 'text-gray-300 hover:text-white hover:bg-[#453f3b]/50'
-                  }`}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors font-display font-semibold uppercase tracking-wide text-xs ${activeFilter === filter.id
+                    ? 'bg-white/10 text-white'
+                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                    }`}
                 >
                   <span>{filter.label}</span>
                   <span className="bg-gray-600 text-white text-xs px-2 py-1 rounded-full">
@@ -409,11 +407,19 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ onNavigate }) => {
           {/* History List */}
           <div className="flex-1 flex flex-col">
             {/* Header */}
-            <div className="p-6 border-b border-[#453f3b]/30">
+            {/* Header */}
+            <div className="p-6 border-b border-primary-500/60">
               <div className="flex items-center justify-between">
-                <h3 className="text-white text-xl font-medium">
-                  {historyFilters.find(f => f.id === activeFilter)?.label} ({filteredItems.length})
-                </h3>
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-primary-500/10 border border-primary-500/60 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+                    <Clock className="w-6 h-6 text-primary-400" />
+                  </div>
+                  <div>
+                    <h1 className="text-white text-2xl font-display font-bold tracking-tight">
+                      {historyFilters.find(f => f.id === activeFilter)?.label}
+                    </h1>
+                  </div>
+                </div>
                 <div className="flex items-center space-x-2">
                   <button className="text-gray-400 hover:text-white px-3 py-1 text-sm">
                     Latest First
@@ -439,32 +445,31 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ onNavigate }) => {
                   {filteredItems.map(item => (
                     <div
                       key={item.id}
-                      className="bg-[#453f3b] rounded-lg p-4 border border-gray-600 hover:border-gray-500 transition-all cursor-pointer"
+                      className="glass-panel rounded-lg p-4 border border-white/10 hover:border-primary-500/50 transition-all cursor-pointer hover:bg-white/5"
                       onClick={() => setSelectedItem(item)}
                     >
                       <div className="flex items-start space-x-4">
                         <div className={`flex-shrink-0 w-8 h-8 rounded-full ${getTypeColor(item.type)} flex items-center justify-center text-white`}>
                           {getTypeIcon(item.type)}
                         </div>
-                        
+
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-2">
                             <h4 className="text-white font-medium">{item.title}</h4>
                             <div className="flex items-center space-x-2">
                               {item.status && (
-                                <div className={`w-2 h-2 rounded-full ${
-                                  item.status === 'success' ? 'bg-green-400' :
+                                <div className={`w-2 h-2 rounded-full ${item.status === 'success' ? 'bg-green-400' :
                                   item.status === 'error' ? 'bg-red-400' : 'bg-yellow-400'
-                                }`} />
+                                  }`} />
                               )}
                               <button className="text-gray-400 hover:text-white">
                                 <Eye className="w-4 h-4" />
                               </button>
                             </div>
                           </div>
-                          
+
                           <p className="text-gray-300 text-sm mb-3">{item.description}</p>
-                          
+
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3">
                               <span className="text-xs text-gray-400 capitalize">{item.type}</span>
@@ -487,7 +492,7 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ onNavigate }) => {
 
           {/* Details Panel */}
           {selectedItem && (
-            <div className="w-96 border-l border-[#453f3b]/30 p-6">
+            <div className="w-96 border-l border-white/10 p-6 glass-panel">
               {renderDetailsView()}
             </div>
           )}

@@ -23,7 +23,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
   });
   const [activeTab, setActiveTab] = useState<string>('settings');
   const [activeSettingsTab, setActiveSettingsTab] = useState<string>('profile');
-  
+
   // Settings state
   const [profileSettings, setProfileSettings] = useState({
     name: 'John Doe',
@@ -78,9 +78,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
   const handleToggleCollapse = () => {
     const next = !isCollapsed;
     setIsCollapsed(next);
-    try { 
-      localStorage.setItem('sidebarCollapsed', String(next)); 
-    } catch {}
+    try {
+      localStorage.setItem('sidebarCollapsed', String(next));
+    } catch { }
   };
 
   const handleSidebarNavigation = (itemId: string) => {
@@ -174,8 +174,17 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
 
   const renderProfileSettings = () => (
     <div className="space-y-6">
-      <h3 className="text-xl font-semibold text-white">Profile Settings</h3>
-      
+      <div className="p-6 border-b border-primary-500/60 -mx-6 -mt-6 mb-6">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-primary-500/10 border border-primary-500/60 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+            <User className="w-6 h-6 text-primary-400" />
+          </div>
+          <div>
+            <h1 className="text-white text-2xl font-display font-bold tracking-tight">Profile Settings</h1>
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">Your Name</label>
@@ -183,26 +192,26 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
             type="text"
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
-            className="w-full p-3 bg-[#453f3b] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
           <input
             type="email"
             value={profileSettings.email}
             onChange={(e) => setProfileSettings(prev => ({ ...prev, email: e.target.value }))}
-            className="w-full p-3 bg-[#453f3b] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 bg-white/5 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">Timezone</label>
           <select
             value={profileSettings.timezone}
             onChange={(e) => setProfileSettings(prev => ({ ...prev, timezone: e.target.value }))}
-            className="w-full p-3 bg-[#453f3b] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 bg-white/5 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="UTC-8">Pacific Time (UTC-8)</option>
             <option value="UTC-5">Eastern Time (UTC-5)</option>
@@ -210,13 +219,13 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
             <option value="UTC+1">Central European Time (UTC+1)</option>
           </select>
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">Language</label>
           <select
             value={profileSettings.language}
             onChange={(e) => setProfileSettings(prev => ({ ...prev, language: e.target.value }))}
-            className="w-full p-3 bg-[#453f3b] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 bg-white/5 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="English">English</option>
             <option value="Spanish">Spanish</option>
@@ -276,7 +285,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
             type="text"
             value={emobotName}
             onChange={(e) => setEmobotName(e.target.value)}
-            className="w-full p-3 bg-[#453f3b] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 bg-white/5 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Enter EmoBot's name"
           />
           <p className="text-gray-400 text-xs mt-1">
@@ -327,10 +336,19 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
 
   const renderNotificationSettings = () => (
     <div className="space-y-6">
-      <h3 className="text-xl font-semibold text-white">Notification Settings</h3>
-      
+      <div className="p-6 border-b border-primary-500/60 -mx-6 -mt-6 mb-6">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-primary-500/10 border border-primary-500/60 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+            <Bell className="w-6 h-6 text-primary-400" />
+          </div>
+          <div>
+            <h1 className="text-white text-2xl font-display font-bold tracking-tight">Notification Settings</h1>
+          </div>
+        </div>
+      </div>
+
       <div className="space-y-4">
-        <div className="flex items-center justify-between p-4 bg-[#453f3b] rounded-lg">
+        <div className="flex items-center justify-between p-4 glass-panel rounded-lg">
           <div>
             <h4 className="text-white font-medium">Email Notifications</h4>
             <p className="text-gray-400 text-sm">Receive notifications via email</p>
@@ -343,7 +361,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
           />
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-[#453f3b] rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
           <div>
             <h4 className="text-white font-medium">Push Notifications</h4>
             <p className="text-gray-400 text-sm">Receive push notifications on your device</p>
@@ -356,7 +374,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
           />
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-[#453f3b] rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
           <div>
             <h4 className="text-white font-medium">Desktop Notifications</h4>
             <p className="text-gray-400 text-sm">Show notifications on your desktop</p>
@@ -369,7 +387,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
           />
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-[#453f3b] rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
           <div>
             <h4 className="text-white font-medium">Task Reminders</h4>
             <p className="text-gray-400 text-sm">Get reminded about upcoming tasks</p>
@@ -387,7 +405,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
           <select
             value={notificationSettings.emailDigest}
             onChange={(e) => setNotificationSettings(prev => ({ ...prev, emailDigest: e.target.value }))}
-            className="w-full p-3 bg-[#453f3b] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 bg-white/5 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
@@ -401,10 +419,19 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
 
   const renderPrivacySettings = () => (
     <div className="space-y-6">
-      <h3 className="text-xl font-semibold text-white">Privacy & Security</h3>
+      <div className="p-6 border-b border-primary-500/60 -mx-6 -mt-6 mb-6">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-primary-500/10 border border-primary-500/60 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+            <Shield className="w-6 h-6 text-primary-400" />
+          </div>
+          <div>
+            <h1 className="text-white text-2xl font-display font-bold tracking-tight">Privacy & Security</h1>
+          </div>
+        </div>
+      </div>
 
       <div className="space-y-4">
-        <div className="flex items-center justify-between p-4 bg-[#453f3b] rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
           <div>
             <h4 className="text-white font-medium">Data Collection</h4>
             <p className="text-gray-400 text-sm">Allow collection of usage data to improve service</p>
@@ -417,7 +444,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
           />
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-[#453f3b] rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
           <div>
             <h4 className="text-white font-medium">Analytics</h4>
             <p className="text-gray-400 text-sm">Share anonymous analytics data</p>
@@ -430,7 +457,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
           />
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-[#453f3b] rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
           <div>
             <h4 className="text-white font-medium">Auto-Save</h4>
             <p className="text-gray-400 text-sm">Automatically save your work</p>
@@ -448,7 +475,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
           <select
             value={privacySettings.sessionTimeout}
             onChange={(e) => setPrivacySettings(prev => ({ ...prev, sessionTimeout: e.target.value }))}
-            className="w-full p-3 bg-[#453f3b] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 bg-white/5 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="15">15 minutes</option>
             <option value="30">30 minutes</option>
@@ -460,7 +487,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
       </div>
 
       {/* Sign Out Section */}
-      <div className="mt-8 pt-6 border-t border-[#453f3b]/30">
+      <div className="mt-8 pt-6 border-t border-white/10">
         <h4 className="text-lg font-medium text-white mb-4">Account Actions</h4>
         <button
           onClick={handleSignOut}
@@ -478,15 +505,24 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
 
   const renderAppearanceSettings = () => (
     <div className="space-y-6">
-      <h3 className="text-xl font-semibold text-white">Appearance</h3>
-      
+      <div className="p-6 border-b border-primary-500/60 -mx-6 -mt-6 mb-6">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-primary-500/10 border border-primary-500/60 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+            <Palette className="w-6 h-6 text-primary-400" />
+          </div>
+          <div>
+            <h1 className="text-white text-2xl font-display font-bold tracking-tight">Appearance</h1>
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">Theme</label>
           <select
             value={appearanceSettings.theme}
             onChange={(e) => setAppearanceSettings(prev => ({ ...prev, theme: e.target.value }))}
-            className="w-full p-3 bg-[#453f3b] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 bg-white/5 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="dark">Dark</option>
             <option value="light">Light</option>
@@ -499,11 +535,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
           <select
             value={appearanceSettings.accentColor}
             onChange={(e) => setAppearanceSettings(prev => ({ ...prev, accentColor: e.target.value }))}
-            className="w-full p-3 bg-[#453f3b] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 bg-white/5 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="blue">Blue</option>
             <option value="green">Green</option>
-            <option value="purple">Purple</option>
+            <option value="cyan">Cyan</option>
             <option value="red">Red</option>
             <option value="orange">Orange</option>
           </select>
@@ -514,7 +550,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
           <select
             value={appearanceSettings.fontSize}
             onChange={(e) => setAppearanceSettings(prev => ({ ...prev, fontSize: e.target.value }))}
-            className="w-full p-3 bg-[#453f3b] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 bg-white/5 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="small">Small</option>
             <option value="medium">Medium</option>
@@ -524,7 +560,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
       </div>
 
       <div className="space-y-4">
-        <div className="flex items-center justify-between p-4 bg-[#453f3b] rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
           <div>
             <h4 className="text-white font-medium">Compact Mode</h4>
             <p className="text-gray-400 text-sm">Use smaller spacing and elements</p>
@@ -537,7 +573,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
           />
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-[#453f3b] rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
           <div>
             <h4 className="text-white font-medium">Animations</h4>
             <p className="text-gray-400 text-sm">Enable UI animations and transitions</p>
@@ -555,10 +591,19 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
 
   const renderSystemSettings = () => (
     <div className="space-y-6">
-      <h3 className="text-xl font-semibold text-white">System Settings</h3>
-      
+      <div className="p-6 border-b border-primary-500/60 -mx-6 -mt-6 mb-6">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-primary-500/10 border border-primary-500/60 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+            <Database className="w-6 h-6 text-primary-400" />
+          </div>
+          <div>
+            <h1 className="text-white text-2xl font-display font-bold tracking-tight">System Settings</h1>
+          </div>
+        </div>
+      </div>
+
       <div className="space-y-4">
-        <div className="flex items-center justify-between p-4 bg-[#453f3b] rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
           <div>
             <h4 className="text-white font-medium">Auto Update</h4>
             <p className="text-gray-400 text-sm">Automatically update to the latest version</p>
@@ -571,7 +616,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
           />
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-[#453f3b] rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
           <div>
             <h4 className="text-white font-medium">Error Reporting</h4>
             <p className="text-gray-400 text-sm">Send error reports to help improve the app</p>
@@ -584,7 +629,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
           />
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-[#453f3b] rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
           <div>
             <h4 className="text-white font-medium">Performance Mode</h4>
             <p className="text-gray-400 text-sm">Optimize for better performance</p>
@@ -604,7 +649,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
               type="number"
               value={systemSettings.cacheSize}
               onChange={(e) => setSystemSettings(prev => ({ ...prev, cacheSize: e.target.value }))}
-              className="w-full p-3 bg-[#453f3b] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 bg-white/5 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -614,7 +659,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
               type="number"
               value={systemSettings.maxHistoryItems}
               onChange={(e) => setSystemSettings(prev => ({ ...prev, maxHistoryItems: e.target.value }))}
-              className="w-full p-3 bg-[#453f3b] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 bg-white/5 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -640,7 +685,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
   };
 
   return (
-    <div className="h-screen bg-[#1e1e1e]">
+    <div className="h-screen bg-transparent">
       <Sidebar
         isCollapsed={isCollapsed}
         onToggleCollapse={handleToggleCollapse}
@@ -649,12 +694,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
       />
 
       {/* Main Content Area */}
-      <div className={`${isCollapsed ? 'ml-20' : 'ml-72'} transition-all duration-300 flex flex-col h-screen`}>
+      <div className={`${isCollapsed ? 'ml-20' : 'ml-64'} transition-all duration-300 flex flex-col h-screen`}>
 
         {/* Settings Content Area */}
-        <div className="flex-1 bg-[#1e1e1e] flex overflow-hidden">
+        <div className="flex-1 bg-transparent flex overflow-hidden">
           {/* Settings Navigation */}
-          <div className="w-64 bg-[#1e1e1e] border-r border-[#453f3b]/30 p-4">
+          <div className="w-64 glass-panel border-r border-white/10 p-4">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-white text-lg font-medium">Settings</h2>
               <Zap className="w-5 h-5 text-gray-400" />
@@ -667,11 +712,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveSettingsTab(tab.id)}
-                    className={`w-full flex items-center space-x-3 px-3 py-3 rounded-lg text-left transition-colors text-sm ${
-                      activeSettingsTab === tab.id
-                        ? 'bg-[#453f3b] text-white'
-                        : 'text-gray-300 hover:text-white hover:bg-[#453f3b]/50'
-                    }`}
+                    className={`w-full flex items-center space-x-3 px-3 py-3 rounded-lg text-left transition-colors font-display font-semibold uppercase tracking-wide text-xs ${activeSettingsTab === tab.id
+                      ? 'bg-white/10 text-white'
+                      : 'text-white/70 hover:text-white hover:bg-accent-500/10 hover:shadow-[0_0_15px_rgba(236,72,153,0.2)] hover:border-accent-500/30'
+                      }`}
                   >
                     <Icon className="w-4 h-4 flex-shrink-0" />
                     <span>{tab.label}</span>
@@ -686,17 +730,17 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
             {renderSettingsContent()}
 
             {/* Action Buttons */}
-            <div className="mt-8 pt-6 border-t border-[#453f3b]/30 flex items-center space-x-4">
+            <div className="mt-8 pt-6 border-t border-white/10 flex items-center space-x-4">
               <button
                 onClick={handleSaveSettings}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors shadow-lg hover:shadow-primary-500/25 font-display font-semibold uppercase tracking-wide text-xs"
               >
                 <Save className="w-4 h-4" />
                 <span>Save Changes</span>
               </button>
               <button
                 onClick={handleResetSettings}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                className="glass-button text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors font-display font-semibold uppercase tracking-wide text-xs"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>Reset to Default</span>

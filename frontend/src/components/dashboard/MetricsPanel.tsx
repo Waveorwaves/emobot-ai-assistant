@@ -10,7 +10,7 @@ const MetricsPanel: React.FC<MetricsPanelProps> = ({
     const days = Math.floor(seconds / 86400);
     const hours = Math.floor((seconds % 86400) / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    
+
     if (days > 0) {
       return `${days}d ${hours}h`;
     } else if (hours > 0) {
@@ -48,7 +48,7 @@ const MetricsPanel: React.FC<MetricsPanelProps> = ({
   };
 
   return (
-    <div className="bg-[#453f3b] rounded-lg p-6 h-[300px] overflow-hidden">
+    <div className="glass-panel rounded-lg p-6 h-[300px] overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-white">Performance</h3>
@@ -71,11 +71,10 @@ const MetricsPanel: React.FC<MetricsPanelProps> = ({
               {runtime.uptimePercentage.toFixed(1)}%
             </p>
             <div className="w-full bg-gray-700 rounded-full h-1.5">
-              <div 
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  runtime.uptimePercentage >= 99 ? 'bg-green-500' :
-                  runtime.uptimePercentage >= 95 ? 'bg-yellow-500' : 'bg-red-500'
-                }`}
+              <div
+                className={`h-1.5 rounded-full transition-all duration-300 ${runtime.uptimePercentage >= 99 ? 'bg-green-500' :
+                    runtime.uptimePercentage >= 95 ? 'bg-yellow-500' : 'bg-red-500'
+                  }`}
                 style={{ width: `${Math.min(runtime.uptimePercentage, 100)}%` }}
               />
             </div>
@@ -94,16 +93,15 @@ const MetricsPanel: React.FC<MetricsPanelProps> = ({
             </p>
             <p className={`text-sm font-medium ${getResponseTimeColor(performance.avgResponseTime)}`}>
               {performance.avgResponseTime <= 500 ? 'Excellent' :
-               performance.avgResponseTime <= 1000 ? 'Good' : 'Slow'}
+                performance.avgResponseTime <= 1000 ? 'Good' : 'Slow'}
             </p>
             <div className="w-full bg-gray-700 rounded-full h-1.5">
-              <div 
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  performance.avgResponseTime <= 500 ? 'bg-green-500' :
-                  performance.avgResponseTime <= 1000 ? 'bg-yellow-500' : 'bg-red-500'
-                }`}
-                style={{ 
-                  width: `${Math.max(20, Math.min(100, 100 - (performance.avgResponseTime / 20)))}%` 
+              <div
+                className={`h-1.5 rounded-full transition-all duration-300 ${performance.avgResponseTime <= 500 ? 'bg-green-500' :
+                    performance.avgResponseTime <= 1000 ? 'bg-yellow-500' : 'bg-red-500'
+                  }`}
+                style={{
+                  width: `${Math.max(20, Math.min(100, 100 - (performance.avgResponseTime / 20)))}%`
                 }}
               />
             </div>
@@ -122,14 +120,13 @@ const MetricsPanel: React.FC<MetricsPanelProps> = ({
             </p>
             <p className={`text-sm font-medium ${getAccuracyColor(performance.accuracy)}`}>
               {performance.accuracy >= 95 ? 'Excellent' :
-               performance.accuracy >= 90 ? 'Good' : 'Needs Work'}
+                performance.accuracy >= 90 ? 'Good' : 'Needs Work'}
             </p>
             <div className="w-full bg-gray-700 rounded-full h-1.5">
-              <div 
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  performance.accuracy >= 95 ? 'bg-green-500' :
-                  performance.accuracy >= 90 ? 'bg-yellow-500' : 'bg-red-500'
-                }`}
+              <div
+                className={`h-1.5 rounded-full transition-all duration-300 ${performance.accuracy >= 95 ? 'bg-green-500' :
+                    performance.accuracy >= 90 ? 'bg-yellow-500' : 'bg-red-500'
+                  }`}
                 style={{ width: `${performance.accuracy}%` }}
               />
             </div>

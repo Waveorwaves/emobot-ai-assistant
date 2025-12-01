@@ -26,7 +26,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       setIsTyping(true);
       onSendMessage(inputValue.trim());
       setInputValue('');
-      
+
       // Simulate typing indicator
       setTimeout(() => {
         setIsTyping(false);
@@ -53,7 +53,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   };
 
   return (
-    <div className="bg-[#453f3b] rounded-lg p-6 h-[300px] flex flex-col">
+    <div className="glass-panel rounded-lg p-6 h-[300px] flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-white">Quick Chat</h3>
@@ -104,8 +104,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 className={`
                   max-w-[80%] px-3 py-2 rounded-lg text-sm
                   ${message.sender === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-[#1e1e1e] text-gray-100 border border-gray-600'
+                    ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/20'
+                    : 'bg-white/10 text-gray-100 border border-primary-500/60'
                   }
                 `}
               >
@@ -123,7 +123,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
         {isTyping && (
           <div className="flex justify-start">
-            <div className="bg-[#1e1e1e] border border-gray-600 px-3 py-2 rounded-lg">
+            <div className="bg-white/10 border border-primary-500/60 px-3 py-2 rounded-lg">
               <div className="flex space-x-1">
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
@@ -145,7 +145,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder="Type a message..."
-          className="flex-1 px-3 py-2 bg-[#1e1e1e] border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="flex-1 px-3 py-2 bg-black/20 border border-primary-500/60 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           disabled={isTyping}
         />
         <button
@@ -154,8 +154,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
           className={`
             p-2 rounded-lg transition-all duration-200
             ${inputValue.trim() && !isTyping
-              ? 'bg-blue-600 hover:bg-blue-700 text-white'
-              : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+              ? 'bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-500/20'
+              : 'bg-white/10 text-white/30 cursor-not-allowed'
             }
           `}
         >

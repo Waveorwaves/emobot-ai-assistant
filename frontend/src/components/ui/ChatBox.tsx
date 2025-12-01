@@ -54,7 +54,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   };
 
   return (
-    <div className={`fixed bottom-0 ${sidebarCollapsed ? 'left-20' : 'left-72'} right-0 bg-[#1e1e1e] border-t border-[#453f3b]/30 px-4 py-3 transition-all duration-300 ${className}`}>
+    <div className={`fixed bottom-0 ${sidebarCollapsed ? 'left-20' : 'left-64'} right-0 glass-panel border-t border-primary-500/30 px-4 py-3 transition-all duration-300 ${className}`}>
       <div className="max-w-6xl mx-auto flex items-center gap-3">
         <div className="flex-1 relative">
           <input
@@ -63,21 +63,21 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder={finalPlaceholder}
-            className="w-full h-12 px-4 pr-12 bg-[#453f3b] border-none rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            className="w-full h-12 px-4 pr-12 bg-black/50 border border-primary-500/60 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
           {message.trim() && (
             <button
               onClick={handleSendMessage}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-300 hover:text-white transition-colors"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary-400 hover:text-primary-300 transition-colors"
             >
               <Send className="w-4 h-4" />
             </button>
           )}
         </div>
-        
+
         <button
           onClick={onOpenFullChat}
-          className="px-4 py-2 bg-[#453f3b] hover:bg-[#524d48] text-white rounded-lg transition-colors text-sm font-medium whitespace-nowrap"
+          className="btn-neon-flow text-white px-4 py-2 rounded-lg flex items-center space-x-2 font-display font-semibold uppercase tracking-wide text-xs whitespace-nowrap"
         >
           Open Full Chat
         </button>

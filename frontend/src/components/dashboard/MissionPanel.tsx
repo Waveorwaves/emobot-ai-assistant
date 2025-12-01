@@ -62,7 +62,7 @@ const MissionPanel: React.FC<MissionPanelProps> = ({
   const visibleMissions = currentMissions.slice(0, 3); // Show max 3 missions
 
   return (
-    <div className="bg-[#453f3b] rounded-lg p-6 h-[250px]">
+    <div className="glass-panel rounded-lg p-6 h-[250px]">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-white">Active Missions</h3>
@@ -95,7 +95,7 @@ const MissionPanel: React.FC<MissionPanelProps> = ({
           visibleMissions.map((mission) => (
             <div
               key={mission.id}
-              className="bg-[#1e1e1e] border border-gray-600 rounded-lg p-3 space-y-2"
+              className="bg-white/5 border border-primary-500/60 rounded-lg p-3 space-y-2 hover:bg-white/10 transition-colors"
             >
               {/* Mission Header */}
               <div className="flex items-center justify-between">

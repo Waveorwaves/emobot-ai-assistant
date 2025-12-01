@@ -49,6 +49,7 @@ dist/
 gmail_credentials.json
 gmail_token.json
 *.json.backup
+emobot/configs/gmail_config.yaml
 
 # Logs
 *.log
@@ -59,11 +60,18 @@ logs/
 *.sqlite
 *.sqlite3
 
-# Agent Memory
+# Agent Memory (contains personal data - do not commit)
+emobot/agent_memory/*.json
 agent_memory/*.json
 
-# Todo
+# Todo (contains personal tasks)
+emobot/todo_list.json
 todo_list.json
+
+# Any personal data files
+*_memory.json
+*_patterns.json
+*_events.json
 
 # Build
 frontend/dist/

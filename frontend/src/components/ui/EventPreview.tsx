@@ -18,13 +18,13 @@ const EventPreview: React.FC<EventPreviewProps> = ({
   onDelete
 }) => {
   const { getEventsForDate, detectConflicts } = useData();
-  
+
   // Check for conflicts
   const eventDate = event.date ? new Date(event.date + 'T00:00:00') : new Date();
   const dayEvents = getEventsForDate(eventDate);
   const conflicts = detectConflicts(dayEvents);
   const eventConflicts = conflicts.find(c => c.eventId === event.id);
-  const conflictingEvents = eventConflicts ? 
+  const conflictingEvents = eventConflicts ?
     dayEvents.filter(e => eventConflicts.conflictsWith.includes(e.id)) : [];
 
   const getEventTypeColor = (type: CalendarEvent['type']) => {
@@ -36,7 +36,7 @@ const EventPreview: React.FC<EventPreviewProps> = ({
       case 'reminder':
         return 'bg-yellow-500';
       case 'personal':
-        return 'bg-purple-500';
+        return 'bg-sky-500';
       default:
         return 'bg-gray-500';
     }
@@ -80,20 +80,20 @@ const EventPreview: React.FC<EventPreviewProps> = ({
   const maxHeight = 400;
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
-  
+
   let adjustedX = position.x;
   let adjustedY = position.y;
-  
+
   // Adjust horizontal position
   if (position.x + maxWidth > viewportWidth) {
     adjustedX = viewportWidth - maxWidth - 20;
   }
-  
+
   // Adjust vertical position
   if (position.y + maxHeight > viewportHeight) {
     adjustedY = position.y - maxHeight - 10;
   }
-  
+
   if (adjustedY < 20) {
     adjustedY = 20;
   }
@@ -101,14 +101,14 @@ const EventPreview: React.FC<EventPreviewProps> = ({
   return (
     <>
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 z-40"
         onClick={onClose}
       />
-      
+
       {/* Popup */}
       <div
-        className="fixed z-50 bg-[#453f3b] rounded-lg shadow-2xl border border-gray-600 max-w-sm"
+        className="fixed z-50 glass-panel rounded-lg shadow-2xl border border-gray-600 max-w-sm"
         style={{
           left: `${adjustedX}px`,
           top: `${adjustedY}px`,
@@ -145,16 +145,16 @@ const EventPreview: React.FC<EventPreviewProps> = ({
           <div className="flex items-center space-x-3 text-gray-300">
             <Calendar className="w-4 h-4 text-gray-400" />
             <div className="text-sm">
-              {event.date ? 
-                new Date(event.date + 'T00:00:00').toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  month: 'long', 
-                  day: 'numeric' 
+              {event.date ?
+                new Date(event.date + 'T00:00:00').toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric'
                 }) :
-                new Date().toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  month: 'long', 
-                  day: 'numeric' 
+                new Date().toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric'
                 })
               }
             </div>
@@ -207,7 +207,7 @@ const EventPreview: React.FC<EventPreviewProps> = ({
           </button>
           <button
             onClick={handleEdit}
-            className="flex items-center space-x-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            className="flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-blue-600 to-cyan-400 hover:from-blue-500 hover:to-cyan-300 text-white rounded-lg transition-all shadow-lg shadow-blue-500/20"
           >
             <Edit className="w-4 h-4" />
             <span className="text-sm">Edit</span>

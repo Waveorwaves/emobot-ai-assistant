@@ -61,7 +61,7 @@ const StatusPanel: React.FC<StatusPanelProps> = ({
     const now = new Date();
     const diff = now.getTime() - lastSeen.getTime();
     const minutes = Math.floor(diff / 60000);
-    
+
     if (minutes < 1) return 'Just now';
     if (minutes < 60) return `${minutes}m ago`;
     const hours = Math.floor(minutes / 60);
@@ -71,10 +71,10 @@ const StatusPanel: React.FC<StatusPanelProps> = ({
   };
 
   return (
-    <div className="bg-[#453f3b] rounded-lg p-6 h-[300px] flex flex-col items-center justify-center overflow-hidden">
+    <div className="glass-panel rounded-lg p-6 h-[300px] flex flex-col items-center justify-center overflow-hidden">
       {/* Status Circle */}
       <div className="relative mb-4">
-        <div 
+        <div
           className={`
             w-24 h-24 rounded-full ${getStatusColor()} ${getPulseAnimation()}
             flex items-center justify-center shadow-lg
@@ -85,7 +85,7 @@ const StatusPanel: React.FC<StatusPanelProps> = ({
         >
           {getStatusIcon()}
         </div>
-        
+
         {/* Pulse Ring for Active States */}
         {(status === 'online' || status === 'busy') && (
           <div className={`
@@ -107,7 +107,7 @@ const StatusPanel: React.FC<StatusPanelProps> = ({
             Response: {responseTime}ms
           </p>
         )}
-        
+
         <p className="text-xs text-gray-400">
           Last seen: {formatLastSeen()}
         </p>

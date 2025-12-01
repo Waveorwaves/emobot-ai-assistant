@@ -45,7 +45,7 @@ const MetricsDashboard: React.FC = () => {
       <div className="bg-white rounded-lg shadow p-6">
         <div className="text-center text-red-600">
           <p>Error loading metrics: {error}</p>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200"
           >
@@ -64,16 +64,16 @@ const MetricsDashboard: React.FC = () => {
     );
   }
 
-  const StatCard = ({ 
-    title, 
-    value, 
-    icon: Icon, 
+  const StatCard = ({
+    title,
+    value,
+    icon: Icon,
     color = 'blue',
-    description 
-  }: { 
-    title: string; 
-    value: string | number; 
-    icon: any; 
+    description
+  }: {
+    title: string;
+    value: string | number;
+    icon: any;
     color?: string;
     description?: string;
   }) => (
@@ -110,7 +110,7 @@ const MetricsDashboard: React.FC = () => {
           color="blue"
           description="Reasoning requests processed"
         />
-        
+
         <StatCard
           title="Avg Satisfaction"
           value={`${metrics.user_satisfaction.average.toFixed(1)}/5`}
@@ -118,15 +118,15 @@ const MetricsDashboard: React.FC = () => {
           color="green"
           description={`Trend: ${metrics.user_satisfaction.trend}`}
         />
-        
+
         <StatCard
           title="Learning Quality"
           value={`${(metrics.learning_progress.learning_data_quality * 100).toFixed(0)}%`}
           icon={Target}
-          color="purple"
+          color="sky"
           description="Interactions with feedback"
         />
-        
+
         <StatCard
           title="Correction Rate"
           value={`${(metrics.correction_stats.correction_rate * 100).toFixed(1)}%`}
@@ -147,30 +147,30 @@ const MetricsDashboard: React.FC = () => {
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={metrics.accuracy_trends}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="date" 
+                <XAxis
+                  dataKey="date"
                   tick={{ fontSize: 12 }}
                   tickFormatter={(value) => new Date(value).toLocaleDateString()}
                 />
                 <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip 
+                <Tooltip
                   labelFormatter={(value) => new Date(value).toLocaleDateString()}
                   formatter={(value: any, name: string) => [
                     typeof value === 'number' ? value.toFixed(2) : value,
                     name === 'accuracy' ? 'Accuracy' : 'Satisfaction'
                   ]}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="accuracy" 
-                  stroke="#3B82F6" 
+                <Line
+                  type="monotone"
+                  dataKey="accuracy"
+                  stroke="#3B82F6"
                   strokeWidth={2}
                   name="accuracy"
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="satisfaction" 
-                  stroke="#10B981" 
+                <Line
+                  type="monotone"
+                  dataKey="satisfaction"
+                  stroke="#10B981"
                   strokeWidth={2}
                   name="satisfaction"
                 />
@@ -192,17 +192,17 @@ const MetricsDashboard: React.FC = () => {
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={metrics.accuracy_trends}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="date" 
+                <XAxis
+                  dataKey="date"
                   tick={{ fontSize: 12 }}
                   tickFormatter={(value) => new Date(value).toLocaleDateString()}
                 />
                 <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip 
+                <Tooltip
                   labelFormatter={(value) => new Date(value).toLocaleDateString()}
                   formatter={(value: any) => [value, 'Interactions']}
                 />
-                <Bar dataKey="interactions" fill="#8B5CF6" />
+                <Bar dataKey="interactions" fill="#0ea5e9" />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -220,7 +220,7 @@ const MetricsDashboard: React.FC = () => {
             Detailed Statistics
           </h3>
         </div>
-        
+
         <div className="px-6 py-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>

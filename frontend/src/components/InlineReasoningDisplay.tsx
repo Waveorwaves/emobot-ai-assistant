@@ -20,9 +20,9 @@ const InlineReasoningDisplay: React.FC<InlineReasoningDisplayProps> = ({
   const getStepIcon = (type: string) => {
     switch (type) {
       case 'thought':
-        return <Brain className="w-4 h-4 text-purple-500" />;
+        return <Brain className="w-4 h-4 text-sky-500" />;
       case 'tool_call':
-        return <Wrench className="w-4 h-4 text-blue-500" />;
+        return <Wrench className="w-4 h-4 text-cyan-500" />;
       case 'observation':
         return <Eye className="w-4 h-4 text-green-500" />;
       case 'final_answer':
@@ -37,17 +37,17 @@ const InlineReasoningDisplay: React.FC<InlineReasoningDisplayProps> = ({
   const getStepColor = (type: string) => {
     switch (type) {
       case 'thought':
-        return 'bg-purple-50 border-purple-200';
+        return 'bg-sky-500/10 border-sky-500/30 text-sky-200';
       case 'tool_call':
-        return 'bg-blue-50 border-blue-200';
+        return 'bg-cyan-500/10 border-cyan-500/30 text-cyan-200';
       case 'observation':
-        return 'bg-green-50 border-green-200';
+        return 'bg-green-500/10 border-green-500/30 text-green-200';
       case 'final_answer':
-        return 'bg-green-100 border-green-300';
+        return 'bg-green-500/20 border-green-500/50 text-green-100';
       case 'error':
-        return 'bg-red-50 border-red-200';
+        return 'bg-red-500/10 border-red-500/30 text-red-200';
       default:
-        return 'bg-gray-50 border-gray-200';
+        return 'bg-white/5 border-primary-500/60 text-gray-300';
     }
   };
 
@@ -76,11 +76,11 @@ const InlineReasoningDisplay: React.FC<InlineReasoningDisplayProps> = ({
   );
 
   return (
-    <div className="mt-2 rounded-md overflow-hidden border border-gray-600 bg-[#2a2a2a]">
+    <div className="mt-2 rounded-md overflow-hidden border border-primary-500/60 glass-panel">
       {/* Toggle Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-3 py-2 flex items-center justify-between text-sm hover:bg-[#333] transition-colors"
+        className="w-full px-3 py-2 flex items-center justify-between text-sm hover:bg-white/5 transition-colors"
       >
         <div className="flex items-center gap-2">
           <Brain className="w-4 h-4 text-blue-400" />
@@ -97,7 +97,7 @@ const InlineReasoningDisplay: React.FC<InlineReasoningDisplayProps> = ({
 
       {/* Expandable Steps */}
       {isExpanded && (
-        <div className="border-t border-gray-600 bg-[#1e1e1e]">
+        <div className="border-t border-primary-500/60 bg-black/20">
           <div className="p-3 space-y-2 max-h-96 overflow-y-auto">
             {displaySteps.map((step, index) => (
               <div
@@ -110,28 +110,28 @@ const InlineReasoningDisplay: React.FC<InlineReasoningDisplayProps> = ({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                      <span className="text-xs font-semibold text-white/90 uppercase tracking-wide">
                         {getStepLabel(step.type)}
                       </span>
                       {step.confidence !== undefined && (
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-white/50">
                           ({Math.round(step.confidence * 100)}%)
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-700 leading-relaxed break-words">
+                    <p className="text-sm text-white/80 leading-relaxed break-words">
                       {step.action && step.action !== step.reasoning && (
                         <span className="font-medium">{step.action}: </span>
                       )}
                       {step.reasoning}
                     </p>
                     {step.tool_name && (
-                      <div className="mt-1 text-xs text-gray-600">
+                      <div className="mt-1 text-xs text-white/60">
                         Tool: <span className="font-mono">{step.tool_name}</span>
                       </div>
                     )}
                     {step.parameters && (
-                      <div className="mt-1 text-xs text-gray-600 font-mono overflow-auto">
+                      <div className="mt-1 text-xs text-white/60 font-mono overflow-auto">
                         {typeof step.parameters === 'string'
                           ? step.parameters
                           : JSON.stringify(step.parameters)}

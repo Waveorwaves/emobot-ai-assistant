@@ -37,7 +37,7 @@ const WeeklyStatsPanel: React.FC<WeeklyStatsPanelProps> = ({
   const completionRate = (weeklyStats.completedTasks / weeklyStats.totalTasks) * 100;
 
   return (
-    <div className="bg-[#453f3b] rounded-lg p-6 h-[250px]">
+    <div className="glass-panel rounded-lg p-6 h-[250px]">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-white">Weekly Performance</h3>
@@ -53,7 +53,7 @@ const WeeklyStatsPanel: React.FC<WeeklyStatsPanelProps> = ({
           {getTrendIcon(weeklyStats.trend)}
         </div>
         <p className="text-sm text-gray-400">On-Time Completion</p>
-        
+
         {/* Trend Indicator */}
         <div className="flex items-center justify-center space-x-1 mt-1">
           <span className={`text-xs ${getTrendColor(previousWeekComparison.onTimeChange)}`}>
@@ -75,14 +75,13 @@ const WeeklyStatsPanel: React.FC<WeeklyStatsPanelProps> = ({
             </span>
           </div>
           <p className="text-xs text-gray-400">Completed</p>
-          
+
           {/* Completion Rate Bar */}
           <div className="mt-1 w-full bg-gray-700 rounded-full h-1">
-            <div 
-              className={`h-1 rounded-full transition-all duration-300 ${
-                completionRate >= 90 ? 'bg-green-500' :
-                completionRate >= 70 ? 'bg-yellow-500' : 'bg-red-500'
-              }`}
+            <div
+              className={`h-1 rounded-full transition-all duration-300 ${completionRate >= 90 ? 'bg-green-500' :
+                  completionRate >= 70 ? 'bg-yellow-500' : 'bg-red-500'
+                }`}
               style={{ width: `${Math.min(completionRate, 100)}%` }}
             />
           </div>
@@ -94,15 +93,14 @@ const WeeklyStatsPanel: React.FC<WeeklyStatsPanelProps> = ({
             {weeklyStats.totalTasks}
           </p>
           <p className="text-xs text-gray-400">Total Tasks</p>
-          
+
           {/* Weekly Progress Indicator */}
           <div className="mt-1 flex justify-center space-x-0.5">
             {[...Array(7)].map((_, i) => (
-              <div 
+              <div
                 key={i}
-                className={`w-1 h-2 rounded-sm ${
-                  i < 5 ? 'bg-blue-500' : 'bg-gray-600'
-                }`}
+                className={`w-1 h-2 rounded-sm ${i < 5 ? 'bg-blue-500' : 'bg-gray-600'
+                  }`}
               />
             ))}
           </div>
@@ -119,13 +117,12 @@ const WeeklyStatsPanel: React.FC<WeeklyStatsPanelProps> = ({
             </span>
           </div>
           <p className="text-xs text-gray-400">Avg Response</p>
-          
+
           {/* Response Time Indicator */}
           <div className="mt-1 flex items-center justify-center">
-            <Clock className={`w-3 h-3 ${
-              weeklyStats.averageResponseTime <= 500 ? 'text-green-400' :
-              weeklyStats.averageResponseTime <= 1000 ? 'text-yellow-400' : 'text-red-400'
-            }`} />
+            <Clock className={`w-3 h-3 ${weeklyStats.averageResponseTime <= 500 ? 'text-green-400' :
+                weeklyStats.averageResponseTime <= 1000 ? 'text-yellow-400' : 'text-red-400'
+              }`} />
           </div>
         </div>
       </div>

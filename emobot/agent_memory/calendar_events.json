@@ -92,5 +92,31 @@
     ],
     "created_at": "2025-11-12T19:02:40.326410",
     "status": "confirmed"
+  },
+  {
+    "id": "event_9",
+    "title": "New Capstone Meeting Request from Yifei Wang",
+    "start_time": "2025-11-13T18:00:00",
+    "end_time": "2025-11-13T19:00:00",
+    "location": "",
+    "description": "Attendees: yifeiwang28@uchicago.edu",
+    "attendees": [
+      "yifeiwang28@uchicago.edu"
+    ],
+    "created_at": "2025-11-12T21:04:11.772077",
+    "status": "confirmed"
+  },
+  {
+    "id": "event_10",
+    "title": "Capstone Meeting Request from Yifei Wang",
+    "start_time": "2025-11-13T18:00:00",
+    "end_time": "2025-11-13T19:00:00",
+    "location": "",
+    "description": "Attendees: yifeiwang28@uchicago.edu",
+    "attendees": [
+      "yifeiwang28@uchicago.edu"
+    ],
+    "created_at": "2025-11-12T21:18:46.009712",
+    "status": "confirmed"
   }
 ]

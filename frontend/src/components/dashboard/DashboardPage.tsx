@@ -89,7 +89,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
       return {};
     }
   });
-  const [notification, setNotification] = useState<{message: string; type: 'success' | 'error' | 'info' | 'warning'} | null>(null);
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'warning' } | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [historyFilter, setHistoryFilter] = useState<string>('all');
   const [insightEmailDrafts, setInsightEmailDrafts] = useState<Record<number, any>>({});
@@ -101,10 +101,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   });
   const [showCalendarConfirmation, setShowCalendarConfirmation] = useState(false);
   const [calendarEventData, setCalendarEventData] = useState<any>(null);
-  
+
   // Get real data from context
   const { getCalendarSummary, getEmailSummary, getTodoSummary, todos, emails } = useData();
-  
+
   // Real summary data
   const calendarSummary = getCalendarSummary();
   const todoSummary = getTodoSummary();
@@ -226,36 +226,36 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         },
       });
       const data = await response.json();
-      
+
       if (data.success) {
         // Filter out completed and snoozed insights
         const now = Date.now();
         const filteredInsights = (data.insights || []).filter((insight: any) => {
           const hash = getInsightHash(insight);
           const state = insightStates[hash];
-          
+
           // Skip if completed
           if (state && state.status === 'completed') {
             return false;
           }
-          
+
           // Skip if snoozed and not yet time
           if (state && state.status === 'snoozed' && state.snoozeUntil > now) {
             return false;
           }
-          
+
           return true;
         });
-        
+
         setInsights(filteredInsights);
-        
+
         // Update summary with actual filtered count
         const updatedSummary = {
           ...(data.summary || {}),
           insights_count: filteredInsights.length
         };
         setInsightsSummary(updatedSummary);
-        
+
         // Cache insights and summary to localStorage
         try {
           localStorage.setItem('cachedInsights', JSON.stringify(filteredInsights));
@@ -951,7 +951,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
     // Detect if this is about email reply - only if there's a sender_email or it's clearly an email-specific insight
     const isEmailInsight = insight.sender_email ||
-                          title.includes('email') && (combined.includes('reply') || combined.includes('respond') || combined.includes('from'));
+      title.includes('email') && (combined.includes('reply') || combined.includes('respond') || combined.includes('from'));
 
     // Detect if this is about scheduling/calendar
     const isSchedulingInsight = combined.includes('schedule') || combined.includes('meeting') || combined.includes('calendar') || combined.includes('reschedule');
@@ -1040,9 +1040,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   const handleToggleCollapse = () => {
     const next = !isCollapsed;
     setIsCollapsed(next);
-    try { 
-      localStorage.setItem('sidebarCollapsed', String(next)); 
-    } catch {}
+    try {
+      localStorage.setItem('sidebarCollapsed', String(next));
+    } catch { }
   };
 
   const handleApproveAction = async (itemId: string) => {
@@ -1097,7 +1097,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   };
 
   return (
-    <div className="h-screen bg-[#1e1e1e]">
+    <div className="h-screen bg-black text-white font-sans selection:bg-primary-500/30">
       <Sidebar
         isCollapsed={isCollapsed}
         onToggleCollapse={handleToggleCollapse}
@@ -1106,45 +1106,44 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
       />
 
       {/* Main Content Area */}
-      <div className={`${isCollapsed ? 'ml-20' : 'ml-72'} transition-all duration-300 flex flex-col h-screen pb-20`}>
+      <div className={`${isCollapsed ? 'ml-20' : 'ml-64'} transition-all duration-300 flex flex-col h-screen pb-20`}>
         {/* Dashboard Content Area */}
-        <div className="flex-1 bg-[#1e1e1e] overflow-y-auto">
-          
+        <div className="flex-1 overflow-y-auto">
+
           {/* AI Assistant Header */}
-          <div className="p-6">
+          <div className="p-6 border-b border-white/10">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-600 rounded-lg">
-                  <Bot className="w-6 h-6 text-white" />
+                <div className="p-2 bg-primary-500/10 border border-primary-500/60 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+                  <Bot className="w-6 h-6 text-primary-400" />
                 </div>
                 <div>
-                  <h1 className="text-white text-2xl font-medium">EmoBot AI Assistant</h1>
-                  <p className="text-gray-400">Your personal productivity companion</p>
+                  <h1 className="text-white text-2xl font-display font-bold tracking-tight">EmoBot AI Assistant</h1>
                 </div>
               </div>
               <div className="flex flex-col items-end space-y-2">
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={viewInsightHistory}
-                    className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-3 rounded-lg flex items-center space-x-2 transition-colors font-medium"
+                    className="bg-white/5 hover:bg-white/10 border border-primary-500/60 hover:border-white/20 text-white px-4 py-3 rounded-lg flex items-center space-x-2 transition-all font-display font-semibold uppercase tracking-wide text-xs"
                     title="View insight history"
                   >
-                    <History className="w-5 h-5" />
+                    <History className="w-4 h-4" />
                     <span>History</span>
                   </button>
                   <button
                     onClick={analyzeInsights}
                     disabled={isAnalyzing}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition-colors font-medium"
+                    className="btn-neon-flow text-white px-6 py-3 rounded-lg flex items-center space-x-2 font-display font-semibold uppercase tracking-wide text-xs"
                   >
                     {isAnalyzing ? (
                       <>
-                        <Clock className="w-5 h-5 animate-spin" />
+                        <Clock className="w-4 h-4 animate-spin" />
                         <span>Analyzing...</span>
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-5 h-5" />
+                        <Sparkles className="w-4 h-4" />
                         <span>Analyze Now</span>
                       </>
                     )}
@@ -1160,7 +1159,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                       const hours = Math.floor(minutes / 60);
                       return <span className="text-xs text-gray-400">Updated {hours}h ago</span>;
                     }
-                  } catch {}
+                  } catch { }
                   return null;
                 })()}
               </div>
@@ -1169,44 +1168,44 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
           {/* AI Insights & Recommendations */}
           <div className="px-6 mb-6">
-            <div className="bg-[#453f3b] rounded-lg overflow-hidden flex flex-col" style={{ maxHeight: '700px' }}>
+            <div className="bg-black/40 backdrop-blur-xl border border-primary-500/60 rounded-lg overflow-hidden flex flex-col shadow-[0_0_15px_rgba(6,182,212,0.1)]" style={{ maxHeight: '700px' }}>
               {/* Fixed Header with Title and Overview */}
               <div className="flex-shrink-0">
                 {/* Title */}
                 <div className="px-6 pt-6 pb-3">
                   <div className="flex items-center space-x-2">
-                    <Brain className="w-5 h-5 text-purple-400" />
-                    <h2 className="text-lg font-semibold text-white">AI Insights & Recommendations</h2>
+                    <Brain className="w-5 h-5 text-accent-400" />
+                    <h2 className="text-lg font-display font-bold tracking-tight text-white">AI Insights & Recommendations</h2>
                   </div>
                 </div>
 
                 {/* Overview Stats - Pinned */}
                 <div className="px-6 pb-4">
-                  <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg p-6">
+                  <div className="bg-gradient-to-r from-purple-600 to-indigo-600 border border-white/5 rounded-lg p-6">
                     <div className="grid grid-cols-4 gap-4">
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-                        <div className="text-3xl font-bold text-white mb-1">
+                      <div className="bg-black/20 backdrop-blur-sm rounded-lg p-4 text-center border border-white/5">
+                        <div className="text-3xl font-display font-bold text-white mb-1">
                           {insightsSummary?.unread_emails ?? emailSummary.unreadEmails}
                         </div>
-                        <div className="text-sm text-white/80">Unread Emails</div>
+                        <div className="text-sm text-gray-400 font-sans">Unread Emails</div>
                       </div>
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-                        <div className="text-3xl font-bold text-white mb-1">
+                      <div className="bg-black/20 backdrop-blur-sm rounded-lg p-4 text-center border border-white/5">
+                        <div className="text-3xl font-display font-bold text-white mb-1">
                           {insightsSummary?.upcoming_events ?? calendarSummary.upcomingEvents}
                         </div>
-                        <div className="text-sm text-white/80">Upcoming Events</div>
+                        <div className="text-sm text-gray-400 font-sans">Upcoming Events</div>
                       </div>
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-                        <div className="text-3xl font-bold text-white mb-1">
+                      <div className="bg-black/20 backdrop-blur-sm rounded-lg p-4 text-center border border-white/5">
+                        <div className="text-3xl font-display font-bold text-white mb-1">
                           {insightsSummary?.pending_tasks ?? todoSummary.pendingTasks}
                         </div>
-                        <div className="text-sm text-white/80">Pending Tasks</div>
+                        <div className="text-sm text-gray-400 font-sans">Pending Tasks</div>
                       </div>
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-                        <div className="text-3xl font-bold text-white mb-1">
+                      <div className="bg-black/20 backdrop-blur-sm rounded-lg p-4 text-center border border-white/5">
+                        <div className="text-3xl font-display font-bold text-white mb-1">
                           {insightsSummary?.insights_count ?? insights.length}
                         </div>
-                        <div className="text-sm text-white/80">Insights Found</div>
+                        <div className="text-sm text-gray-400 font-sans">Insights Found</div>
                       </div>
                     </div>
                   </div>
@@ -1215,7 +1214,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
               {/* Scrollable Content - Insights Only */}
               <div className="flex-1 overflow-y-auto px-6 pb-6">
-                
+
                 {/* Insights Content */}
                 {isAnalyzing ? (
                   <div className="text-center py-12">
@@ -1227,7 +1226,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                     {insights.map((insight, index) => (
                       <div
                         key={index}
-                        className={`border-l-4 rounded-lg p-4 ${getInsightTypeClass(insight.type)}`}
+                        className={`border-l-4 rounded-lg p-4 ${getInsightTypeClass(insight.type)} `}
                       >
                         <div className="flex items-start space-x-3 mb-3">
                           <span className="text-2xl">{getInsightTypeIcon(insight.type)}</span>
@@ -1248,7 +1247,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                                 <div className="bg-black/30 rounded p-2 space-y-1">
                                   <p className="text-gray-300 text-xs"><strong>To:</strong> {insightEmailDrafts[index].to}</p>
                                   <p className="text-gray-300 text-xs"><strong>Subject:</strong> {insightEmailDrafts[index].subject}</p>
-                                  <div className="mt-2 pt-2 border-t border-gray-700">
+                                  <div className="mt-2 pt-2 border-t border-primary-500/60">
                                     <p className="text-gray-400 text-xs whitespace-pre-wrap line-clamp-3">{insightEmailDrafts[index].body}</p>
                                   </div>
                                 </div>
@@ -1262,13 +1261,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                             <button
                               key={actionIndex}
                               onClick={action.onClick}
-                              className={`${
-                                action.type === 'confirm'
-                                  ? 'bg-green-600 hover:bg-green-700'
-                                  : 'bg-blue-600 hover:bg-blue-700'
-                              } text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                                action.priority ? 'ring-2 ring-green-400 ring-opacity-50' : ''
-                              }`}
+                              className={`${action.type === 'confirm'
+                                ? 'bg-green-600 hover:bg-green-700'
+                                : 'bg-blue-600 hover:bg-blue-700'
+                                } text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${action.priority ? 'ring-2 ring-green-400 ring-opacity-50' : ''
+                                } `}
                             >
                               {action.label}
                             </button>
@@ -1306,7 +1303,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
           {/* AI-Generated Schedule Optimization */}
           <div className="px-6 mb-6">
-            <div className="bg-[#453f3b] rounded-lg p-6">
+            <div className="glass-panel border border-primary-500/60 rounded-lg p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-2">
                   <Target className="w-5 h-5 text-green-400" />
@@ -1315,7 +1312,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 <button
                   onClick={optimizeSchedule}
                   disabled={isOptimizing}
-                  className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors text-sm font-medium"
+                  className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-all shadow-lg hover:shadow-emerald-500/25 text-sm font-medium"
                 >
                   {isOptimizing ? (
                     <>
@@ -1330,9 +1327,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                   )}
                 </button>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                
+
                 {/* Priority Tasks */}
                 <div>
                   <h3 className="text-gray-300 font-medium mb-3">Priority Tasks</h3>
@@ -1355,17 +1352,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                   <div className="space-y-2">
                     {aiActions.length > 0 ? (
                       aiActions.map((action) => (
-                        <div key={action.id} className="flex items-center justify-between text-sm bg-[#1e1e1e] rounded-lg p-3">
+                        <div key={action.id} className="flex items-center justify-between text-sm bg-white/5 rounded-lg p-3">
                           <div className="flex items-center space-x-2">
                             {getActionIcon(action.type)}
                             <span className="text-gray-300">{action.description}</span>
                           </div>
                           <div className="flex items-center space-x-2">
                             <span className="text-blue-400 font-medium">{action.count}</span>
-                            <div className={`w-2 h-2 rounded-full ${
-                              action.status === 'completed' ? 'bg-green-400' :
+                            <div className={`w-2 h-2 rounded-full ${action.status === 'completed' ? 'bg-green-400' :
                               action.status === 'in-progress' ? 'bg-yellow-400' : 'bg-gray-400'
-                            }`} />
+                              } `} />
                           </div>
                         </div>
                       ))
@@ -1390,7 +1386,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                   <div className="space-y-3">
                     {approvalItems.length > 0 ? (
                       approvalItems.map((item) => (
-                        <div key={item.id} className="bg-[#1e1e1e] rounded-lg p-3 border border-yellow-600/20">
+                        <div key={item.id} className="bg-white/5 rounded-lg p-3 border border-yellow-600/20">
                           <h4 className="text-white text-sm font-medium mb-1">{item.title}</h4>
                           <p className="text-gray-400 text-xs mb-2">{item.description}</p>
                           <p className="text-green-400 text-xs mb-3">{item.impact}</p>
@@ -1427,9 +1423,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           {/* Data Summary Cards */}
           <div className="px-6 pb-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              
+
               {/* Calendar Summary */}
-              <div className="bg-[#453f3b] rounded-lg p-6">
+              <div className="glass-panel border border-primary-500/60 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-white">Today's Schedule</h3>
                   <Calendar className="w-5 h-5 text-blue-400" />
@@ -1443,14 +1439,14 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                     <span className="text-gray-300">Upcoming</span>
                     <span className="text-white font-medium">{calendarSummary.upcomingEvents}</span>
                   </div>
-                  <div className="mt-4 p-3 bg-[#1e1e1e] rounded-lg">
+                  <div className="mt-4 p-3 bg-white/5 border border-accent-500/60 rounded-lg">
                     <p className="text-sm text-blue-400">Next: {calendarSummary.nextEvent}</p>
                   </div>
                 </div>
               </div>
 
               {/* Todo Summary */}
-              <div className="bg-[#453f3b] rounded-lg p-6">
+              <div className="glass-panel border border-primary-500/60 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-white">Task Progress</h3>
                   <CheckSquare className="w-5 h-5 text-green-400" />
@@ -1469,10 +1465,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                       <span className="text-gray-300">AI Optimized</span>
                       <span className="text-white">{todoSummary.completionRate}%</span>
                     </div>
-                    <div className="w-full bg-[#1e1e1e] rounded-full h-2">
-                      <div 
-                        className="bg-green-500 h-2 rounded-full transition-all duration-300" 
-                        style={{ width: `${todoSummary.completionRate}%` }}
+                    <div className="w-full bg-white/10 rounded-full h-2">
+                      <div
+                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${todoSummary.completionRate}% ` }}
                       />
                     </div>
                   </div>
@@ -1480,10 +1476,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               </div>
 
               {/* Email Summary */}
-              <div className="bg-[#453f3b] rounded-lg p-6">
+              <div className="glass-panel border border-primary-500/60 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-white">Smart Inbox</h3>
-                  <Mail className="w-5 h-5 text-purple-400" />
+                  <Mail className="w-5 h-5 text-sky-400" />
                 </div>
                 <div className="space-y-3">
                   <div className="flex justify-between">
@@ -1494,8 +1490,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                     <span className="text-gray-300">AI Processed</span>
                     <span className="text-green-400 font-medium">{emailSummary.totalEmails - emailSummary.unreadEmails}</span>
                   </div>
-                  <div className="mt-4 p-3 bg-[#1e1e1e] rounded-lg">
-                    <p className="text-sm text-purple-400">Latest: {emailSummary.recentSender}</p>
+                  <div className="mt-4 p-3 bg-white/5 border border-accent-500/60 rounded-lg">
+                    <p className="text-sm text-sky-400">Latest: {emailSummary.recentSender}</p>
                     {emailSummary.priority > 0 && (
                       <div className="flex items-center mt-2">
                         <AlertTriangle className="w-4 h-4 text-red-400 mr-2" />
@@ -1517,387 +1513,389 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
       />
 
       {/* Notification */}
-      {notification && (
-        <Notification
-          message={notification.message}
-          type={notification.type}
-          onClose={() => setNotification(null)}
-        />
-      )}
+      {
+        notification && (
+          <Notification
+            message={notification.message}
+            type={notification.type}
+            onClose={() => setNotification(null)}
+          />
+        )
+      }
 
       {/* Insight History Modal */}
-      {showHistory && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#1a1a1a] border border-gray-700 rounded-lg w-[600px] max-h-[80vh] flex flex-col">
-            {/* History Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-700">
-              <div className="flex items-center space-x-2">
-                <History className="w-5 h-5 text-blue-400" />
-                <h2 className="text-lg font-medium text-white">Insight History</h2>
-              </div>
-              <button
-                onClick={() => setShowHistory(false)}
-                className="text-gray-400 hover:text-white p-1"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* History Filter Tabs */}
-            {Object.keys(insightStates).length > 0 && (
-              <div className="flex items-center flex-wrap gap-2 px-6 pt-4 border-b border-gray-700 pb-4">
+      {
+        showHistory && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="glass-panel border border-primary-500/60 rounded-lg w-[600px] max-h-[80vh] flex flex-col shadow-2xl">
+              {/* History Header */}
+              <div className="flex items-center justify-between p-6 border-b border-primary-500/60">
+                <div className="flex items-center space-x-2">
+                  <History className="w-5 h-5 text-blue-400" />
+                  <h2 className="text-lg font-medium text-white">Insight History</h2>
+                </div>
                 <button
-                  onClick={() => setHistoryFilter('all')}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    historyFilter === 'all'
+                  onClick={() => setShowHistory(false)}
+                  className="text-gray-400 hover:text-white p-1"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* History Filter Tabs */}
+              {Object.keys(insightStates).length > 0 && (
+                <div className="flex items-center flex-wrap gap-2 px-6 pt-4 border-b border-primary-500/60 pb-4">
+                  <button
+                    onClick={() => setHistoryFilter('all')}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${historyFilter === 'all'
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  }`}
-                >
-                  All
-                </button>
-                <button
-                  onClick={() => setHistoryFilter('email_sent')}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    historyFilter === 'email_sent'
+                      } `}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => setHistoryFilter('email_sent')}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${historyFilter === 'email_sent'
                       ? 'bg-blue-500 text-white'
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  }`}
-                >
-                  📧 Email Sent
-                </button>
-                <button
-                  onClick={() => setHistoryFilter('calendar_added')}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    historyFilter === 'calendar_added'
-                      ? 'bg-purple-600 text-white'
+                      } `}
+                  >
+                    📧 Email Sent
+                  </button>
+                  <button
+                    onClick={() => setHistoryFilter('calendar_added')}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${historyFilter === 'calendar_added'
+                      ? 'bg-sky-600 text-white'
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  }`}
-                >
-                  📅 Calendar Added
-                </button>
-                <button
-                  onClick={() => setHistoryFilter('completed')}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    historyFilter === 'completed'
+                      } `}
+                  >
+                    📅 Calendar Added
+                  </button>
+                  <button
+                    onClick={() => setHistoryFilter('completed')}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${historyFilter === 'completed'
                       ? 'bg-green-600 text-white'
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  }`}
-                >
-                  ✓ Completed
-                </button>
-                <button
-                  onClick={() => setHistoryFilter('not_useful')}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    historyFilter === 'not_useful'
+                      } `}
+                  >
+                    ✓ Completed
+                  </button>
+                  <button
+                    onClick={() => setHistoryFilter('not_useful')}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${historyFilter === 'not_useful'
                       ? 'bg-gray-500 text-white'
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  }`}
-                >
-                  ✗ Not Useful
-                </button>
-              </div>
-            )}
-
-            {/* History Content */}
-            <div className="flex-1 overflow-y-auto p-6">
-              {Object.keys(insightStates).length === 0 ? (
-                <div className="text-center py-12">
-                  <History className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                  <p className="text-gray-400">No history yet</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {Object.entries(insightStates)
-                    .filter(([, state]: [string, any]) => {
-                      if (historyFilter === 'all') return true;
-                      return state.status === historyFilter;
-                    })
-                    .sort(([, a]: [string, any], [, b]: [string, any]) => b.timestamp - a.timestamp)
-                    .map(([hash, state]: [string, any]) => {
-                    const statusEmoji = {
-                      'email_sent': '📧',
-                      'calendar_added': '📅',
-                      'completed': '✓',
-                      'not_useful': '✗',
-                      'snoozed': '⏰'
-                    }[state.status] || '•';
-
-                    const statusColor = {
-                      'email_sent': 'border-blue-600/20 bg-blue-900/20',
-                      'calendar_added': 'border-purple-600/20 bg-purple-900/20',
-                      'completed': 'border-green-600/20 bg-green-900/20',
-                      'not_useful': 'border-gray-600/20 bg-gray-900/20',
-                      'snoozed': 'border-blue-600/20 bg-blue-900/20'
-                    }[state.status] || 'border-gray-600/20 bg-gray-900/20';
-
-                    const statusLabel = {
-                      'email_sent': 'EMAIL SENT',
-                      'calendar_added': 'CALENDAR ADDED',
-                      'completed': 'COMPLETED',
-                      'not_useful': 'NOT USEFUL',
-                      'snoozed': 'SNOOZED'
-                    }[state.status] || state.status.replace('_', ' ').toUpperCase();
-
-                    const date = new Date(state.timestamp).toLocaleString();
-
-                    return (
-                      <div
-                        key={hash}
-                        className={`border-l-3 rounded-lg p-4 ${statusColor}`}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            {/* Status badge */}
-                            <div className="flex items-center space-x-2 mb-2">
-                              <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                state.status === 'email_sent' ? 'bg-blue-500 text-white' :
-                                state.status === 'calendar_added' ? 'bg-purple-600 text-white' :
-                                state.status === 'completed' ? 'bg-green-600 text-white' :
-                                state.status === 'not_useful' ? 'bg-gray-600 text-white' :
-                                'bg-blue-600 text-white'
-                              }`}>
-                                {statusEmoji} {statusLabel}
-                              </span>
-                              <span className="text-gray-400 text-xs">{date}</span>
-                            </div>
-
-                            {/* Insight title - prominently displayed */}
-                            {state.title && (
-                              <h4 className="text-white font-semibold text-base mb-2">
-                                {state.title}
-                              </h4>
-                            )}
-
-                            {/* Insight content */}
-                            {state.content && (
-                              <p className="text-gray-300 text-sm leading-relaxed mb-2">
-                                {state.content}
-                              </p>
-                            )}
-
-                            {/* Suggestion */}
-                            {state.suggestion && (
-                              <div className="bg-blue-900/30 border border-blue-600/20 rounded-lg p-2 mb-2">
-                                <p className="text-blue-300 text-xs">
-                                  <strong className="text-blue-400">💡 Suggestion:</strong> {state.suggestion}
-                                </p>
-                              </div>
-                            )}
-
-                            {/* Email Sent Details */}
-                            {state.status === 'email_sent' && state.emailTo && (
-                              <div className="bg-blue-900/30 border border-blue-500/20 rounded-lg p-2 mb-2">
-                                <p className="text-blue-300 text-xs mb-1">
-                                  <strong className="text-blue-400">📧 Email Sent:</strong>
-                                </p>
-                                <p className="text-gray-300 text-xs">To: {state.emailTo}</p>
-                                {state.emailSubject && (
-                                  <p className="text-gray-300 text-xs">Subject: {state.emailSubject}</p>
-                                )}
-                              </div>
-                            )}
-
-                            {/* Calendar Added Details */}
-                            {state.status === 'calendar_added' && state.eventTitle && (
-                              <div className="bg-purple-900/30 border border-purple-500/20 rounded-lg p-2 mb-2">
-                                <p className="text-purple-300 text-xs mb-1">
-                                  <strong className="text-purple-400">📅 Calendar Event:</strong>
-                                </p>
-                                <p className="text-gray-300 text-xs">{state.eventTitle}</p>
-                                {state.eventDate && state.eventTime && (
-                                  <p className="text-gray-300 text-xs">{state.eventDate} at {state.eventTime}</p>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      } `}
+                  >
+                    ✗ Not Useful
+                  </button>
                 </div>
               )}
-            </div>
 
-            {/* History Footer */}
-            <div className="flex items-center justify-between p-6 border-t border-gray-700">
-              <button
-                onClick={clearInsightHistory}
-                className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
-                disabled={Object.keys(insightStates).length === 0}
-              >
-                <Trash2 className="w-4 h-4" />
-                <span>Clear History</span>
-              </button>
-              <button
-                onClick={() => setShowHistory(false)}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+              {/* History Content */}
+              <div className="flex-1 overflow-y-auto p-6">
+                {Object.keys(insightStates).length === 0 ? (
+                  <div className="text-center py-12">
+                    <History className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                    <p className="text-gray-400">No history yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {Object.entries(insightStates)
+                      .filter(([, state]: [string, any]) => {
+                        if (historyFilter === 'all') return true;
+                        return state.status === historyFilter;
+                      })
+                      .sort(([, a]: [string, any], [, b]: [string, any]) => b.timestamp - a.timestamp)
+                      .map(([hash, state]: [string, any]) => {
+                        const statusEmoji = {
+                          'email_sent': '📧',
+                          'calendar_added': '📅',
+                          'completed': '✓',
+                          'not_useful': '✗',
+                          'snoozed': '⏰'
+                        }[state.status] || '•';
 
-      {/* Compose Email Modal */}
-      {showComposeModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#1a1a1a] border border-gray-700 rounded-lg w-[600px] max-h-[80vh] flex flex-col">
-            {/* Compose Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-700">
-              <h2 className="text-lg font-medium text-white">New Message</h2>
-              <button
-                onClick={() => setShowComposeModal(false)}
-                className="text-gray-400 hover:text-white p-1"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+                        const statusColor = {
+                          'email_sent': 'border-blue-600/20 bg-blue-900/20',
+                          'calendar_added': 'border-sky-600/20 bg-sky-900/20',
+                          'completed': 'border-green-600/20 bg-green-900/20',
+                          'not_useful': 'border-gray-600/20 bg-gray-900/20',
+                          'snoozed': 'border-blue-600/20 bg-blue-900/20'
+                        }[state.status] || 'border-gray-600/20 bg-gray-900/20';
 
-            {/* Compose Form */}
-            <div className="flex-1 p-6 space-y-4 overflow-y-auto">
-              {/* To Field */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">To</label>
-                <input
-                  type="email"
-                  value={composeForm.to}
-                  onChange={(e) => setComposeForm(prev => ({ ...prev, to: e.target.value }))}
-                  placeholder="recipient@example.com"
-                  className="w-full bg-[#0a0a0a] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
+                        const statusLabel = {
+                          'email_sent': 'EMAIL SENT',
+                          'calendar_added': 'CALENDAR ADDED',
+                          'completed': 'COMPLETED',
+                          'not_useful': 'NOT USEFUL',
+                          'snoozed': 'SNOOZED'
+                        }[state.status] || state.status.replace('_', ' ').toUpperCase();
 
-              {/* Subject Field */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Subject</label>
-                <input
-                  type="text"
-                  value={composeForm.subject}
-                  onChange={(e) => setComposeForm(prev => ({ ...prev, subject: e.target.value }))}
-                  placeholder="Email subject"
-                  className="w-full bg-[#0a0a0a] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
+                        const date = new Date(state.timestamp).toLocaleString();
 
-              {/* Content Field */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Message</label>
-                <textarea
-                  value={composeForm.content}
-                  onChange={(e) => setComposeForm(prev => ({ ...prev, content: e.target.value }))}
-                  placeholder="Write your message..."
-                  rows={12}
-                  className="w-full bg-[#0a0a0a] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                />
-              </div>
-            </div>
+                        return (
+                          <div
+                            key={hash}
+                            className={`border-l-3 rounded-lg p-4 ${statusColor} `}
+                          >
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="flex-1">
+                                {/* Status badge */}
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${state.status === 'email_sent' ? 'bg-blue-500 text-white' :
+                                    state.status === 'calendar_added' ? 'bg-sky-600 text-white' :
+                                      state.status === 'completed' ? 'bg-green-600 text-white' :
+                                        state.status === 'not_useful' ? 'bg-gray-600 text-white' :
+                                          'bg-blue-600 text-white'
+                                    } `}>
+                                    {statusEmoji} {statusLabel}
+                                  </span>
+                                  <span className="text-gray-400 text-xs">{date}</span>
+                                </div>
 
-            {/* Compose Footer */}
-            <div className="flex items-center justify-between p-6 border-t border-gray-700">
-              <button
-                onClick={() => setShowComposeModal(false)}
-                className="px-4 py-2 text-gray-300 hover:text-white transition-colors"
-              >
-                Cancel
-              </button>
-              <div className="flex items-center space-x-3">
-                <button
-                  onClick={handleSendEmail}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors font-medium"
-                >
-                  <Send className="w-4 h-4" />
-                  <span>Send</span>
-                </button>
-                {calendarEventData && (
-                  <button
-                    onClick={handleSendAndSchedule}
-                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors font-medium ring-2 ring-green-400 ring-opacity-50"
-                  >
-                    <Calendar className="w-4 h-4" />
-                    <span>Send & Schedule</span>
-                  </button>
+                                {/* Insight title - prominently displayed */}
+                                {state.title && (
+                                  <h4 className="text-white font-semibold text-base mb-2">
+                                    {state.title}
+                                  </h4>
+                                )}
+
+                                {/* Insight content */}
+                                {state.content && (
+                                  <p className="text-gray-300 text-sm leading-relaxed mb-2">
+                                    {state.content}
+                                  </p>
+                                )}
+
+                                {/* Suggestion */}
+                                {state.suggestion && (
+                                  <div className="bg-blue-900/30 border border-blue-600/20 rounded-lg p-2 mb-2">
+                                    <p className="text-blue-300 text-xs">
+                                      <strong className="text-blue-400">💡 Suggestion:</strong> {state.suggestion}
+                                    </p>
+                                  </div>
+                                )}
+
+                                {/* Email Sent Details */}
+                                {state.status === 'email_sent' && state.emailTo && (
+                                  <div className="bg-blue-900/30 border border-blue-500/20 rounded-lg p-2 mb-2">
+                                    <p className="text-blue-300 text-xs mb-1">
+                                      <strong className="text-blue-400">📧 Email Sent:</strong>
+                                    </p>
+                                    <p className="text-gray-300 text-xs">To: {state.emailTo}</p>
+                                    {state.emailSubject && (
+                                      <p className="text-gray-300 text-xs">Subject: {state.emailSubject}</p>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Calendar Added Details */}
+                                {state.status === 'calendar_added' && state.eventTitle && (
+                                  <div className="bg-sky-900/30 border border-sky-500/20 rounded-lg p-2 mb-2">
+                                    <p className="text-sky-300 text-xs mb-1">
+                                      <strong className="text-sky-400">📅 Calendar Event:</strong>
+                                    </p>
+                                    <p className="text-gray-300 text-xs">{state.eventTitle}</p>
+                                    {state.eventDate && state.eventTime && (
+                                      <p className="text-gray-300 text-xs">{state.eventDate} at {state.eventTime}</p>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
                 )}
               </div>
+
+              {/* History Footer */}
+              <div className="flex items-center justify-between p-6 border-t border-primary-500/60">
+                <button
+                  onClick={clearInsightHistory}
+                  className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+                  disabled={Object.keys(insightStates).length === 0}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Clear History</span>
+                </button>
+                <button
+                  onClick={() => setShowHistory(false)}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
+
+      {/* Compose Email Modal */}
+      {
+        showComposeModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="glass-panel border border-primary-500/60 rounded-lg w-[600px] max-h-[80vh] flex flex-col shadow-2xl">
+              {/* Compose Header */}
+              <div className="flex items-center justify-between p-6 border-b border-primary-500/60">
+                <h2 className="text-lg font-medium text-white">New Message</h2>
+                <button
+                  onClick={() => setShowComposeModal(false)}
+                  className="text-gray-400 hover:text-white p-1"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Compose Form */}
+              <div className="flex-1 p-6 space-y-4 overflow-y-auto">
+                {/* To Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">To</label>
+                  <input
+                    type="email"
+                    value={composeForm.to}
+                    onChange={(e) => setComposeForm(prev => ({ ...prev, to: e.target.value }))}
+                    placeholder="recipient@example.com"
+                    className="w-full bg-black/20 border border-primary-500/60 rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Subject Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Subject</label>
+                  <input
+                    type="text"
+                    value={composeForm.subject}
+                    onChange={(e) => setComposeForm(prev => ({ ...prev, subject: e.target.value }))}
+                    placeholder="Email subject"
+                    className="w-full bg-black/20 border border-primary-500/60 rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Content Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Message</label>
+                  <textarea
+                    value={composeForm.content}
+                    onChange={(e) => setComposeForm(prev => ({ ...prev, content: e.target.value }))}
+                    placeholder="Write your message..."
+                    rows={12}
+                    className="w-full bg-black/20 border border-primary-500/60 rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* Compose Footer */}
+              <div className="flex items-center justify-between p-6 border-t border-primary-500/60">
+                <button
+                  onClick={() => setShowComposeModal(false)}
+                  className="px-4 py-2 text-gray-300 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={handleSendEmail}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors font-medium"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>Send</span>
+                  </button>
+                  {calendarEventData && (
+                    <button
+                      onClick={handleSendAndSchedule}
+                      className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors font-medium ring-2 ring-green-400 ring-opacity-50"
+                    >
+                      <Calendar className="w-4 h-4" />
+                      <span>Send & Schedule</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      }
 
       {/* Calendar Confirmation Modal */}
-      {showCalendarConfirmation && calendarEventData && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#1a1a1a] border border-gray-700 rounded-lg w-[500px] flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-700">
-              <div className="flex items-center space-x-2">
-                <Calendar className="w-5 h-5 text-green-400" />
-                <h2 className="text-lg font-medium text-white">Add to Calendar</h2>
-              </div>
-              <button
-                onClick={() => setShowCalendarConfirmation(false)}
-                className="text-gray-400 hover:text-white p-1"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Event Details */}
-            <div className="p-6 space-y-4">
-              <div className="bg-green-900/20 border border-green-600/20 rounded-lg p-4">
-                <p className="text-green-400 text-sm mb-3">✅ Email sent successfully!</p>
-                <p className="text-gray-300 text-sm">Would you like to add this meeting to your calendar?</p>
+      {
+        showCalendarConfirmation && calendarEventData && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="glass-panel border border-primary-500/60 rounded-lg w-[500px] flex flex-col shadow-2xl">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-primary-500/60">
+                <div className="flex items-center space-x-2">
+                  <Calendar className="w-5 h-5 text-green-400" />
+                  <h2 className="text-lg font-medium text-white">Add to Calendar</h2>
+                </div>
+                <button
+                  onClick={() => setShowCalendarConfirmation(false)}
+                  className="text-gray-400 hover:text-white p-1"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              {/* Event Information */}
-              <div className="bg-[#0a0a0a] border border-gray-700 rounded-lg p-4 space-y-3">
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 w-20 text-gray-400 text-sm">Title:</div>
-                  <div className="text-white text-sm font-medium">{calendarEventData.title}</div>
+              {/* Event Details */}
+              <div className="p-6 space-y-4">
+                <div className="bg-green-900/20 border border-green-600/20 rounded-lg p-4">
+                  <p className="text-green-400 text-sm mb-3">✅ Email sent successfully!</p>
+                  <p className="text-gray-300 text-sm">Would you like to add this meeting to your calendar?</p>
                 </div>
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 w-20 text-gray-400 text-sm">Date:</div>
-                  <div className="text-white text-sm">{calendarEventData.date}</div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 w-20 text-gray-400 text-sm">Time:</div>
-                  <div className="text-white text-sm">{calendarEventData.time}</div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 w-20 text-gray-400 text-sm">Duration:</div>
-                  <div className="text-white text-sm">{calendarEventData.duration}</div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 w-20 text-gray-400 text-sm">Attendees:</div>
-                  <div className="text-white text-sm">{calendarEventData.recipient}</div>
+
+                {/* Event Information */}
+                <div className="bg-black/20 border border-primary-500/60 rounded-lg p-4 space-y-3">
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 w-20 text-gray-400 text-sm">Title:</div>
+                    <div className="text-white text-sm font-medium">{calendarEventData.title}</div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 w-20 text-gray-400 text-sm">Date:</div>
+                    <div className="text-white text-sm">{calendarEventData.date}</div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 w-20 text-gray-400 text-sm">Time:</div>
+                    <div className="text-white text-sm">{calendarEventData.time}</div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 w-20 text-gray-400 text-sm">Duration:</div>
+                    <div className="text-white text-sm">{calendarEventData.duration}</div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 w-20 text-gray-400 text-sm">Attendees:</div>
+                    <div className="text-white text-sm">{calendarEventData.recipient}</div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Footer Actions */}
-            <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-700">
-              <button
-                onClick={() => {
-                  setShowCalendarConfirmation(false);
-                  setCalendarEventData(null);
-                }}
-                className="px-4 py-2 text-gray-300 hover:text-white transition-colors"
-              >
-                Skip
-              </button>
-              <button
-                onClick={handleAddToCalendar}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors font-medium"
-              >
-                <Calendar className="w-4 h-4" />
-                <span>Add to Calendar</span>
-              </button>
+              {/* Footer Actions */}
+              <div className="flex items-center justify-end space-x-3 p-6 border-t border-primary-500/60">
+                <button
+                  onClick={() => {
+                    setShowCalendarConfirmation(false);
+                    setCalendarEventData(null);
+                  }}
+                  className="px-4 py-2 text-gray-300 hover:text-white transition-colors"
+                >
+                  Skip
+                </button>
+                <button
+                  onClick={handleAddToCalendar}
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors font-medium"
+                >
+                  <Calendar className="w-4 h-4" />
+                  <span>Add to Calendar</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 

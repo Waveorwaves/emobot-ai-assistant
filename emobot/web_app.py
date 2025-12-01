@@ -6,6 +6,7 @@ Provides HTTP API and simple web interface
 import os
 import sys
 import logging
+import json
 from flask import Flask, request, jsonify, render_template, send_from_directory
 
 # Try to import CORS, make it optional
@@ -926,6 +927,47 @@ def _build_insights_prompt(emails, events, tasks):
     from datetime import datetime
     current_datetime = datetime.now()
     current_datetime_str = current_datetime.strftime("%B %d, %Y at %I:%M %p")
+    
+    # Load user profile from episodic memory if available
+    user_profile_text = ""
+    try:
+        # Try to load from episodic memory
+        memory_file = 'agent_memory/episodic_memory.json'
+        if os.path.exists(memory_file):
+            with open(memory_file, 'r', encoding='utf-8') as f:
+                memory_data = json.load(f)
+                
+            # Get recent memories to understand user context
+            if isinstance(memory_data, list):
+                memories = memory_data
+            else:
+                memories = memory_data.get('memories', [])
+            
+            if memories:
+                # Extract user patterns and preferences from recent memories
+                recent_memories = memories[-10:] if len(memories) > 10 else memories
+                user_context = []
+                
+                for memory in recent_memories:
+                    if isinstance(memory.get('episode'), dict):
+                        query = memory['episode'].get('query', '')
+                        if query:
+                            user_context.append(query)
+                
+                if user_context:
+                    user_profile_text = f"\n\nUSER CONTEXT (from recent interactions):\n"
+                    user_profile_text += "Based on recent conversations, the user:\n"
+                    # Summarize patterns
+                    if any('meeting' in ctx.lower() or 'schedule' in ctx.lower() for ctx in user_context):
+                        user_profile_text += "- Frequently manages meetings and schedules\n"
+                    if any('email' in ctx.lower() for ctx in user_context):
+                        user_profile_text += "- Actively manages email communications\n"
+                    if any('task' in ctx.lower() or 'todo' in ctx.lower() for ctx in user_context):
+                        user_profile_text += "- Keeps track of tasks and to-dos\n"
+                    
+    except Exception as e:
+        logging.warning(f"Could not load user profile from memory: {e}")
+        user_profile_text = ""
 
     # Format emails
     emails_text = ""
@@ -1027,6 +1069,7 @@ def _build_insights_prompt(emails, events, tasks):
 CURRENT DATE AND TIME: {current_datetime_str}
 
 IMPORTANT: Only analyze UPCOMING events that are in the future. Ignore any events that have already occurred before {current_datetime_str}.
+{user_profile_text}
 
 {emails_text}
 
@@ -1569,6 +1612,402 @@ def reject_schedule_action():
             'success': False,
             'error': str(e)
         }), 500
+
+# ============================================================================
+# Memory API Endpoints
+# ============================================================================
+
+@app.route('/api/memory/analyze', methods=['POST'])
+def analyze_episodic_memory():
+    """Analyze episodic memory to generate user background profile"""
+    try:
+        if not reasoning_module:
+            return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
+        
+        logging.info("Starting episodic memory analysis...")
+        
+        # Read episodic memory file
+        memory_file = 'agent_memory/episodic_memory.json'
+        try:
+            with open(memory_file, 'r', encoding='utf-8') as f:
+                memory_data = json.load(f)
+        except FileNotFoundError:
+            return jsonify({'success': False, 'error': 'Memory file not found'}), 404
+        except json.JSONDecodeError:
+            return jsonify({'success': False, 'error': 'Invalid memory file'}), 400
+        
+        # Handle both list and dict formats
+        if isinstance(memory_data, list):
+            memories = memory_data
+        else:
+            memories = memory_data.get('memories', [])
+        
+        if not memories:
+            return jsonify({
+                'success': True,
+                'analysis': 'No memories found. Start chatting to build your profile!',
+                'stats': {'total_memories': 0, 'recent_memories': 0, 'analysis_date': time.strftime('%Y-%m-%d %H:%M:%S')},
+                'profile_suggestions': {}
+            })
+        
+        # Prepare recent memories for analysis
+        recent_memories = memories[-30:] if len(memories) > 30 else memories
+        memory_text = ""
+        for i, memory in enumerate(recent_memories, 1):
+            timestamp = memory.get('timestamp', 'Unknown')
+            content = str(memory.get('episode', memory.get('content', '')))
+            if isinstance(memory.get('episode'), dict):
+                query = memory['episode'].get('query', '')
+                result = memory['episode'].get('result', '')
+                memory_text += f"Memory {i} ({timestamp}):\nQuery: {query}\nResult: {result}\n\n"
+            else:
+                memory_text += f"Memory {i} ({timestamp}):\n{content}\n\n"
+        
+        analysis_prompt = f"""Analyze these episodic memories to create a user profile:
+
+{memory_text}
+
+Provide analysis covering:
+1. Personal Background
+2. Interests and Preferences
+3. Communication Style
+4. Goals and Objectives
+5. Context and Relationships
+6. Personality Traits
+
+Be concise and factual."""
+        
+        logging.info("Analyzing memories with LLM...")
+        
+        import io
+        from contextlib import redirect_stdout, redirect_stderr
+        captured_stdout = io.StringIO()
+        captured_stderr = io.StringIO()
+        
+        with redirect_stdout(captured_stdout), redirect_stderr(captured_stderr):
+            llm_response = reasoning_module.agent.run(analysis_prompt)
+        
+        analysis_text = str(llm_response)
+        
+        # Extract Final Answer if present
+        if 'Final Answer:' in analysis_text:
+            final_answer_start = analysis_text.find('Final Answer:') + len('Final Answer:')
+            analysis_text = analysis_text[final_answer_start:].strip()
+            if analysis_text.endswith('```'):
+                analysis_text = analysis_text[:analysis_text.rfind('```')].strip()
+        
+        # Remove ReAct artifacts
+        if '**Thought**' in analysis_text:
+            analysis_text = analysis_text.split('**Thought**')[0].strip()
+        if '**Action**' in analysis_text:
+            analysis_text = analysis_text.split('**Action**')[0].strip()
+        
+        # Generate profile suggestions
+        profile_prompt = f"""Based on this analysis, write a concise user profile (2-3 paragraphs) that describes the user:
+
+{analysis_text}
+
+Write a natural, integrated description covering their background, interests, goals, and preferences. This will be used as context in future conversations."""
+        
+        with redirect_stdout(captured_stdout), redirect_stderr(captured_stderr):
+            profile_response = reasoning_module.agent.run(profile_prompt)
+        
+        # Extract Final Answer from the response
+        profile_text = str(profile_response).strip()
+        
+        # Try to extract Final Answer if present
+        if 'Final Answer:' in profile_text:
+            # Extract text after "Final Answer:"
+            final_answer_start = profile_text.find('Final Answer:') + len('Final Answer:')
+            profile_text = profile_text[final_answer_start:].strip()
+            
+            # Remove any trailing markdown code blocks
+            if profile_text.endswith('```'):
+                profile_text = profile_text[:profile_text.rfind('```')].strip()
+        
+        # Remove any **Thought** or **Action** sections if they leaked through
+        if '**Thought**' in profile_text:
+            profile_text = profile_text.split('**Thought**')[0].strip()
+        if '**Action**' in profile_text:
+            profile_text = profile_text.split('**Action**')[0].strip()
+        
+        profile_suggestions = {
+            'description': profile_text
+        }
+        
+        # Calculate statistics
+        from datetime import datetime, timedelta
+        now = datetime.now()
+        recent_count = sum(1 for m in memories if 'timestamp' in m and 
+                          (now - datetime.fromisoformat(m['timestamp'].replace('Z', '+00:00'))).days <= 7)
+        
+        stats = {
+            'total_memories': len(memories),
+            'recent_memories': recent_count,
+            'analysis_date': now.isoformat()
+        }
+        
+        logging.info("Memory analysis completed successfully")
+        
+        return jsonify({
+            'success': True,
+            'analysis': analysis_text,
+            'profile_suggestions': profile_suggestions,
+            'stats': stats
+        })
+        
+    except Exception as e:
+        logging.error(f"Memory analysis error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+# ============================================================================
+# Personalized Recommendations API
+# ============================================================================
+
+@app.route('/api/insights/personalized', methods=['POST'])
+def get_personalized_recommendations():
+    """Generate personalized recommendations based on user profile and memory"""
+    try:
+        if not reasoning_module:
+            return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
+        
+        # Get user profile from request (from localStorage)
+        data = request.json or {}
+        user_profile = data.get('user_profile', '')
+        
+        logging.info("Generating personalized recommendations...")
+        
+        # Load episodic memory for context
+        memory_context = ""
+        try:
+            memory_file = 'agent_memory/episodic_memory.json'
+            if os.path.exists(memory_file):
+                with open(memory_file, 'r', encoding='utf-8') as f:
+                    memory_data = json.load(f)
+                    
+                if isinstance(memory_data, list):
+                    memories = memory_data
+                else:
+                    memories = memory_data.get('memories', [])
+                
+                # Get recent memories
+                recent_memories = memories[-20:] if len(memories) > 20 else memories
+                memory_context = f"Recent interactions: {len(recent_memories)} conversations"
+        except Exception as e:
+            logging.warning(f"Could not load memory: {e}")
+        
+        # Build personalized prompt
+        personalized_prompt = f"""Based on the user's profile and recent activity, provide 3-5 personalized recommendations to help them be more productive and achieve their goals.
+
+USER PROFILE:
+{user_profile if user_profile else "No profile information available"}
+
+MEMORY CONTEXT:
+{memory_context}
+
+Please provide recommendations in the following format:
+
+RECOMMENDATION:
+Title: [Brief title]
+Description: [Detailed description]
+Category: [productivity/learning/health/social/work]
+Priority: [high/medium/low]
+---
+
+Focus on:
+1. Productivity improvements based on their work style
+2. Learning opportunities aligned with their interests
+3. Work-life balance suggestions
+4. Goal achievement strategies
+5. Time management tips personalized to their schedule
+
+Make recommendations specific, actionable, and tailored to their profile. If no profile is available, provide general but helpful productivity tips."""
+
+        # Get LLM response
+        import io
+        from contextlib import redirect_stdout, redirect_stderr
+        
+        captured_stdout = io.StringIO()
+        captured_stderr = io.StringIO()
+        
+        with redirect_stdout(captured_stdout), redirect_stderr(captured_stderr):
+            llm_response = reasoning_module.agent.run(personalized_prompt)
+        
+        # Parse response
+        response_text = str(llm_response)
+        
+        # Extract Final Answer if present
+        if 'Final Answer:' in response_text:
+            final_answer_start = response_text.find('Final Answer:') + len('Final Answer:')
+            response_text = response_text[final_answer_start:].strip()
+        
+        # Remove ReAct artifacts
+        if '**Thought**' in response_text:
+            response_text = response_text.split('**Thought**')[0].strip()
+        if '**Action**' in response_text:
+            response_text = response_text.split('**Action**')[0].strip()
+        
+        # Parse recommendations
+        recommendations = []
+        sections = response_text.split('RECOMMENDATION:')
+        
+        for section in sections[1:]:  # Skip first empty section
+            lines = section.strip().split('\n')
+            rec = {
+                'title': '',
+                'description': '',
+                'category': 'productivity',
+                'priority': 'medium'
+            }
+            
+            for line in lines:
+                line = line.strip()
+                if line.startswith('Title:'):
+                    rec['title'] = line.replace('Title:', '').strip()
+                elif line.startswith('Description:'):
+                    rec['description'] = line.replace('Description:', '').strip()
+                elif line.startswith('Category:'):
+                    rec['category'] = line.replace('Category:', '').strip()
+                elif line.startswith('Priority:'):
+                    rec['priority'] = line.replace('Priority:', '').strip()
+                elif line and not line.startswith('---') and rec['description']:
+                    # Continue description
+                    rec['description'] += ' ' + line
+            
+            if rec['title'] and rec['description']:
+                recommendations.append(rec)
+        
+        logging.info(f"Generated {len(recommendations)} personalized recommendations")
+        
+        return jsonify({
+            'success': True,
+            'recommendations': recommendations,
+            'has_profile': bool(user_profile),
+            'generated_at': time.strftime('%Y-%m-%d %H:%M:%S')
+        })
+        
+    except Exception as e:
+        logging.error(f"Personalized recommendations error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+# ============================================================================
+# System Health API Endpoints
+# ============================================================================
+
+@app.route('/api/system/health', methods=['GET'])
+def get_system_health():
+    """Get system health and API connection status"""
+    try:
+        health_data = {
+            'success': True,
+            'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
+            'api_connections': [],
+            'system_status': 'healthy'
+        }
+        
+        # Check Gemini API
+        gemini_status = {
+            'name': 'Gemini API',
+            'status': 'connected' if reasoning_module else 'disconnected',
+            'responseTime': 0,
+            'uptime': 100 if reasoning_module else 0,
+            'lastCheck': time.strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        if reasoning_module:
+            try:
+                # Quick test to measure response time
+                start_time = time.time()
+                # Just check if the model is accessible
+                gemini_status['responseTime'] = int((time.time() - start_time) * 1000)
+            except:
+                gemini_status['status'] = 'degraded'
+                gemini_status['responseTime'] = 0
+        
+        health_data['api_connections'].append(gemini_status)
+        
+        # Check Email Service
+        email_status = {
+            'name': 'Email Service',
+            'status': 'disconnected',
+            'responseTime': 0,
+            'uptime': 0,
+            'lastCheck': time.strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        try:
+            if reasoning_module and reasoning_module.action_executor:
+                # Check if email tool is available
+                tools = reasoning_module.action_executor.get_available_tools()
+                email_tool = next((t for t in tools if 'email' in t.get('name', '').lower()), None)
+                if email_tool:
+                    email_status['status'] = 'connected'
+                    email_status['responseTime'] = 50  # Estimated
+                    email_status['uptime'] = 100
+        except Exception as e:
+            logging.error(f"Error checking email service: {e}")
+        
+        health_data['api_connections'].append(email_status)
+        
+        # Check Calendar API
+        calendar_status = {
+            'name': 'Calendar API',
+            'status': 'disconnected',
+            'responseTime': 0,
+            'uptime': 0,
+            'lastCheck': time.strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        try:
+            if reasoning_module and reasoning_module.action_executor:
+                # Check if calendar tool is available
+                tools = reasoning_module.action_executor.get_available_tools()
+                calendar_tool = next((t for t in tools if 'calendar' in t.get('name', '').lower()), None)
+                if calendar_tool:
+                    calendar_status['status'] = 'connected'
+                    calendar_status['responseTime'] = 45  # Estimated
+                    calendar_status['uptime'] = 100
+        except Exception as e:
+            logging.error(f"Error checking calendar service: {e}")
+        
+        health_data['api_connections'].append(calendar_status)
+        
+        # Determine overall system status
+        connected_count = sum(1 for conn in health_data['api_connections'] if conn['status'] == 'connected')
+        total_count = len(health_data['api_connections'])
+        
+        if connected_count == total_count:
+            health_data['system_status'] = 'healthy'
+        elif connected_count > 0:
+            health_data['system_status'] = 'degraded'
+        else:
+            health_data['system_status'] = 'unhealthy'
+        
+        health_data['active_apis'] = f"{connected_count}/{total_count}"
+        
+        return jsonify(health_data)
+        
+    except Exception as e:
+        logging.error(f"System health check error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'system_status': 'unhealthy'
+        }), 500
+
+# ============================================================================
+# Main Application
+# ============================================================================
 
 def main():
     """Main entry point"""

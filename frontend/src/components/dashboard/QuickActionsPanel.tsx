@@ -35,15 +35,15 @@ const QuickActionsPanel: React.FC = () => {
       id: 'boost',
       icon: Zap,
       label: 'Performance\nBoost',
-      color: 'text-purple-400 hover:text-purple-300',
-      bgColor: 'hover:bg-purple-900/20'
+      color: 'text-sky-400 hover:text-sky-300',
+      bgColor: 'hover:bg-sky-900/20'
     },
     {
       id: 'help',
       icon: HelpCircle,
       label: 'Help',
-      color: 'text-indigo-400 hover:text-indigo-300',
-      bgColor: 'hover:bg-indigo-900/20'
+      color: 'text-cyan-400 hover:text-cyan-300',
+      bgColor: 'hover:bg-cyan-900/20'
     }
   ];
 
@@ -73,7 +73,7 @@ const QuickActionsPanel: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#453f3b] rounded-lg p-6 h-[250px] overflow-hidden">
+    <div className="glass-panel rounded-lg p-6 h-[250px] overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-white">Quick Actions</h3>
@@ -90,9 +90,9 @@ const QuickActionsPanel: React.FC = () => {
               onClick={() => handleAction(action.id)}
               className={`
                 flex flex-col items-center justify-center space-y-1 p-2 rounded-lg
-                bg-[#1e1e1e] border border-gray-600 transition-all duration-200 min-h-[60px]
-                ${action.bgColor} hover:border-gray-500 hover:scale-105
-                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
+                bg-white/5 border border-primary-500/60 transition-all duration-200 min-h-[60px]
+                ${action.bgColor} hover:border-white/30 hover:bg-white/10 hover:scale-105
+                focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50
               `}
               title={action.label.replace('\n', ' ')}
             >

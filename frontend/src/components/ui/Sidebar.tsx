@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Calendar, Mail, CheckSquare, Clock, Settings, Menu, LayoutDashboard, ChevronUp, Brain } from 'lucide-react';
+import { Calendar, Mail, CheckSquare, Clock, Settings, Menu, LayoutDashboard, ChevronUp, Brain, Server } from 'lucide-react';
 import Avatar from './Avatar';
 import { useData } from '../../context/DataContext';
 
@@ -25,7 +25,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'calendar', label: 'Calendar', icon: Calendar },
     { id: 'email', label: 'Email', icon: Mail },
     { id: 'todo', label: 'TODO List', icon: CheckSquare },
-    { id: 'systemlog', label: 'System Log', icon: Clock },
+    { id: 'systemlog', label: 'System Log', icon: Server },
   ];
 
   const profileDropdownItems = [
@@ -60,19 +60,21 @@ const Sidebar: React.FC<SidebarProps> = ({
   }, []);
 
   return (
-    <div className={`${isCollapsed ? 'w-20' : 'w-72'} bg-[#1e1e1e] transition-all duration-300 flex flex-col border-r border-[#453f3b]/30 fixed left-0 top-0 h-screen z-10`}>
-      {/* Sidebar Header */}
-      <div className={`p-4 border-b border-[#453f3b]/30 flex items-center ${isCollapsed ? 'justify-center' : 'px-8'}`}>
+    <div
+      className={`${isCollapsed ? 'w-20' : 'w-64'} bg-black/40 backdrop-blur-xl border-r border-primary-500/60 text-white transition-all duration-300 flex flex-col fixed left-0 top-0 h-screen z-50 shadow-[0_0_30px_rgba(0,0,0,0.5)]`}
+    >  {/* Sidebar Header */}
+      <div className={`p-4 flex items-center ${isCollapsed ? 'justify-center' : 'px-6 justify-between'}`}>
+        {!isCollapsed && <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-primary-400 to-accent-400">Emobot</span>}
         <button
           onClick={onToggleCollapse}
-          className="text-gray-400 hover:text-white transition-colors"
+          className="text-white/60 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg"
         >
           <Menu className="w-6 h-6" />
         </button>
       </div>
 
       {/* Sidebar Navigation */}
-      <div className="flex-1 p-4">
+      <div className="flex-1 px-3 py-4 space-y-1">
         {sidebarItems.map(item => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -80,27 +82,22 @@ const Sidebar: React.FC<SidebarProps> = ({
             <button
               key={item.id}
               onClick={() => handleSidebarNavigation(item.id)}
-              className={`${
-                isCollapsed
-                  ? 'w-full h-[56px] flex items-center justify-center mb-2'
-                  : 'w-full h-[56px] flex items-center gap-3 px-4 rounded-lg text-left transition-colors mb-2 text-sm'
-              } ${!isCollapsed && (isActive ? 'bg-[#453f3b] text-white' : 'text-gray-300 hover:text-white hover:bg-[#453f3b]/50')}`}
+              className={`group relative flex items-center transition-all duration-200 ${isCollapsed
+                ? 'w-full justify-center h-[56px] rounded-xl mb-2'
+                : 'w-full px-4 h-[56px] gap-3 rounded-xl mb-2'
+                } ${isActive
+                  ? 'bg-transparent text-white shadow-[0_0_20px_rgba(6,182,212,0.15)] border border-primary-500'
+                  : 'text-gray-400 hover:text-white hover:bg-accent-500/10 hover:shadow-[0_0_15px_rgba(236,72,153,0.2)] hover:border-accent-500/30'
+                }`}
             >
-              {isCollapsed ? (
-                <div
-                  className={`flex items-center justify-center w-12 h-12 rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-[#453f3b] text-white'
-                      : 'text-gray-300 hover:text-white hover:bg-[#453f3b]/50'
-                  }`}
-                >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                </div>
-              ) : (
-                <>
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  <span>{item.label}</span>
-                </>
+              {isActive && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary-400 rounded-r-full"></div>
+              )}
+
+              <Icon className={`w-5 h-5 flex-shrink-0 transition-colors ${isActive ? 'text-primary-400' : 'group-hover:text-white'}`} />
+
+              {!isCollapsed && (
+                <span className="font-display font-semibold uppercase tracking-wide text-sm">{item.label}</span>
               )}
             </button>
           );
@@ -108,10 +105,10 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Profile Dropdown Section */}
-      <div className="relative" ref={dropdownRef}>
+      <div className="relative p-3" ref={dropdownRef}>
         {/* Dropdown Menu */}
         {isProfileDropdownOpen && !isCollapsed && (
-          <div className="absolute bottom-full left-4 right-4 mb-2 bg-[#453f3b] border border-[#453f3b]/50 rounded-lg shadow-lg overflow-hidden">
+          <div className="absolute bottom-full left-3 right-3 mb-2 glass-panel rounded-xl overflow-hidden shadow-2xl animate-in slide-in-from-bottom-2 fade-in duration-200">
             {profileDropdownItems.map(item => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -119,11 +116,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   key={item.id}
                   onClick={() => handleSidebarNavigation(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors text-sm ${
-                    isActive 
-                      ? 'bg-[#524d48] text-white' 
-                      : 'text-gray-300 hover:text-white hover:bg-[#524d48]'
-                  }`}
+                  className={`w-full flex items-center gap-3 px-4 py-2 text-left transition-colors font-display font-semibold uppercase tracking-wide text-xs ${isActive
+                    ? 'bg-[#524d48] text-white'
+                    : 'text-gray-300 hover:text-white hover:bg-[#524d48]'
+                    }`}
                 >
                   <Icon className="w-4 h-4 flex-shrink-0" />
                   <span>{item.label}</span>
@@ -133,40 +129,31 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
         )}
 
-        {/* Profile Button - Fixed Height */}
-        <div className="border-t border-[#453f3b]/30">
+        {/* Profile Button */}
+        <div className="border-t border-white/10 pt-3">
           <button
             onClick={handleProfileDropdownToggle}
-            className={`${
-              isCollapsed
-                ? 'w-full flex justify-center items-center px-4 py-3'
-                : 'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[#453f3b]/50'
-            }`}
+            className={`w-full flex items-center transition-all duration-200 rounded-xl hover:bg-white/5 ${isCollapsed
+              ? 'justify-center p-2'
+              : 'gap-3 px-3 py-2 text-left'
+              }`}
           >
-            {isCollapsed ? (
-              <Avatar
-                src={userAvatar}
-                alt={userName}
-                fallback={userName}
-                size="sm"
-                className="ring-2 ring-[#453f3b] hover:ring-white transition-all duration-200"
-              />
-            ) : (
+            <Avatar
+              src={userAvatar}
+              alt={userName}
+              fallback={userName}
+              size="sm"
+              className="ring-2 ring-primary-500/50"
+            />
+            {!isCollapsed && (
               <>
-                <Avatar
-                  src={userAvatar}
-                  alt={userName}
-                  fallback={userName}
-                  size="sm"
-                  className="ring-2 ring-[#453f3b]"
-                />
                 <div className="flex-1 min-w-0">
                   <p className="text-white text-sm font-medium truncate">{userName}</p>
+                  <p className="text-xs text-gray-400 truncate">Online</p>
                 </div>
                 <ChevronUp
-                  className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
-                    isProfileDropdownOpen ? 'rotate-180' : ''
-                  }`}
+                  className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isProfileDropdownOpen ? 'rotate-180' : ''
+                    }`}
                 />
               </>
             )}

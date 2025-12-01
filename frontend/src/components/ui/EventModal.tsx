@@ -47,14 +47,14 @@ const EventModal: React.FC<EventModalProps> = ({
       });
     } else {
       // New event
-      const defaultTime = selectedDate ? 
-        `${selectedDate.getHours().toString().padStart(2, '0')}:${selectedDate.getMinutes().toString().padStart(2, '0')}` : 
+      const defaultTime = selectedDate ?
+        `${selectedDate.getHours().toString().padStart(2, '0')}:${selectedDate.getMinutes().toString().padStart(2, '0')}` :
         '09:00';
-      
-      const defaultDate = selectedDate ? 
-        formatDateForInput(selectedDate) : 
+
+      const defaultDate = selectedDate ?
+        formatDateForInput(selectedDate) :
         formatDateForInput(new Date());
-      
+
       setFormData({
         title: '',
         time: defaultTime,
@@ -98,8 +98,8 @@ const EventModal: React.FC<EventModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={onClose}>
-      <div 
-        className="bg-[#453f3b] rounded-lg p-6 w-full max-w-md mx-4"
+      <div
+        className="glass-panel rounded-lg p-6 w-full max-w-md mx-4 border border-white/10 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKeyDown}
       >
@@ -129,7 +129,7 @@ const EventModal: React.FC<EventModalProps> = ({
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="Enter event title..."
-              className="w-full bg-[#1e1e1e] border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500"
               autoFocus
             />
           </div>
@@ -144,7 +144,7 @@ const EventModal: React.FC<EventModalProps> = ({
               type="date"
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              className="w-full bg-[#1e1e1e] border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
 
@@ -159,7 +159,7 @@ const EventModal: React.FC<EventModalProps> = ({
                 type="time"
                 value={formData.time}
                 onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                className="w-full bg-[#1e1e1e] border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
             <div>
@@ -169,7 +169,7 @@ const EventModal: React.FC<EventModalProps> = ({
               <select
                 value={formData.duration}
                 onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                className="w-full bg-[#1e1e1e] border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value="15 min">15 min</option>
                 <option value="30 min">30 min</option>
@@ -192,7 +192,7 @@ const EventModal: React.FC<EventModalProps> = ({
             <select
               value={formData.type}
               onChange={(e) => setFormData({ ...formData, type: e.target.value as CalendarEvent['type'] })}
-              className="w-full bg-[#1e1e1e] border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="meeting">Meeting</option>
               <option value="task">Task</option>
@@ -212,7 +212,7 @@ const EventModal: React.FC<EventModalProps> = ({
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Meeting link, notes, or summary..."
               rows={3}
-              className="w-full bg-[#1e1e1e] border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
             />
             <p className="text-xs text-gray-400 mt-1">e.g., Zoom link, agenda, or notes</p>
           </div>
@@ -222,14 +222,14 @@ const EventModal: React.FC<EventModalProps> = ({
         <div className="flex justify-end space-x-3 mt-6">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-300 hover:text-white transition-colors rounded-lg hover:bg-[#1e1e1e]"
+            className="px-4 py-2 text-white/70 hover:text-white transition-colors rounded-lg hover:bg-white/10"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={!formData.title.trim()}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+            className="px-4 py-2 bg-primary-600 hover:bg-primary-700 disabled:bg-white/10 disabled:text-white/30 disabled:cursor-not-allowed text-white rounded-lg transition-colors shadow-lg shadow-primary-500/20"
           >
             {event ? 'Save Changes' : 'Create Event'}
           </button>

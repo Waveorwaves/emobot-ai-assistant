@@ -138,7 +138,7 @@ const SystemLogPage: React.FC<SystemLogPageProps> = ({
     setIsCollapsed(next);
     try {
       localStorage.setItem('sidebarCollapsed', String(next));
-    } catch {}
+    } catch { }
   };
 
   const handleSidebarNavigation = (page: string) => {
@@ -197,7 +197,7 @@ const SystemLogPage: React.FC<SystemLogPageProps> = ({
   };
 
   return (
-    <div className="h-screen bg-[#1e1e1e]">
+    <div className="h-screen bg-transparent">
       <Sidebar
         isCollapsed={isCollapsed}
         onToggleCollapse={handleToggleCollapse}
@@ -206,25 +206,24 @@ const SystemLogPage: React.FC<SystemLogPageProps> = ({
       />
 
       {/* Main Content Area */}
-      <div className={`${isCollapsed ? 'ml-20' : 'ml-72'} transition-all duration-300 flex flex-col h-screen`}>
-        <div className="flex-1 bg-[#1e1e1e] overflow-y-auto pb-20">
+      <div className={`${isCollapsed ? 'ml-20' : 'ml-64'} transition-all duration-300 flex flex-col h-screen`}>
+        <div className="flex-1 bg-transparent overflow-y-auto pb-20">
 
           {/* Header */}
-          <div className="p-6">
+          <div className="p-6 border-b border-white/10">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-purple-600 rounded-lg">
-                  <Server className="w-6 h-6 text-white" />
+                <div className="p-2 bg-primary-500/10 border border-primary-500/60 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+                  <Server className="w-6 h-6 text-primary-400" />
                 </div>
                 <div>
-                  <h1 className="text-white text-2xl font-medium">System Log</h1>
-                  <p className="text-gray-400 text-sm">Monitor network and API connections</p>
+                  <h1 className="text-2xl font-display font-bold tracking-tight text-white">System Log</h1>
                 </div>
               </div>
               <button
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className="flex items-center space-x-2 px-4 py-2 bg-[#453f3b] hover:bg-[#524d48] text-white rounded-lg transition-colors disabled:opacity-50"
+                className="flex items-center space-x-2 px-4 py-2 glass-button text-white rounded-lg transition-colors disabled:opacity-50"
               >
                 <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                 <span>Refresh</span>
@@ -234,15 +233,15 @@ const SystemLogPage: React.FC<SystemLogPageProps> = ({
 
           {/* Network & System Health Section */}
           <div className="px-6 mb-6">
-            <div className="bg-[#453f3b] rounded-lg p-6">
+            <div className="glass-panel rounded-lg p-6">
               <div className="flex items-center space-x-2 mb-4">
                 <Activity className="w-5 h-5 text-green-400" />
-                <h2 className="text-lg font-semibold text-white">Network & System Health</h2>
+                <h2 className="text-lg font-display font-bold tracking-tight text-white">Network & System Health</h2>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
                 {/* Download Speed */}
-                <div className="bg-[#1e1e1e] rounded-lg p-4">
+                <div className="bg-white/5 rounded-lg p-4 border border-white/5">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-gray-300 text-sm">Download</span>
                     <TrendingUp className="w-4 h-4 text-green-400" />
@@ -331,10 +330,10 @@ const SystemLogPage: React.FC<SystemLogPageProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
               {/* API Connections - Left Half */}
-              <div className="bg-[#453f3b] rounded-lg p-6">
+              <div className="glass-panel rounded-lg p-6">
                 <div className="flex items-center space-x-2 mb-4">
-                  <Database className="w-5 h-5 text-purple-400" />
-                  <h2 className="text-lg font-semibold text-white">API Connections</h2>
+                  <Database className="w-5 h-5 text-accent-400" />
+                  <h2 className="text-lg font-display font-bold tracking-tight text-white">API Connections</h2>
                 </div>
 
                 <div className="space-y-4">
@@ -393,15 +392,15 @@ const SystemLogPage: React.FC<SystemLogPageProps> = ({
               </div>
 
               {/* Recent System Events - Right Half */}
-              <div className="bg-[#453f3b] rounded-lg p-6">
+              <div className="glass-panel rounded-lg p-6">
                 <div className="flex items-center space-x-2 mb-4">
                   <Activity className="w-5 h-5 text-blue-400" />
-                  <h2 className="text-lg font-semibold text-white">Recent System Events</h2>
+                  <h2 className="text-lg font-display font-bold tracking-tight text-white">Recent System Events</h2>
                 </div>
 
                 <div className="space-y-3">
                   {/* Event 1 */}
-                  <div className="p-3 bg-[#1e1e1e] rounded-lg border-l-4 border-green-500">
+                  <div className="p-3 bg-white/5 rounded-lg border-l-4 border-green-500">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-3 flex-1">
                         <CheckCircle className="w-5 h-5 text-green-400 mt-0.5" />
@@ -415,7 +414,7 @@ const SystemLogPage: React.FC<SystemLogPageProps> = ({
                   </div>
 
                   {/* Event 2 */}
-                  <div className="p-3 bg-[#1e1e1e] rounded-lg border-l-4 border-blue-500">
+                  <div className="p-3 bg-white/5 rounded-lg border-l-4 border-blue-500">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-3 flex-1">
                         <Wifi className="w-5 h-5 text-blue-400 mt-0.5" />
@@ -429,10 +428,10 @@ const SystemLogPage: React.FC<SystemLogPageProps> = ({
                   </div>
 
                   {/* Event 3 */}
-                  <div className="p-3 bg-[#1e1e1e] rounded-lg border-l-4 border-purple-500">
+                  <div className="p-3 bg-white/5 rounded-lg border-l-4 border-accent-500">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-3 flex-1">
-                        <Brain className="w-5 h-5 text-purple-400 mt-0.5" />
+                        <Brain className="w-5 h-5 text-accent-400 mt-0.5" />
                         <div>
                           <h4 className="text-white text-sm font-medium">Gemini API Response Optimized</h4>
                           <p className="text-gray-400 text-xs mt-1">Response time improved by 15ms</p>
@@ -443,7 +442,7 @@ const SystemLogPage: React.FC<SystemLogPageProps> = ({
                   </div>
 
                   {/* Event 4 */}
-                  <div className="p-3 bg-[#1e1e1e] rounded-lg border-l-4 border-yellow-500">
+                  <div className="p-3 bg-white/5 rounded-lg border-l-4 border-yellow-500">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-3 flex-1">
                         <AlertTriangle className="w-5 h-5 text-yellow-400 mt-0.5" />
@@ -457,7 +456,7 @@ const SystemLogPage: React.FC<SystemLogPageProps> = ({
                   </div>
 
                   {/* Event 5 */}
-                  <div className="p-3 bg-[#1e1e1e] rounded-lg border-l-4 border-green-500">
+                  <div className="p-3 bg-white/5 rounded-lg border-l-4 border-green-500">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-3 flex-1">
                         <Mail className="w-5 h-5 text-green-400 mt-0.5" />
@@ -471,7 +470,7 @@ const SystemLogPage: React.FC<SystemLogPageProps> = ({
                   </div>
 
                   {/* Event 6 */}
-                  <div className="p-3 bg-[#1e1e1e] rounded-lg border-l-4 border-blue-500">
+                  <div className="p-3 bg-white/5 rounded-lg border-l-4 border-blue-500">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-3 flex-1">
                         <Calendar className="w-5 h-5 text-blue-400 mt-0.5" />
