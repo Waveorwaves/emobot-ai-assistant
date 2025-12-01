@@ -76,14 +76,14 @@ const MainPage: React.FC<MainPageProps> = ({ initialMessages = [], onNavigate })
       <div className={`${isCollapsed ? 'ml-20' : 'ml-64'} transition-all duration-300 flex flex-col h-screen flex-1 relative`}>
 
         {/* Chat Area */}
-        <div className="flex-1 flex flex-col relative z-0">
+        <div className="flex-1 flex flex-col relative z-0 min-h-0">
           {/* Chat Header */}
           <div className="p-6 text-center">
             <h1 className="font-display font-bold tracking-tight text-2xl text-white">CHAT</h1>
           </div>
 
           {/* Messages Container */}
-          <div className="flex-1 overflow-y-auto px-6 pb-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+          <div className="flex-1 overflow-y-auto px-6 pb-8 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
             {chatMessages.length === 0 ? (
               /* Welcome Screen - shown when no messages */
               <div className="flex flex-col items-center justify-center h-full">
