@@ -281,7 +281,7 @@ You can edit any of these fields directly. This is useful because purely learnin
                 "id": "scene_5",
                 "triggers": [
                     "update my style with unfamiliar contacts",
-                    "friendly but still concise and professional"
+                    "change my communication style to friendly but still concise"
                 ],
                 "reasoning_steps": [
                     {
@@ -443,7 +443,8 @@ This keeps the message friendly and reassuring, similar to how you usually write
                 "id": "scene_6_3",
                 "triggers": [
                     "write an email to Alex Li",
-                    "Share the latest progress on Emobot"
+                    "email to Alex Li",
+                    "email Alex Li"
                 ],
                 "reasoning_steps": [
                     {

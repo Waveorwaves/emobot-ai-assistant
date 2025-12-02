@@ -5,6 +5,10 @@ server:
   host: "127.0.0.1"
   port: 8080
 
+# Demo mode - set to true to use demo data instead of real APIs
+# This avoids OAuth authentication and uses predefined demo data
+demo_mode: true
+
 # List of tools to be loaded by the server
 tools:
   - name: "web_search"

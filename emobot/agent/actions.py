@@ -46,7 +46,8 @@ class ActionExecutor:
         # Try to initialize each tool individually
         try:
             from tools.mcp_server.email import EmailTool
-            self.direct_tools['email'] = EmailTool()
+            # Default to demo_mode=True to avoid OAuth prompts on startup
+            self.direct_tools['email'] = EmailTool(demo_mode=True)
             self.logger.info("Email tool initialized for direct execution")
         except Exception as e:
             self.logger.warning(f"Failed to initialize email tool: {e}")

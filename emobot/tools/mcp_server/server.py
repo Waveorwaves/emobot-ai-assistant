@@ -23,6 +23,9 @@ class MCPToolServer:
     def _load_tools(self) -> Dict[str, Any]:
         """Dynamically loads tool classes based on the configuration."""
         loaded_tools = {}
+        # Check if demo_mode is enabled globally
+        demo_mode = self.config.get("demo_mode", True)  # Default to True for demo
+        
         for tool_config in self.config.get("tools", []):
             if tool_config.get("enabled", False):
                 try:
@@ -30,7 +33,12 @@ class MCPToolServer:
                     class_name = tool_config["class"]
                     module = importlib.import_module(module_path)
                     tool_class = getattr(module, class_name)
-                    loaded_tools[tool_config["name"]] = tool_class()
+                    
+                    # Pass demo_mode to EmailTool
+                    if class_name == "EmailTool":
+                        loaded_tools[tool_config["name"]] = tool_class(demo_mode=demo_mode)
+                    else:
+                        loaded_tools[tool_config["name"]] = tool_class()
                     print(f"Successfully loaded tool: {tool_config['name']}")
                 except (ImportError, AttributeError, KeyError) as e:
                     print(f"Error loading tool '{tool_config.get('name', 'N/A')}': {e}")

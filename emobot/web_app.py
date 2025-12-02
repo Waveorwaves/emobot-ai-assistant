@@ -109,6 +109,9 @@ def initialize_agent(model_id="gemini-2.5-flash"):
         profile_manager = ProfileManager()
         insights_manager = InsightsManager(agent=reasoning_module.agent)
         
+        # Set demo mode by default (matches global demo_mode setting)
+        insights_manager.set_demo_mode(demo_mode)
+        
         print("✅ Agent initialized successfully")
         return True
     except Exception as e:

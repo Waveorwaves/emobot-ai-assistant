@@ -107,7 +107,11 @@ class EmailTool(MCPToolBase):
         self.service = None
         self.contacts_service = None
         self.demo_mode = demo_mode
-        self.demo_data_path = "emobot/demo_data/emails.json"
+        # Use absolute path relative to this file's location
+        import os
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        emobot_dir = os.path.dirname(os.path.dirname(current_dir))
+        self.demo_data_path = os.path.join(emobot_dir, "demo_data", "emails.json")
         self.demo_emails = []
         if self.demo_mode:
             self._load_demo_data()
@@ -141,9 +145,11 @@ class EmailTool(MCPToolBase):
             if not operation:
                 return {"status": "error", "error_message": "Missing operation parameter"}
 
-            # Ensure Gmail service is available
-            if not self._ensure_service():
-                return {"status": "error", "error_message": "Gmail service unavailable, please check auth config"}
+            # In demo mode, skip real Gmail service initialization
+            if not self.demo_mode:
+                # Ensure Gmail service is available
+                if not self._ensure_service():
+                    return {"status": "error", "error_message": "Gmail service unavailable, please check auth config"}
 
             # 邮件操作
             if operation == "read_inbox":
@@ -299,6 +305,15 @@ class EmailTool(MCPToolBase):
     def _read_sent(self, max_results: int = 10, **kwargs) -> Dict[str, Any]:
         """读取发件箱中的邮件"""
         try:
+            if self.demo_mode:
+                print(f"📧 [DEMO] Fetching sent emails...")
+                # Return empty sent box for demo (no sent emails in demo data)
+                return {
+                    "status": "success",
+                    "emails": [],
+                    "total_count": 0
+                }
+            
             # 确保服务可用
             if not self._ensure_service():
                 return {"status": "error", "error_message": "Gmail服务不可用"}
