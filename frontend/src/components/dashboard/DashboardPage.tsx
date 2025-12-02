@@ -41,7 +41,7 @@ interface AIInsight {
 
 interface AIAction {
   id: string;
-  type: 'email' | 'calendar' | 'task';
+  type: 'email' | 'calendar' | 'task' | 'schedule' | 'reschedule' | 'priority' | 'automation';
   description: string;
   count: number;
   status: 'completed' | 'in-progress' | 'pending';
@@ -49,7 +49,7 @@ interface AIAction {
 
 interface ApprovalItem {
   id: string;
-  type: 'reschedule' | 'priority' | 'automation';
+  type: 'reschedule' | 'priority' | 'automation' | 'schedule';
   title: string;
   description: string;
   impact: string;
@@ -93,17 +93,41 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   const [showHistory, setShowHistory] = useState(false);
   const [historyFilter, setHistoryFilter] = useState<string>('all');
   const [insightEmailDrafts, setInsightEmailDrafts] = useState<Record<number, any>>({});
-  const [showComposeModal, setShowComposeModal] = useState(false);
+  // Use context state for modal visibility
+  const {
+    getCalendarSummary,
+    getEmailSummary,
+    getTodoSummary,
+    emailComposeModal,
+    setEmailComposeModal,
+    todos,
+    emails
+  } = useData();
+
+  const showComposeModal = emailComposeModal.isOpen;
+  const setShowComposeModal = (isOpen: boolean) => {
+    setEmailComposeModal({ ...emailComposeModal, isOpen });
+  };
+
   const [composeForm, setComposeForm] = useState({
     to: '',
     subject: '',
-    content: ''
+    body: ''
   });
+
+  // Sync context state to local form state when modal opens
+  React.useEffect(() => {
+    if (emailComposeModal.isOpen) {
+      setComposeForm({
+        to: emailComposeModal.to,
+        subject: emailComposeModal.subject,
+        body: emailComposeModal.body
+      });
+    }
+  }, [emailComposeModal]);
   const [showCalendarConfirmation, setShowCalendarConfirmation] = useState(false);
   const [calendarEventData, setCalendarEventData] = useState<any>(null);
 
-  // Get real data from context
-  const { getCalendarSummary, getEmailSummary, getTodoSummary, todos, emails } = useData();
 
   // Real summary data
   const calendarSummary = getCalendarSummary();
@@ -116,6 +140,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   const [aiActions, setAiActions] = useState<AIAction[]>([]);
   const [approvalItems, setApprovalItems] = useState<ApprovalItem[]>([]);
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const [isSessionActive, setIsSessionActive] = useState(false);
+  const [sessionStep, setSessionStep] = useState<'idle' | 'analyzing' | 'results' | 'fixing' | 'complete'>('idle');
 
   // Helper function to create insight hash
   const getInsightHash = (insight: any) => {
@@ -189,30 +215,77 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   };
 
   // Optimize schedule
-  const optimizeSchedule = async () => {
+  const optimizeSchedule = async (isDemo = false) => {
     setIsOptimizing(true);
+    // If starting a session (demo or real), show the overlay immediately
+    setIsSessionActive(true);
+    setSessionStep('analyzing');
+
     try {
       const response = await fetch('http://localhost:8000/api/schedule/optimize', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ demo: isDemo })
       });
       const data = await response.json();
 
       if (data.success) {
+        // Simulate a delay for the "analysis" phase to make it feel more real/immersive
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
         setAiActions(data.actions || []);
         setApprovalItems(data.approvals || []);
-        showNotification(`✓ Found ${data.summary.total_approvals} optimization opportunities`, 'success');
+        setSessionStep('results');
+
+        if (isDemo) {
+          showNotification('✓ Demo optimization complete', 'success');
+        } else {
+          showNotification(`✓ Found ${data.summary.total_approvals} optimization opportunities`, 'success');
+        }
       } else {
         showNotification('Failed to optimize schedule', 'error');
+        setIsSessionActive(false);
       }
     } catch (error) {
       console.error('Error optimizing schedule:', error);
       showNotification('Failed to optimize schedule', 'error');
+      setIsSessionActive(false);
     } finally {
       setIsOptimizing(false);
     }
+  };
+
+  const handleAutoFixAll = async () => {
+    if (approvalItems.length === 0) return;
+
+    setSessionStep('fixing');
+
+    // Process all approvals sequentially
+    for (const item of approvalItems) {
+      try {
+        await fetch('http://localhost:8000/api/schedule/approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ approval_id: item.id })
+        });
+        // Small delay for visual effect
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (e) {
+        console.error('Error auto-fixing:', e);
+      }
+    }
+
+    // Refresh data
+    await fetchScheduleData();
+    setSessionStep('complete');
+    showNotification('✓ All items optimized successfully!', 'success');
+  };
+
+  const closeSession = () => {
+    setIsSessionActive(false);
+    setSessionStep('idle');
   };
 
   // Analyze insights function
@@ -590,7 +663,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         setComposeForm({
           to: finalRecipient,
           subject: data.subject || 'Re: Meeting Request',
-          content: cleanedBody
+          body: cleanedBody
         });
         setShowComposeModal(true);
 
@@ -607,7 +680,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
   // Handle sending email from dashboard
   const handleSendEmail = async () => {
-    if (!composeForm.to.trim() || !composeForm.subject.trim() || !composeForm.content.trim()) {
+    if (!composeForm.to.trim() || !composeForm.subject.trim() || !composeForm.body.trim()) {
       showNotification('❌ Please fill in all fields', 'error');
       return;
     }
@@ -623,7 +696,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         body: JSON.stringify({
           to: composeForm.to,
           subject: composeForm.subject,
-          body: composeForm.content
+          body: composeForm.body
         })
       });
 
@@ -632,7 +705,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
       if (data.success) {
         showNotification('✅ Email sent successfully!', 'success');
         setShowComposeModal(false);
-        setComposeForm({ to: '', subject: '', content: '' });
+        setComposeForm({ to: '', subject: '', body: '' });
       } else {
         showNotification('❌ Failed to send email: ' + (data.error || 'Unknown error'), 'error');
       }
@@ -713,7 +786,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
       setComposeForm({
         to: finalRecipient,
         subject: emailData.subject || 'Re: Meeting Request',
-        content: cleanedBody
+        body: cleanedBody
       });
       setShowComposeModal(true);
 
@@ -770,7 +843,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
   // Handle sending email and showing calendar confirmation
   const handleSendAndSchedule = async () => {
-    if (!composeForm.to.trim() || !composeForm.subject.trim() || !composeForm.content.trim()) {
+    if (!composeForm.to.trim() || !composeForm.subject.trim() || !composeForm.body.trim()) {
       showNotification('❌ Please fill in all fields', 'error');
       return;
     }
@@ -786,7 +859,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         body: JSON.stringify({
           to: composeForm.to,
           subject: composeForm.subject,
-          body: composeForm.content
+          body: composeForm.body
         })
       });
 
@@ -928,7 +1001,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
         setShowCalendarConfirmation(false);
         setCalendarEventData(null);
-        setComposeForm({ to: '', subject: '', content: '' });
+        setComposeForm({ to: '', subject: '', body: '' });
 
         // Refresh the page or trigger a calendar refresh
         // You might want to add a callback here to refresh calendar data
@@ -1017,6 +1090,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
       case 'email': return <Mail className="w-4 h-4" />;
       case 'calendar': return <Calendar className="w-4 h-4" />;
       case 'task': return <CheckSquare className="w-4 h-4" />;
+      case 'schedule': return <Calendar className="w-4 h-4" />;
+      case 'reschedule': return <Clock className="w-4 h-4" />;
+      case 'priority': return <TrendingUp className="w-4 h-4" />;
+      case 'automation': return <Zap className="w-4 h-4" />;
       default: return <Activity className="w-4 h-4" />;
     }
   };
@@ -1310,7 +1387,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                   <h2 className="text-lg font-semibold text-white">AI-Generated Schedule Optimization</h2>
                 </div>
                 <button
-                  onClick={optimizeSchedule}
+                  onClick={() => optimizeSchedule(true)}
+                  disabled={isOptimizing}
+                  className="bg-white/5 hover:bg-white/10 border border-white/10 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-all text-sm font-medium mr-2"
+                >
+                  <Sparkles className="w-4 h-4 text-purple-400" />
+                  <span>Demo Mode</span>
+                </button>
+                <button
+                  onClick={() => optimizeSchedule(false)}
                   disabled={isOptimizing}
                   className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-all shadow-lg hover:shadow-emerald-500/25 text-sm font-medium"
                 >
@@ -1419,6 +1504,161 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               </div>
             </div>
           </div>
+
+          {/* Session Overlay */}
+          {isSessionActive && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+              <div className="bg-gray-900 border border-primary-500/50 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh]">
+
+                {/* Header */}
+                <div className="p-6 border-b border-white/10 bg-gradient-to-r from-gray-900 to-gray-800 flex justify-between items-center">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-emerald-500/20 rounded-lg">
+                      <Zap className="w-6 h-6 text-emerald-400" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-display font-bold text-white">Schedule Optimization</h2>
+                      <p className="text-sm text-gray-400">AI-powered productivity enhancement</p>
+                    </div>
+                  </div>
+                  <button onClick={closeSession} className="text-gray-400 hover:text-white transition-colors">
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="p-8 overflow-y-auto flex-1">
+
+                  {sessionStep === 'analyzing' && (
+                    <div className="flex flex-col items-center justify-center py-12 space-y-6">
+                      <div className="relative w-24 h-24">
+                        <div className="absolute inset-0 border-4 border-emerald-500/30 rounded-full animate-pulse"></div>
+                        <div className="absolute inset-0 border-t-4 border-emerald-500 rounded-full animate-spin"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Bot className="w-10 h-10 text-emerald-400" />
+                        </div>
+                      </div>
+                      <div className="text-center space-y-2">
+                        <h3 className="text-xl font-medium text-white">Analyzing Your Schedule...</h3>
+                        <p className="text-gray-400">Scanning calendar events, emails, and tasks for optimization opportunities.</p>
+                      </div>
+                      <div className="w-full max-w-md bg-gray-800 rounded-full h-2 mt-4 overflow-hidden">
+                        <div className="h-full bg-emerald-500 animate-progress-indeterminate"></div>
+                      </div>
+                    </div>
+                  )}
+
+                  {(sessionStep === 'results' || sessionStep === 'fixing') && (
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-medium text-white">Optimization Opportunities Found ({approvalItems.length})</h3>
+                        {sessionStep === 'fixing' && <span className="text-emerald-400 text-sm animate-pulse">Applying fixes...</span>}
+                      </div>
+
+                      <div className="space-y-3">
+                        {approvalItems.map((item) => (
+                          <div key={item.id} className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-start space-x-4 hover:bg-white/10 transition-colors">
+                            <div className="p-2 bg-yellow-500/20 rounded-lg mt-1">
+                              <Lightbulb className="w-5 h-5 text-yellow-400" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="text-white font-medium">{item.title}</h4>
+                              <p className="text-gray-400 text-sm mt-1">{item.description}</p>
+                              <div className="flex items-center mt-2 text-emerald-400 text-xs font-medium">
+                                <TrendingUp className="w-3 h-3 mr-1" />
+                                {item.impact}
+                              </div>
+                            </div>
+                            <div className="flex flex-col space-y-2">
+                              <button
+                                onClick={() => handleApproveAction(item.id)}
+                                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs rounded-lg transition-colors font-medium"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => handleRejectAction(item.id)}
+                                className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-gray-300 text-xs rounded-lg transition-colors"
+                              >
+                                Skip
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+
+                        {approvalItems.length === 0 && (
+                          <div className="text-center py-8 text-gray-400">
+                            <CheckCircle className="w-12 h-12 mx-auto mb-3 text-emerald-500/50" />
+                            <p>No pending optimizations.</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {sessionStep === 'complete' && (
+                    <div className="flex flex-col items-center justify-center py-12 space-y-6 text-center">
+                      <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mb-4">
+                        <CheckCircle className="w-10 h-10 text-emerald-400" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-white">Optimization Complete!</h3>
+                      <p className="text-gray-400 max-w-md">
+                        Your schedule has been optimized. We've organized your emails, blocked time for important tasks, and added buffers to your meetings.
+                      </p>
+                      <div className="grid grid-cols-3 gap-4 w-full max-w-md mt-8">
+                        <div className="bg-white/5 p-4 rounded-xl">
+                          <div className="text-2xl font-bold text-white mb-1">{aiActions.filter(a => a.type === 'email').reduce((acc, curr) => acc + (curr.count || 0), 0)}</div>
+                          <div className="text-xs text-gray-400">Emails Sorted</div>
+                        </div>
+                        <div className="bg-white/5 p-4 rounded-xl">
+                          <div className="text-2xl font-bold text-white mb-1">{aiActions.filter(a => a.type === 'schedule' || a.type === 'reschedule').length}</div>
+                          <div className="text-xs text-gray-400">Schedule Fixes</div>
+                        </div>
+                        <div className="bg-white/5 p-4 rounded-xl">
+                          <div className="text-2xl font-bold text-white mb-1">{aiActions.filter(a => a.type === 'task' || a.type === 'priority').length}</div>
+                          <div className="text-xs text-gray-400">Tasks Prioritized</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div className="p-6 border-t border-white/10 bg-gray-900/50 flex justify-between items-center">
+                  <div className="text-xs text-gray-500">
+                    {sessionStep === 'results' ? `${approvalItems.length} suggestions pending` : 'AI Agent Active'}
+                  </div>
+                  <div className="flex space-x-3">
+                    {sessionStep === 'results' && approvalItems.length > 0 && (
+                      <button
+                        onClick={handleAutoFixAll}
+                        className="px-6 py-2.5 bg-white text-black font-bold rounded-lg hover:bg-gray-200 transition-colors flex items-center space-x-2"
+                      >
+                        <Sparkles className="w-4 h-4 text-purple-600" />
+                        <span>Auto-Fix All</span>
+                      </button>
+                    )}
+                    {(sessionStep === 'complete' || (sessionStep === 'results' && approvalItems.length === 0)) && (
+                      <button
+                        onClick={closeSession}
+                        className="px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-500 transition-colors"
+                      >
+                        Done
+                      </button>
+                    )}
+                    {sessionStep === 'results' && approvalItems.length > 0 && (
+                      <button
+                        onClick={closeSession}
+                        className="px-4 py-2.5 text-gray-400 hover:text-white transition-colors font-medium"
+                      >
+                        Close
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Data Summary Cards */}
           <div className="px-6 pb-6">
@@ -1780,8 +2020,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Message</label>
                   <textarea
-                    value={composeForm.content}
-                    onChange={(e) => setComposeForm(prev => ({ ...prev, content: e.target.value }))}
+                    value={composeForm.body}
+                    onChange={(e) => setComposeForm(prev => ({ ...prev, body: e.target.value }))}
                     placeholder="Write your message..."
                     rows={12}
                     className="w-full bg-black/20 border border-primary-500/60 rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"

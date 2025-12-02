@@ -1,0 +1,34 @@
+[
+    {
+        "id": "msg_demo_1",
+        "thread_id": "thread_demo_1",
+        "subject": "Meeting about your Emobot project",
+        "from": "Prof. Chenhao Tan <chenhao@uchicago.edu>",
+        "to": "Yifei Wang <yifei@uchicago.edu>",
+        "date": "Tue, 02 Dec 2025 09:30:00 -0600",
+        "snippet": "Could we meet for 30 minutes sometime next Tuesday or Wednesday afternoon...",
+        "body": "Hi Yifei,\n\nCould we meet for 30 minutes sometime next Tuesday or Wednesday afternoon to discuss your Emobot project progress?\n\nBest,\nChenhao",
+        "labels": [
+            "INBOX",
+            "UNREAD"
+        ],
+        "is_read": false,
+        "internal_date": "1764689400000"
+    },
+    {
+        "id": "msg_demo_2",
+        "thread_id": "thread_demo_2",
+        "subject": "Interview Confirmation - Microsoft AI",
+        "from": "HR Team <hr@microsoft.com>",
+        "to": "Yifei Wang <yifei@uchicago.edu>",
+        "date": "Mon, 01 Dec 2025 14:00:00 -0600",
+        "snippet": "We are pleased to confirm your interview scheduled for Friday at 10:00 AM...",
+        "body": "Dear Yifei,\n\nWe are pleased to confirm your interview scheduled for Friday, December 5th at 10:00 AM CST.\n\nPlease be prepared to discuss your recent projects.\n\nBest regards,\nMicrosoft AI HR Team",
+        "labels": [
+            "INBOX",
+            "UNREAD"
+        ],
+        "is_read": false,
+        "internal_date": "1764619200000"
+    }
+]

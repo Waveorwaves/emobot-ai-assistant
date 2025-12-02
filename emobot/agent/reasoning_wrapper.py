@@ -51,28 +51,38 @@ class ReasoningWrapper:
             # Check for pending confirmation
             if self.reasoning_module.has_pending_confirmation():
                 self._add_step("confirmation", "Handling confirmation response", {"query": query})
-                response = self.reasoning_module.handle_confirmation_response(query)
+                result = self.reasoning_module.handle_confirmation_response(query)
             else:
-                # Process normal query
-                response = self.reasoning_module.process_query(query)
-                
-                # Get reasoning steps from the module
-                if hasattr(self.reasoning_module, 'last_reasoning_steps') and self.reasoning_module.last_reasoning_steps:
-                    self.current_steps = self.reasoning_module.last_reasoning_steps
-                    self.logger.info(f"Retrieved {len(self.current_steps)} reasoning steps from module")
-                else:
-                    self.logger.warning("No reasoning steps found in module")
+                # Get response from reasoning module
+                result = self.reasoning_module.process_query(query)
             
+            # Handle both string and dict responses
+            response_text = ""
+            ui_action = None
+            
+            if isinstance(result, dict):
+                response_text = result.get("response", "")
+                ui_action = result.get("ui_action")
+            else:
+                response_text = str(result)
+            
+            # Get reasoning steps
+            steps = self.reasoning_module.get_last_reasoning_steps()
+            
+            # If we captured actual steps, use them
+            if steps:
+                self.current_steps = steps
             # If no steps were captured, add generic ones
-            if len(self.current_steps) == 0:
+            elif len(self.current_steps) == 0:
                 self.logger.warning("Falling back to generic steps")
                 self._add_step("input", "Processing user query", {"query": query})
                 self._add_step("reasoning", "Analyzing query and planning actions")
-                self._add_step("output", "Generated response", {"response": response})
+                self._add_step("output", "Generated response", {"response": response_text})
             
             return {
                 'success': True,
-                'response': response,
+                'response': response_text,
+                'ui_action': ui_action,
                 'reasoning_steps': self.current_steps,
                 'timestamp': datetime.now().isoformat()
             }

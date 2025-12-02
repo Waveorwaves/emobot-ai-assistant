@@ -16,6 +16,10 @@ export interface BackendQueryResponse {
     tool_name?: string;
     parameters?: any;
   }>;
+  ui_action?: {
+    type: string;
+    data: any;
+  };
 }
 
 export interface BackendHealthResponse {

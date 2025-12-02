@@ -101,11 +101,30 @@ class EmailTool(MCPToolBase):
         }
     }
 
-    def __init__(self):
+    def __init__(self, demo_mode: bool = False):
         super().__init__()
         self.auth_manager = GmailAuthManager()
         self.service = None
         self.contacts_service = None
+        self.demo_mode = demo_mode
+        self.demo_data_path = "emobot/demo_data/emails.json"
+        self.demo_emails = []
+        if self.demo_mode:
+            self._load_demo_data()
+
+    def _load_demo_data(self):
+        """Load demo emails from JSON"""
+        try:
+            import json
+            import os
+            if os.path.exists(self.demo_data_path):
+                with open(self.demo_data_path, 'r', encoding='utf-8') as f:
+                    self.demo_emails = json.load(f)
+            else:
+                print(f"Warning: Demo data not found at {self.demo_data_path}")
+        except Exception as e:
+            print(f"Error loading demo data: {e}")
+
 
     def execute(self, **kwargs) -> Dict[str, Any]:
         """
@@ -120,11 +139,11 @@ class EmailTool(MCPToolBase):
         try:
             operation = kwargs.get("operation")
             if not operation:
-                return {"status": "error", "error_message": "缺少operation参数"}
+                return {"status": "error", "error_message": "Missing operation parameter"}
 
-            # 确保 Gmail 服务可用
+            # Ensure Gmail service is available
             if not self._ensure_service():
-                return {"status": "error", "error_message": "Gmail 服务不可用，请检查认证配置"}
+                return {"status": "error", "error_message": "Gmail service unavailable, please check auth config"}
 
             # 邮件操作
             if operation == "read_inbox":
@@ -183,9 +202,9 @@ class EmailTool(MCPToolBase):
             elif operation == "move_to_folder":
                 return self._move_to_folder(**kwargs)
             else:
-                return {"status": "error", "error_message": f"无效操作: {operation}"}
+                return {"status": "error", "error_message": f"Invalid operation: {operation}"}
         except Exception as e:
-            return {"status": "error", "error_message": f"执行操作时出错: {str(e)}"}
+            return {"status": "error", "error_message": f"Error executing operation: {str(e)}"}
 
     def _ensure_service(self) -> bool:
         """确保 Gmail 服务可用"""
@@ -202,9 +221,23 @@ class EmailTool(MCPToolBase):
     def _read_inbox(self, max_results: int = 10, unread_only: bool = False, **kwargs) -> Dict[str, Any]:
         """读取收件箱中的邮件"""
         try:
-            # 确保服务可用
+            if self.demo_mode:
+                print(f"📧 [DEMO] Fetching emails (unread_only={unread_only})...")
+                filtered_emails = self.demo_emails
+                if unread_only:
+                    filtered_emails = [e for e in self.demo_emails if not e.get('is_read', False)]
+                
+                # Sort by date (newest first) - assuming date string format or just reverse list
+                # For demo simplicity, just return as is (usually pre-sorted)
+                return {
+                    "status": "success",
+                    "emails": filtered_emails[:max_results],
+                    "total_count": len(filtered_emails)
+                }
+
+            # Ensure service is available
             if not self._ensure_service():
-                return {"status": "error", "error_message": "Gmail服务不可用"}
+                return {"status": "error", "error_message": "Gmail service unavailable"}
             
             # Build label list based on unread_only parameter
             label_ids = ['INBOX']
@@ -225,7 +258,7 @@ class EmailTool(MCPToolBase):
             print(f"📊 Gmail API returned {len(messages)} message IDs")
             
             if not messages:
-                return {"status": "success", "result": "收件箱中没有邮件", "emails": []}
+                return {"status": "success", "result": "No emails in inbox", "emails": []}
 
             # 获取邮件详情
             email_list = []
@@ -261,7 +294,7 @@ class EmailTool(MCPToolBase):
             }
 
         except Exception as e:
-            return {"status": "error", "error_message": f"读取收件箱失败: {str(e)}"}
+            return {"status": "error", "error_message": f"Failed to read inbox: {str(e)}"}
 
     def _read_sent(self, max_results: int = 10, **kwargs) -> Dict[str, Any]:
         """读取发件箱中的邮件"""
@@ -283,7 +316,7 @@ class EmailTool(MCPToolBase):
             print(f"📊 Gmail API returned {len(messages)} sent message IDs")
 
             if not messages:
-                return {"status": "success", "result": "发件箱中没有邮件", "emails": []}
+                return {"status": "success", "result": "No emails in sent box", "emails": []}
 
             # 获取邮件详情
             email_list = []
@@ -303,13 +336,23 @@ class EmailTool(MCPToolBase):
             }
 
         except Exception as e:
-            return {"status": "error", "error_message": f"读取发件箱失败: {str(e)}"}
+            return {"status": "error", "error_message": f"Failed to read sent box: {str(e)}"}
 
     def _send_email(self, recipient: str, subject: str, body: str, **kwargs) -> Dict[str, Any]:
         """发送邮件"""
         try:
             if not all([recipient, subject, body]):
-                return {"status": "error", "error_message": "收件人、主题和内容都是必需的"}
+                return {"status": "error", "error_message": "Recipient, subject, and body are required"}
+
+            if self.demo_mode:
+                print(f"📧 [DEMO] Sending email to {recipient}")
+                print(f"   Subject: {subject}")
+                print(f"   Body: {body[:50]}...")
+                return {
+                    "status": "success", 
+                    "result": f"Email successfully sent to {recipient} (DEMO MODE)",
+                    "message_id": "demo_sent_msg_id_12345"
+                }
 
             # 确保服务可用
             if not self._ensure_service():
@@ -331,13 +374,70 @@ class EmailTool(MCPToolBase):
             }
 
         except Exception as e:
-            return {"status": "error", "error_message": f"发送邮件失败: {str(e)}"}
+            return {"status": "error", "error_message": f"Failed to send email: {str(e)}"}
 
     def _search_emails(self, search_query: str, max_results: int = 10, **kwargs) -> Dict[str, Any]:
         """搜索邮件"""
         try:
             if not search_query:
-                return {"status": "error", "error_message": "搜索查询不能为空"}
+                return {"status": "error", "error_message": "Search query cannot be empty"}
+
+            if self.demo_mode:
+                print(f"📧 [DEMO] Searching emails with query: {search_query}")
+                query_lower = search_query.lower()
+                results = []
+                
+                # Simple demo search logic
+                for email in self.demo_emails:
+                    # Check for specific "from:" query which is common
+                    if "from:" in query_lower:
+                        # Extract name after from:
+                        import re
+                        from_match = re.search(r'from:\s*([a-z0-9\s\.]+)', query_lower)
+                        if from_match:
+                            target_name = from_match.group(1).strip()
+                            # Loose match for "Professor Tan" vs "Prof. Chenhao Tan"
+                            email_from = email.get('from', '').lower()
+                            # Check if any part of target name is in email from
+                            parts = target_name.split()
+                            if any(part in email_from for part in parts if len(part) > 2):
+                                results.append(email)
+                                continue
+                    
+                    # General keyword match
+                    searchable_text = (
+                        f"{email.get('subject', '')} "
+                        f"{email.get('body', '')} "
+                        f"{email.get('from', '')}"
+                    ).lower()
+                    
+                    # If query has OR, split it
+                    if " or " in query_lower:
+                        keywords = [k.strip() for k in query_lower.split(' or ')]
+                        # Remove "from:..." part from keywords if present to avoid confusion
+                        keywords = [k for k in keywords if "from:" not in k]
+                        
+                        if any(k in searchable_text for k in keywords if k):
+                            results.append(email)
+                    else:
+                        # Simple substring match
+                        clean_query = query_lower.replace("from:", "").strip()
+                        if clean_query in searchable_text:
+                            results.append(email)
+                
+                # Deduplicate
+                unique_results = []
+                seen_ids = set()
+                for r in results:
+                    if r['id'] not in seen_ids:
+                        unique_results.append(r)
+                        seen_ids.add(r['id'])
+                        
+                return {
+                    "status": "success", 
+                    "emails": unique_results[:max_results],
+                    "total_count": len(unique_results)
+                }
 
             # 执行搜索
             results = self.service.users().messages().list(
@@ -348,7 +448,7 @@ class EmailTool(MCPToolBase):
 
             messages = results.get('messages', [])
             if not messages:
-                return {"status": "success", "result": f"No emails found matching '{search_query}' 的邮件"}
+                return {"status": "success", "result": f"No emails found matching '{search_query}'"}
 
             # 获取邮件详情
             email_list = []
@@ -364,13 +464,13 @@ class EmailTool(MCPToolBase):
             }
 
         except Exception as e:
-            return {"status": "error", "error_message": f"搜索邮件失败: {str(e)}"}
+            return {"status": "error", "error_message": f"Failed to search emails: {str(e)}"}
 
     def _mark_read(self, message_id: str, **kwargs) -> Dict[str, Any]:
         """标记邮件为已读"""
         try:
             if not message_id:
-                return {"status": "error", "error_message": "邮件 ID 不能为空"}
+                return {"status": "error", "error_message": "Message ID cannot be empty"}
 
             # 移除 UNREAD 标签
             self.service.users().messages().modify(
@@ -405,6 +505,16 @@ class EmailTool(MCPToolBase):
     def _get_message_details(self, message_id: str) -> Dict[str, Any]:
         """获取邮件详细信息"""
         try:
+            if self.demo_mode:
+                # Check if it's a demo email ID
+                for email in self.demo_emails:
+                    if email['id'] == message_id:
+                        return email
+                # If not found in demo emails, maybe return None or try real API?
+                # For safety in demo mode, just return None if not found
+                print(f"⚠️ [DEMO] Email ID {message_id} not found in demo data")
+                return None
+
             message = self.service.users().messages().get(
                 userId='me', 
                 id=message_id,
@@ -566,9 +676,9 @@ class EmailTool(MCPToolBase):
         """删除邮件"""
         try:
             self.service.users().messages().delete(userId='me', id=message_id).execute()
-            return {"status": "success", "result": f"邮件 {message_id} 已删除"}
+            return {"status": "success", "result": f"Email {message_id} deleted"}
         except Exception as e:
-            return {"status": "error", "error_message": f"删除邮件失败: {str(e)}"}
+            return {"status": "error", "error_message": f"Failed to delete email: {str(e)}"}
     
     def _archive_email(self, message_id: str, **kwargs) -> Dict[str, Any]:
         """归档邮件"""
@@ -578,9 +688,9 @@ class EmailTool(MCPToolBase):
                 id=message_id, 
                 body={'removeLabelIds': ['INBOX']}
             ).execute()
-            return {"status": "success", "result": f"邮件 {message_id} 已归档"}
+            return {"status": "success", "result": f"Email {message_id} archived"}
         except Exception as e:
-            return {"status": "error", "error_message": f"归档邮件失败: {str(e)}"}
+            return {"status": "error", "error_message": f"Failed to archive email: {str(e)}"}
     
     def _reply_email(self, message_id: str, reply_message: str, **kwargs) -> Dict[str, Any]:
         """回复邮件"""
@@ -605,9 +715,9 @@ class EmailTool(MCPToolBase):
             message = {'raw': raw, 'threadId': original['threadId']}
             
             result = self.service.users().messages().send(userId='me', body=message).execute()
-            return {"status": "success", "result": f"回复邮件已发送，ID: {result['id']}"}
+            return {"status": "success", "result": f"Reply sent, ID: {result['id']}"}
         except Exception as e:
-            return {"status": "error", "error_message": f"回复邮件失败: {str(e)}"}
+            return {"status": "error", "error_message": f"Failed to reply: {str(e)}"}
     
     def _forward_email(self, message_id: str, forward_to: str, **kwargs) -> Dict[str, Any]:
         """转发邮件"""
@@ -632,9 +742,9 @@ class EmailTool(MCPToolBase):
             message = {'raw': raw}
             
             result = self.service.users().messages().send(userId='me', body=message).execute()
-            return {"status": "success", "result": f"转发邮件已发送，ID: {result['id']}"}
+            return {"status": "success", "result": f"Forwarded email sent, ID: {result['id']}"}
         except Exception as e:
-            return {"status": "error", "error_message": f"转发邮件失败: {str(e)}"}
+            return {"status": "error", "error_message": f"Failed to forward: {str(e)}"}
     
     def _get_email_details(self, message_id: str, **kwargs) -> Dict[str, Any]:
         """获取邮件详细信息"""
@@ -643,9 +753,9 @@ class EmailTool(MCPToolBase):
             if email_details:
                 return {"status": "success", "result": email_details}
             else:
-                return {"status": "error", "error_message": "获取邮件详情失败"}
+                return {"status": "error", "error_message": "Failed to get email details"}
         except Exception as e:
-            return {"status": "error", "error_message": f"获取邮件详情失败: {str(e)}"}
+            return {"status": "error", "error_message": f"Failed to get email details: {str(e)}"}
     
     def _get_attachments(self, message_id: str, **kwargs) -> Dict[str, Any]:
         """获取邮件附件信息"""
@@ -668,18 +778,25 @@ class EmailTool(MCPToolBase):
             extract_attachments(message['payload'])
             return {"status": "success", "result": attachments}
         except Exception as e:
-            return {"status": "error", "error_message": f"获取附件信息失败: {str(e)}"}
+            return {"status": "error", "error_message": f"Failed to get attachments: {str(e)}"}
     
     def _create_draft(self, recipient: str, subject: str, body: str, **kwargs) -> Dict[str, Any]:
         """创建草稿"""
         try:
+            if self.demo_mode:
+                print(f"📧 [DEMO] Creating draft to {recipient}")
+                return {
+                    "status": "success", 
+                    "result": f"Draft created (DEMO MODE), ID: demo_draft_id_12345"
+                }
+
             message = self._create_message(recipient, subject, body)
             draft = {'message': message}
             
             result = self.service.users().drafts().create(userId='me', body=draft).execute()
-            return {"status": "success", "result": f"草稿已创建，ID: {result['id']}"}
+            return {"status": "success", "result": f"Draft created, ID: {result['id']}"}
         except Exception as e:
-            return {"status": "error", "error_message": f"创建草稿失败: {str(e)}"}
+            return {"status": "error", "error_message": f"Failed to create draft: {str(e)}"}
     
     def _send_draft(self, draft_id: str, **kwargs) -> Dict[str, Any]:
         """发送草稿"""

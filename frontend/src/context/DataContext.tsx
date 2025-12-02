@@ -149,6 +149,15 @@ interface DataContextType {
     pendingTasks: number;
     completionRate: number;
   };
+
+  // UI Actions
+  emailComposeModal: {
+    isOpen: boolean;
+    to: string;
+    subject: string;
+    body: string;
+  };
+  setEmailComposeModal: (modal: { isOpen: boolean; to: string; subject: string; body: string }) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -160,6 +169,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [sessionId] = useState<string>(() => `web-${Math.random().toString(36).slice(2, 10)}`);
+
+  // UI Action State
+  const [emailComposeModal, setEmailComposeModal] = useState({
+    isOpen: false,
+    to: '',
+    subject: '',
+    body: ''
+  });
 
   // User profile state
   const [userAvatar, setUserAvatarState] = useState<string>(() => {
@@ -209,7 +226,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const transformedEvents = calendarResponse.events.map((event: any) => {
           // Extract date from various possible formats
           let eventDate = event.date;
-          
+
           // If no date field, try to extract from start_time or start
           if (!eventDate) {
             const startTime = event.start_time || event.start || event.datetime;
@@ -222,7 +239,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               }
             }
           }
-          
+
           // Extract time from start_time
           let eventTime = event.time || '00:00';
           if (!event.time) {
@@ -237,7 +254,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               }
             }
           }
-          
+
           return {
             id: event.id || Date.now().toString(),
             title: event.title || event.summary || 'Untitled Event',
@@ -356,7 +373,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const todoResponse = await todoApi.listTodos();
       if (todoResponse.success && (todoResponse.tasks || todoResponse.todos)) {
         // Backend returns 'tasks', not 'todos'
-        setTodos(todoResponse.tasks || todoResponse.todos);
+        const backendTasks = todoResponse.tasks || todoResponse.todos;
+        const transformedTasks = backendTasks.map((task: any) => ({
+          ...task,
+          dueDate: task.due_date || task.dueDate // Handle both snake_case and camelCase
+        }));
+        setTodos(transformedTasks);
       }
     } catch (error) {
       console.log('Todo sync failed, using local data:', error);
@@ -423,37 +445,37 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const markEmailAsRead = (emailId: string) => {
-    setEmails(prev => prev.map(email => 
+    setEmails(prev => prev.map(email =>
       email.id === emailId ? { ...email, read: true } : email
     ));
   };
 
   const toggleEmailStar = (emailId: string) => {
-    setEmails(prev => prev.map(email => 
+    setEmails(prev => prev.map(email =>
       email.id === emailId ? { ...email, starred: !email.starred } : email
     ));
   };
 
   const toggleEmailImportant = (emailId: string) => {
-    setEmails(prev => prev.map(email => 
+    setEmails(prev => prev.map(email =>
       email.id === emailId ? { ...email, important: !email.important } : email
     ));
   };
 
   const deleteEmail = (emailId: string) => {
-    setEmails(prev => prev.map(email => 
+    setEmails(prev => prev.map(email =>
       email.id === emailId ? { ...email, folder: 'trash' } : email
     ));
   };
 
   const archiveEmail = (emailId: string) => {
-    setEmails(prev => prev.map(email => 
+    setEmails(prev => prev.map(email =>
       email.id === emailId ? { ...email, folder: 'archive' } : email
     ));
   };
 
   const restoreEmail = (emailId: string) => {
-    setEmails(prev => prev.map(email => 
+    setEmails(prev => prev.map(email =>
       email.id === emailId ? { ...email, folder: 'inbox' } : email
     ));
   };
@@ -465,10 +487,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       timestamp: 'Just now',
       read: true, // Sent emails are marked as read
     };
-    
+
     // Optimistically update UI
     setEmails(prev => [newEmail, ...prev]);
-    
+
     // Sync with backend if it's being sent
     if (email.folder === 'sent' || !email.folder) {
       try {
@@ -484,39 +506,39 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const addTagToEmail = (emailId: string, tag: string) => {
-    setEmails(prev => prev.map(email => 
-      email.id === emailId 
+    setEmails(prev => prev.map(email =>
+      email.id === emailId
         ? { ...email, tags: [...(email.tags || []), tag].filter((t, index, arr) => arr.indexOf(t) === index) }
         : email
     ));
   };
 
   const removeTagFromEmail = (emailId: string, tag: string) => {
-    setEmails(prev => prev.map(email => 
-      email.id === emailId 
+    setEmails(prev => prev.map(email =>
+      email.id === emailId
         ? { ...email, tags: (email.tags || []).filter(t => t !== tag) }
         : email
     ));
   };
 
   const toggleTodoComplete = (todoId: string) => {
-    setTodos(prev => prev.map(todo => 
+    setTodos(prev => prev.map(todo =>
       todo.id === todoId ? { ...todo, completed: !todo.completed } : todo
     ));
   };
 
   const toggleTodoStar = (todoId: string) => {
-    setTodos(prev => prev.map(todo => 
+    setTodos(prev => prev.map(todo =>
       todo.id === todoId ? { ...todo, starred: !todo.starred } : todo
     ));
   };
 
   const addTodo = async (todo: Omit<TodoItem, 'id'>) => {
     const newTodo = { ...todo, id: Date.now().toString() };
-    
+
     // Optimistically update UI
     setTodos(prev => [...prev, newTodo]);
-    
+
     // Sync with backend
     try {
       const response = await todoApi.addTodo({
@@ -526,12 +548,17 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         category: todo.category,
         due_date: todo.dueDate
       });
-      
+
       if (response.success) {
         // Refresh todos from backend to get the actual stored todo
         const todoResponse = await todoApi.listTodos();
         if (todoResponse.success && todoResponse.tasks) {
-          setTodos(todoResponse.tasks);
+          const backendTasks = todoResponse.tasks;
+          const transformedTasks = backendTasks.map((task: any) => ({
+            ...task,
+            dueDate: task.due_date || task.dueDate
+          }));
+          setTodos(transformedTasks);
         }
       }
     } catch (error) {
@@ -541,7 +568,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const updateTodo = (todoId: string, updates: Partial<TodoItem>) => {
-    setTodos(prev => prev.map(todo => 
+    setTodos(prev => prev.map(todo =>
       todo.id === todoId ? { ...todo, ...updates } : todo
     ));
   };
@@ -551,20 +578,20 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const addSubtask = (projectId: string, subtask: Omit<TodoItem, 'id'>) => {
-    const newSubtask = { 
-      ...subtask, 
+    const newSubtask = {
+      ...subtask,
       id: Date.now().toString(),
       parentId: projectId,
       isProject: false
     };
-    
+
     setTodos(prev => {
       // Add the subtask
       const updatedTodos = [...prev, newSubtask];
-      
+
       // Update the project to include this subtask ID
-      return updatedTodos.map(todo => 
-        todo.id === projectId 
+      return updatedTodos.map(todo =>
+        todo.id === projectId
           ? { ...todo, subtasks: [...(todo.subtasks || []), newSubtask.id] }
           : todo
       );
@@ -574,7 +601,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const getSubtasks = (projectId: string) => {
     const project = todos.find(todo => todo.id === projectId);
     if (!project || !project.subtasks) return [];
-    
+
     return todos.filter(todo => project.subtasks?.includes(todo.id));
   };
 
@@ -585,10 +612,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       id: Date.now().toString(),
       date: event.date || formatDateLocal(new Date())
     };
-    
+
     // Optimistically update UI
     setAllEvents(prev => [...prev, newEvent]);
-    
+
     // Sync with backend
     try {
       const response = await calendarApi.createEvent({
@@ -597,7 +624,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         duration: event.duration,
         description: event.description
       });
-      
+
       if (response.success) {
         // Refresh events from backend to get the actual Google Calendar event
         const calendarResponse = await calendarApi.getEvents();
@@ -605,7 +632,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const transformedEvents = calendarResponse.events.map((evt: any) => {
             // Extract date from various possible formats
             let eventDate = evt.date;
-            
+
             if (!eventDate) {
               const startTime = evt.start_time || evt.start || evt.datetime;
               if (startTime) {
@@ -616,7 +643,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 }
               }
             }
-            
+
             // Extract time from start_time
             let eventTime = evt.time || '00:00';
             if (!evt.time) {
@@ -630,7 +657,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 }
               }
             }
-            
+
             return {
               id: evt.id || Date.now().toString(),
               title: evt.title || evt.summary || 'Untitled Event',
@@ -651,7 +678,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const updateEvent = (updatedEvent: CalendarEvent) => {
-    setAllEvents(prev => prev.map(event => 
+    setAllEvents(prev => prev.map(event =>
       event.id === updatedEvent.id ? updatedEvent : event
     ));
   };
@@ -687,27 +714,27 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Detect time conflicts between events
   const detectConflicts = (events: CalendarEvent[]) => {
     const conflicts: { eventId: string; conflictsWith: string[] }[] = [];
-    
+
     for (let i = 0; i < events.length; i++) {
       const event1 = events[i];
       const start1 = timeToMinutes(event1.time);
       const end1 = start1 + durationToMinutes(event1.duration);
-      
+
       const conflictsWith: string[] = [];
-      
+
       for (let j = 0; j < events.length; j++) {
         if (i === j) continue;
-        
+
         const event2 = events[j];
         const start2 = timeToMinutes(event2.time);
         const end2 = start2 + durationToMinutes(event2.duration);
-        
+
         // Check if events overlap
         if (start1 < end2 && start2 < end1) {
           conflictsWith.push(event2.id);
         }
       }
-      
+
       if (conflictsWith.length > 0) {
         conflicts.push({
           eventId: event1.id,
@@ -715,14 +742,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         });
       }
     }
-    
+
     return conflicts;
   };
 
   const getCalendarSummary = () => {
-    const nextEvent = todayEvents.length > 0 
-      ? `${todayEvents[0].title} at ${todayEvents[0].time}` 
-      : upcomingEvents.length > 0 
+    const nextEvent = todayEvents.length > 0
+      ? `${todayEvents[0].title} at ${todayEvents[0].time}`
+      : upcomingEvents.length > 0
         ? `${upcomingEvents[0].title} ${upcomingEvents[0].time}`
         : 'No upcoming events';
 
@@ -801,43 +828,62 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }));
       let botText = response.raw_response?.response || 'No response received.';
 
+      // Handle UI Actions
+      if (response.raw_response?.ui_action) {
+        const uiAction = response.raw_response.ui_action;
+        if (uiAction.type === 'open_email_draft') {
+          setEmailComposeModal({
+            isOpen: true,
+            to: uiAction.data.recipient || '',
+            subject: uiAction.data.subject || '',
+            body: uiAction.data.body || ''
+          });
+        }
+      }
+
       // Extract clean, concise answer from verbose response
       // Remove all the reasoning markers and metadata
       let cleanText = botText;
-      
+
       // Remove common reasoning patterns
+      // DISABLED: Causing issues with demo responses containing markdown
+      /*
       cleanText = cleanText.replace(/\*\*Thought\*\*:.*?(?=\*\*|$)/gs, '');
       cleanText = cleanText.replace(/\*\*Action\*\*:.*?(?=\*\*|$)/gs, '');
       cleanText = cleanText.replace(/\*\*Observation\*\*:.*?(?=\*\*|$)/gs, '');
       cleanText = cleanText.replace(/\*\*Summary:\*\*.*?(?=\*\*|$)/gs, '');
       cleanText = cleanText.replace(/\*\*Key Points:\*\*.*?(?=\*\*|$)/gs, '');
       cleanText = cleanText.replace(/\*\*Sources for More Details:\*\*.*?$/gs, '');
-      
+
       // Look for "Final Answer:" pattern
       const finalAnswerMatch = cleanText.match(/(?:\*\*)?Final Answer(?:\*\*)?:\s*(.+?)(?:\n\n|$)/s);
       if (finalAnswerMatch) {
         cleanText = finalAnswerMatch[1].trim();
       }
-      
+      */
+
       // Clean up extra whitespace and newlines
       cleanText = cleanText.replace(/\n{3,}/g, '\n\n').trim();
-      
+
       // If still too long or contains metadata, extract first meaningful paragraph
+      // DISABLED: This was too aggressive and truncated valid structured responses (e.g. demo scenarios)
+      /*
       if (cleanText.length > 500 || cleanText.includes('**') || cleanText.includes('💡')) {
         const sentences = cleanText.split(/[.!?]+/).filter(s => s.trim().length > 20);
         // Take first 2-3 sentences that don't contain metadata markers
-        const goodSentences = sentences.filter(s => 
-          !s.includes('**') && 
+        const goodSentences = sentences.filter(s =>
+          !s.includes('**') &&
           !s.includes('💡') &&
           !s.includes('[Search Information]') &&
           !s.includes('http')
         ).slice(0, 3);
-        
+
         if (goodSentences.length > 0) {
           cleanText = goodSentences.join('. ').trim() + '.';
         }
       }
-      
+      */
+
       botText = cleanText || botText; // Fallback to original if cleaning failed
 
       console.log('📬 Bot response:', botText);
@@ -847,23 +893,26 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         prev.map(chat =>
           chat.id === pendingId
             ? {
-                ...chat,
-                content: botText,
-                timestamp: new Date(),
-                reasoningSteps: reasoningSteps
-              }
+              ...chat,
+              content: botText,
+              timestamp: new Date(),
+              reasoningSteps: reasoningSteps
+            }
             : chat
         )
       );
+
+      // Refresh data (todos, calendar, emails) to reflect any actions taken by the agent
+      await syncWithBackend();
     } catch (error) {
       console.error('Failed to fetch bot response', error);
       setChatMessages(prev =>
         prev.map(chat =>
           chat.id === pendingId
             ? {
-                ...chat,
-                content: 'Sorry, something went wrong. Please try again in a moment.'
-              }
+              ...chat,
+              content: 'Sorry, something went wrong. Please try again in a moment.'
+            }
             : chat
         )
       );
@@ -929,7 +978,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Summaries
     getCalendarSummary,
     getEmailSummary,
-    getTodoSummary
+    getTodoSummary,
+
+    // UI Actions
+    emailComposeModal,
+    setEmailComposeModal
   };
 
   return (

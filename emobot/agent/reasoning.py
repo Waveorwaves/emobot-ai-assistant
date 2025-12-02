@@ -51,6 +51,10 @@ class ReasoningModule:
         # Initialize model manager
         self.model_manager = ModelManager()
         
+        # Initialize Demo Manager
+        from .demo_manager import DemoManager
+        self.demo_manager = DemoManager()
+        
         # Create model and agent
         model = self.model_manager.create_model(model_id)
         if not model:
@@ -124,6 +128,11 @@ class ReasoningModule:
         """
         logging.debug(f"Processing query: {query}")
         
+        # Check for demo match
+        if self.demo_manager.is_demo_query(query):
+            logging.info("Demo query detected, executing demo scenario")
+            return self.demo_manager.execute_demo_scenario(query, self)
+        
         # Get conversation history for context (short-term memory)
         conversation_history = self.memory.get_formatted_history(max_entries=5)
         logging.debug(f"Conversation history available: {bool(conversation_history and conversation_history != 'No history records.')}")
@@ -158,6 +167,10 @@ class ReasoningModule:
         })
         
         return result
+
+    def get_last_reasoning_steps(self) -> List[Dict[str, Any]]:
+        """Get reasoning steps from the last query execution"""
+        return self.last_reasoning_steps
 
     def _format_episodic_context(self, episodes: List[Dict[str, Any]]) -> str:
         """Format episodic memories into context string"""

@@ -1,0 +1,58 @@
+[
+    {
+        "task_id": "task_demo_1",
+        "title": "Finish Emobot draft v2",
+        "description": "Update the paper with new results",
+        "priority": "high",
+        "category": "study",
+        "due_date": "2025-11-29",
+        "tags": [
+            "emobot",
+            "paper"
+        ],
+        "status": "pending",
+        "created_at": "2025-11-20T10:00:00"
+    },
+    {
+        "task_id": "task_demo_2",
+        "title": "Refine Emobot architecture slide",
+        "description": "Make the diagram clearer",
+        "priority": "medium",
+        "category": "study",
+        "due_date": "2025-12-05",
+        "tags": [
+            "emobot",
+            "slides"
+        ],
+        "status": "pending",
+        "created_at": "2025-11-25T10:00:00"
+    },
+    {
+        "task_id": "task_demo_3",
+        "title": "Clean up Emobot GitHub README",
+        "description": "Add installation instructions",
+        "priority": "low",
+        "category": "work",
+        "due_date": "2025-12-06",
+        "tags": [
+            "emobot",
+            "code"
+        ],
+        "status": "pending",
+        "created_at": "2025-11-26T10:00:00"
+    },
+    {
+        "task_id": "task_demo_4",
+        "title": "Record short Emobot demo video",
+        "description": "For the presentation",
+        "priority": "medium",
+        "category": "work",
+        "due_date": "2025-12-07",
+        "tags": [
+            "emobot",
+            "demo"
+        ],
+        "status": "pending",
+        "created_at": "2025-11-27T10:00:00"
+    }
+]

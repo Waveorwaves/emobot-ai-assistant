@@ -23,6 +23,8 @@ import time
 from agent.reasoning import ReasoningModule
 from agent.reasoning_wrapper import ReasoningWrapper
 from agent.actions import ActionExecutor
+from agent.profile import ProfileManager
+from agent.insights import InsightsManager
 from tools.mcp_server.server import MCPToolServer
 import yaml
 
@@ -49,6 +51,9 @@ reasoning_module = None
 reasoning_wrapper = None
 mcp_server_thread = None
 server_url = "http://127.0.0.1:8080"
+profile_manager = None
+insights_manager = None
+demo_mode = True  # Default to Demo Mode to avoid API crashes
 
 # Schedule optimization data
 ai_actions = []
@@ -98,30 +103,19 @@ def initialize_agent(model_id="gemini-2.5-flash"):
             use_local_model=False
         )
         reasoning_wrapper = ReasoningWrapper(reasoning_module)
+        
+        # Initialize managers
+        global profile_manager, insights_manager
+        profile_manager = ProfileManager()
+        insights_manager = InsightsManager(agent=reasoning_module.agent)
+        
         print("✅ Agent initialized successfully")
         return True
     except Exception as e:
         print(f"❌ Failed to initialize agent: {e}")
         return False
 
-@app.route('/')
-def index():
-    """Serve the React frontend"""
-    return send_from_directory(FRONTEND_DIR, 'index.html')
 
-@app.route('/simple')
-def simple_ui():
-    """Serve the simple HTML UI for backend testing"""
-    return render_template('index.html')
-
-@app.route('/<path:path>')
-def serve_static(path):
-    """Serve static files from React build"""
-    if os.path.exists(os.path.join(FRONTEND_DIR, path)):
-        return send_from_directory(FRONTEND_DIR, path)
-    else:
-        # For client-side routing, return index.html
-        return send_from_directory(FRONTEND_DIR, 'index.html')
 
 @app.route('/api/query', methods=['POST'])
 def query():
@@ -256,21 +250,6 @@ def get_pending_confirmations():
             'error': str(e)
         }), 500
 
-@app.route('/api/confirmations/cancel', methods=['POST'])
-def cancel_confirmations():
-    """Cancel all pending confirmations"""
-    try:
-        if not reasoning_module:
-            return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
-        
-        # Cancel all pending confirmations
-        pending = reasoning_module.get_pending_confirmation_requests()
-        cancelled_count = 0
-        
-        for req in pending:
-            reasoning_module.cancel_confirmation_request(req['id'])
-            cancelled_count += 1
-        
         return jsonify({
             'success': True,
             'message': f'Cancelled {cancelled_count} pending confirmations'
@@ -281,6 +260,86 @@ def cancel_confirmations():
             'success': False,
             'error': str(e)
         }), 500
+
+# Profile API Endpoints
+@app.route('/api/memory/analyze', methods=['POST'])
+def analyze_memory():
+    """Analyze memory and profile"""
+    try:
+        if not profile_manager:
+            return jsonify({'success': False, 'error': 'Profile manager not initialized'}), 500
+            
+        # In a real scenario, this would trigger LLM analysis of memory
+        # For now, we return the current profile and some mock stats
+        profile = profile_manager.get_profile()
+        
+        return jsonify({
+            'success': True,
+            'profile_suggestions': profile,
+            'analysis': "Based on your recent interactions, you prefer concise communication and are currently focused on the Emobot project.",
+            'stats': {
+                'total_memories': 42,
+                'recent_memories': 5,
+                'analysis_date': time.strftime("%Y-%m-%dT%H:%M:%S")
+            }
+        })
+    except Exception as e:
+        logging.error(f"Memory analysis error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+
+# Demo Control Endpoints
+@app.route('/api/demo/toggle', methods=['POST'])
+def toggle_demo():
+    """Toggle demo mode"""
+    global demo_mode
+    try:
+        data = request.json
+        enabled = data.get('enabled', False)
+        demo_mode = enabled
+        
+        # Update managers and tools
+        if insights_manager:
+            insights_manager.set_demo_mode(enabled)
+            
+        # Update email tool if available
+        if reasoning_module:
+            tools = reasoning_module.action_executor.direct_tools
+            if 'email' in tools:
+                # Update email tool demo mode
+                email_tool = tools['email']
+                if hasattr(email_tool, 'demo_mode'):
+                    email_tool.demo_mode = enabled
+                    # Reload demo data if enabling
+                    if enabled and hasattr(email_tool, '_load_demo_data'):
+                        email_tool._load_demo_data()
+                    logging.info(f"Updated EmailTool demo_mode to {enabled}")
+                
+        return jsonify({
+            'success': True,
+            'demo_mode': demo_mode,
+            'message': f"Demo mode {'enabled' if demo_mode else 'disabled'}"
+        })
+    except Exception as e:
+        logging.error(f"Toggle demo error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/demo/reset', methods=['POST'])
+def reset_demo():
+    """Reset demo data"""
+    try:
+        # Run the setup script
+        import subprocess
+        result = subprocess.run(['python', 'emobot/demo_setup.py'], capture_output=True, text=True)
+        
+        if result.returncode == 0:
+            return jsonify({'success': True, 'message': 'Demo data reset successfully'})
+        else:
+            return jsonify({'success': False, 'error': result.stderr}), 500
+    except Exception as e:
+        logging.error(f"Reset demo error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # Calendar API Endpoints
 @app.route('/api/calendar/events', methods=['GET'])
@@ -839,6 +898,20 @@ def analyze_insights():
         if not reasoning_module:
             return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
         
+        # Check for demo mode via insights_manager
+        if insights_manager and insights_manager.demo_mode:
+            logging.info("Generating DEMO insights...")
+            insights = insights_manager.analyze_insights()
+            return jsonify({
+                'success': True,
+                'insights': insights,
+                'summary': {
+                    'insights_count': len(insights),
+                    'urgent_count': len([i for i in insights if i.get('type') == 'urgent'])
+                },
+                'generated_at': time.time()
+            })
+        
         logging.info("Starting insights analysis...")
         
         # Step 1: Fetch unread emails
@@ -1146,6 +1219,17 @@ def generate_email_reply():
         context = data.get('context', '')
         suggestion = data.get('suggestion', '')
         
+        # Check for demo mode via insights_manager
+        if insights_manager and insights_manager.demo_mode:
+            logging.info(f"Generating DEMO email reply for: {recipient}")
+            result = insights_manager.generate_reply(recipient, context, suggestion)
+            return jsonify({
+                'success': True,
+                'recipient': result.get('to'),
+                'subject': result.get('subject'),
+                'body': result.get('body')
+            })
+        
         logging.info(f"Generating email reply for: {recipient}")
         
         # Build prompt for LLM to generate email
@@ -1325,6 +1409,109 @@ def optimize_schedule():
             return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
 
         logging.info("Starting schedule optimization...")
+
+        # Check for demo mode
+        data = request.get_json(silent=True) or {}
+        is_demo = data.get('demo', False)
+
+        if is_demo:
+            logging.info("Running in DEMO mode")
+            # Generate consistent demo data
+            
+            # Reset counters for demo
+            ai_actions = []
+            approval_items = []
+            
+            # Demo Action 1: Email
+            action_counter += 1
+            ai_actions.append({
+                'id': f'action_{action_counter}',
+                'type': 'email',
+                'description': 'Categorized 42 unread emails',
+                'count': 42,
+                'status': 'completed',
+                'timestamp': datetime.now().isoformat()
+            })
+            
+            # Demo Action 2: Tasks
+            action_counter += 1
+            ai_actions.append({
+                'id': f'action_{action_counter}',
+                'type': 'task',
+                'description': 'Identified 5 high-priority tasks',
+                'count': 5,
+                'status': 'completed',
+                'timestamp': datetime.now().isoformat()
+            })
+            
+            # Demo Action 3: Calendar
+            action_counter += 1
+            ai_actions.append({
+                'id': f'action_{action_counter}',
+                'type': 'calendar',
+                'description': 'Analyzed 12 upcoming meetings',
+                'count': 12,
+                'status': 'completed',
+                'timestamp': datetime.now().isoformat()
+            })
+
+            # Demo Approval 1: Time Blocking
+            approval_counter += 1
+            approval_items.append({
+                'id': f'approval_{approval_counter}',
+                'type': 'schedule',
+                'title': 'Time Block for "Capstone Project"',
+                'description': 'Schedule deep work session tomorrow 9-11 AM',
+                'impact': '⏱️ Protects 2 hours of focus time',
+                'action_data': {
+                    'task_title': 'Capstone Project',
+                    'suggested_time': 'Tomorrow 9:00 AM - 11:00 AM'
+                },
+                'timestamp': datetime.now().isoformat()
+            })
+
+            # Demo Approval 2: Meeting Buffer
+            approval_counter += 1
+            approval_items.append({
+                'id': f'approval_{approval_counter}',
+                'type': 'reschedule',
+                'title': 'Fix Back-to-Back Meetings',
+                'description': 'Add 15min buffer between Team Sync and Client Call',
+                'impact': '🧘 Reduces meeting fatigue',
+                'action_data': {
+                    'meeting_count': 2,
+                    'buffer_duration': '15 minutes'
+                },
+                'timestamp': datetime.now().isoformat()
+            })
+            
+            # Demo Approval 3: Email Batching
+            approval_counter += 1
+            approval_items.append({
+                'id': f'approval_{approval_counter}',
+                'type': 'automation',
+                'title': 'Batch Process Newsletters',
+                'description': 'Archive 15 newsletters from last week',
+                'impact': '📧 Cleans up inbox instantly',
+                'action_data': {
+                    'email_count': 15,
+                    'strategy': 'archive_old'
+                },
+                'timestamp': datetime.now().isoformat()
+            })
+
+            return jsonify({
+                'success': True,
+                'actions': ai_actions,
+                'approvals': approval_items,
+                'summary': {
+                    'total_actions': len(ai_actions),
+                    'total_approvals': len(approval_items),
+                    'emails_processed': 42,
+                    'events_analyzed': 12,
+                    'tasks_reviewed': 15
+                }
+            })
 
         # Fetch data
         email_result = reasoning_module.action_executor.execute_action('email', {
@@ -1624,6 +1811,19 @@ def analyze_episodic_memory():
         if not reasoning_module:
             return jsonify({'success': False, 'error': 'Agent not initialized'}), 500
         
+        # Check for demo mode via insights_manager
+        if insights_manager and insights_manager.demo_mode:
+            logging.info("Generating DEMO memory analysis...")
+            # Return a canned demo response for memory analysis
+            return jsonify({
+                'success': True,
+                'analysis': "This is a demo analysis of your episodic memory. In a real scenario, the AI would process your past interactions to build a detailed profile. For instance, it might note your frequent inquiries about project deadlines, your preference for morning meetings, or your interest in AI development. This helps the agent understand your context better.",
+                'profile_suggestions': {
+                    'description': "This is a demo user profile. The user appears to be engaged in project management, shows a preference for structured scheduling, and has a keen interest in technological advancements, particularly in AI. They value efficiency and clear communication."
+                },
+                'stats': {'total_memories': 50, 'recent_memories': 10, 'analysis_date': time.strftime('%Y-%m-%d %H:%M:%S')}
+            })
+
         logging.info("Starting episodic memory analysis...")
         
         # Read episodic memory file
@@ -2051,6 +2251,26 @@ def main():
         debug=False,
         threaded=True
     )
+
+# Static routes moved to end to avoid conflicts
+@app.route('/')
+def index():
+    """Serve the React frontend"""
+    return send_from_directory(FRONTEND_DIR, 'index.html')
+
+@app.route('/simple')
+def simple_ui():
+    """Serve the simple HTML UI for backend testing"""
+    return render_template('index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    """Serve static files from React build"""
+    if os.path.exists(os.path.join(FRONTEND_DIR, path)):
+        return send_from_directory(FRONTEND_DIR, path)
+    else:
+        # For client-side routing, return index.html
+        return send_from_directory(FRONTEND_DIR, 'index.html')
 
 if __name__ == '__main__':
     main()
