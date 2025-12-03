@@ -128,7 +128,16 @@ class TodoListManager:
     """待办事项列表管理器"""
     
     def __init__(self, storage_file: str = "todo_list.json"):
-        self.storage_file = storage_file
+        # If storage_file is relative, make it absolute relative to emobot root
+        if not os.path.isabs(storage_file):
+            # Get directory of this file (todo_models.py)
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            # Go up 2 levels to get to emobot/ (tools/mcp_server -> tools -> emobot)
+            emobot_dir = os.path.dirname(os.path.dirname(current_dir))
+            self.storage_file = os.path.join(emobot_dir, storage_file)
+        else:
+            self.storage_file = storage_file
+            
         self.tasks: List[TodoTask] = []
         self.load_tasks()
     
@@ -148,12 +157,14 @@ class TodoListManager:
     def save_tasks(self):
         """保存任务到文件"""
         try:
+            abs_path = os.path.abspath(self.storage_file)
+            print(f"💾 Saving tasks to: {abs_path}")
             with open(self.storage_file, 'w', encoding='utf-8') as f:
                 json.dump([task.to_dict() for task in self.tasks], f, 
                          ensure_ascii=False, indent=2)
         except Exception as e:
             print(f"保存待办事项失败: {e}")
-    
+
     def add_task(self, task: TodoTask) -> str:
         """添加新任务"""
         self.tasks.append(task)
@@ -175,14 +186,17 @@ class TodoListManager:
             self.save_tasks()
             return True
         return False
-    
+
     def delete_task(self, task_id: str) -> bool:
         """删除任务"""
+        print(f"🗑️ Attempting to delete task: {task_id}")
         task = self.get_task(task_id)
         if task:
             self.tasks.remove(task)
             self.save_tasks()
+            print(f"✅ Task {task_id} deleted and saved")
             return True
+        print(f"❌ Task {task_id} not found for deletion")
         return False
     
     def mark_task_completed(self, task_id: str) -> bool:

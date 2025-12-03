@@ -429,7 +429,35 @@ const EmailPage: React.FC<EmailPageProps> = ({ onNavigate }) => {
 
         console.log('📊 Transformed email count:', transformedEmails.length);
         console.log('📧 First email:', transformedEmails[0]);
-        setEmails(transformedEmails);
+        setEmails(prev => {
+          // Create a set of IDs from backend emails for efficient lookup
+          const backendIds = new Set(transformedEmails.map((e: any) => e.id));
+
+          // Keep local emails that are NOT in backend response AND are in sent/drafts
+          // This preserves locally added emails that haven't been synced/returned by backend yet
+          const localEmailsToKeep = prev.filter(email =>
+            !backendIds.has(email.id) &&
+            (email.folder === 'sent' || email.folder === 'drafts')
+          );
+
+          console.log(`📧 Merging ${localEmailsToKeep.length} local emails with ${transformedEmails.length} backend emails`);
+
+          // Combine and sort
+          const merged = [...transformedEmails, ...localEmailsToKeep];
+          merged.sort((a: any, b: any) => {
+            // Handle "Just now" timestamp for local emails
+            const getTimestamp = (email: any) => {
+              if (email.timestamp === 'Just now') return Date.now();
+              return new Date(email.timestamp).getTime();
+            };
+
+            const aDate = a.internalDate || getTimestamp(a);
+            const bDate = b.internalDate || getTimestamp(b);
+            return Number(bDate) - Number(aDate);
+          });
+
+          return merged;
+        });
         console.log('✅ Emails updated in context');
         alert(`✅ Emails refreshed successfully! Loaded ${transformedEmails.length} emails.`);
       } else {

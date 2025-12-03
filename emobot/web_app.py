@@ -126,6 +126,7 @@ def query():
     try:
         data = request.json
         query_text = data.get('query', '').strip()
+        print(f"🔍 Received query: {query_text}")
         session_id = data.get('session_id', 'default')
         model_id = data.get('model_id', 'gemini-2.5-flash')
         

@@ -138,16 +138,26 @@ class TodoListTool(MCPToolBase):
     def _add_task(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """添加新任务"""
         # 支持"title"和"task"两种字段名
+        import logging
+        logging.warning(f"DEBUG: _add_task called with parameters: {parameters}")
+        print(f"📝 Adding task: {parameters}")
         title = parameters.get("title") or parameters.get("task")
         if not title:
             return {"status": "error", "message": "任务标题不能为空"}
         
-        # 创建任务对象
+        # Create task object
+        try:
+            category_str = str(parameters.get("category", "other")).lower().strip()
+            category = TaskCategory(category_str)
+        except ValueError:
+            logging.warning(f"Invalid category: {parameters.get('category')}, defaulting to OTHER")
+            category = TaskCategory.OTHER
+
         task = TodoTask(
             title=title,
             description=parameters.get("description", ""),
             priority=TaskPriority(parameters.get("priority", "medium")),
-            category=TaskCategory(parameters.get("category", "other")),
+            category=category,
             due_date=parameters.get("due_date"),
             tags=parameters.get("tags", [])
         )
@@ -176,6 +186,7 @@ class TodoListTool(MCPToolBase):
             formatted_task = {
                 "id": task.task_id,
                 "title": task.title,
+                "description": task.description,
                 "status": task.status.value,
                 "priority": task.priority.value,
                 "category": task.category.value,

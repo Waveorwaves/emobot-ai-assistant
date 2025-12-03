@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Send, MessageSquare } from 'lucide-react';
+import { Send, MessageSquare, X, Calendar, Save } from 'lucide-react';
 import Sidebar from './ui/Sidebar';
 import Avatar from './ui/Avatar';
 import { useData } from '../context/DataContext';
 import InlineReasoningDisplay from './InlineReasoningDisplay';
+import Notification from './ui/Notification';
 
 interface Message {
   id: string;
@@ -18,7 +19,7 @@ interface MainPageProps {
 }
 
 const MainPage: React.FC<MainPageProps> = ({ initialMessages = [], onNavigate }) => {
-  const { emobotAvatar, emobotName, chatMessages, addChatMessage } = useData();
+  const { emobotAvatar, emobotName, chatMessages, addChatMessage, emailComposeModal, setEmailComposeModal, addEmail } = useData();
   const [inputValue, setInputValue] = useState('');
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
     try {
@@ -27,7 +28,93 @@ const MainPage: React.FC<MainPageProps> = ({ initialMessages = [], onNavigate })
       return false;
     }
   });
+
   const [activeTab, setActiveTab] = useState<string>('chat');
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'warning' } | null>(null);
+
+  const showNotification = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+    setNotification({ message, type });
+  };
+
+  const showComposeModal = emailComposeModal.isOpen;
+  const setShowComposeModal = (isOpen: boolean) => {
+    setEmailComposeModal({ ...emailComposeModal, isOpen });
+  };
+
+  const [composeForm, setComposeForm] = useState({
+    to: '',
+    subject: '',
+    body: ''
+  });
+
+  // Sync context state to local form state when modal opens
+  React.useEffect(() => {
+    if (emailComposeModal.isOpen) {
+      setComposeForm({
+        to: emailComposeModal.to,
+        subject: emailComposeModal.subject,
+        body: emailComposeModal.body
+      });
+    }
+  }, [emailComposeModal]);
+
+  const handleSendEmail = async () => {
+    if (!composeForm.to.trim() || !composeForm.subject.trim() || !composeForm.body.trim()) {
+      showNotification('❌ Please fill in all fields', 'error');
+      return;
+    }
+
+    try {
+      showNotification('⏳ Sending email...', 'info');
+
+      // Simulate processing delay (5-10 seconds)
+      await new Promise(resolve => setTimeout(resolve, Math.random() * 5000 + 5000));
+
+      await addEmail({
+        sender: 'Me',
+        senderEmail: 'me@example.com', // Placeholder
+        subject: composeForm.subject,
+        preview: composeForm.body.substring(0, 100),
+        content: composeForm.body,
+        read: true,
+        starred: false,
+        important: false,
+        folder: 'sent',
+        timestamp: 'Just now'
+      });
+
+      showNotification('✅ Email sent successfully!', 'success');
+      setShowComposeModal(false);
+      setComposeForm({ to: '', subject: '', body: '' });
+    } catch (error) {
+      console.error('Error sending email:', error);
+      showNotification('❌ Failed to send email: ' + error, 'error');
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    showNotification('⏳ Saving draft...', 'info');
+
+    // Simulate processing delay (5-10 seconds)
+    await new Promise(resolve => setTimeout(resolve, Math.random() * 5000 + 5000));
+
+    await addEmail({
+      sender: 'Me',
+      senderEmail: 'me@example.com',
+      subject: composeForm.subject,
+      preview: composeForm.body.substring(0, 100),
+      content: composeForm.body,
+      read: true,
+      starred: false,
+      important: false,
+      folder: 'drafts',
+      timestamp: 'Just now'
+    });
+
+    showNotification('💾 Draft saved successfully!', 'success');
+    setShowComposeModal(false);
+    setComposeForm({ to: '', subject: '', body: '' });
+  };
 
   const handleSidebarNavigation = (itemId: string) => {
     setActiveTab(itemId);
@@ -151,47 +238,147 @@ const MainPage: React.FC<MainPageProps> = ({ initialMessages = [], onNavigate })
                         </div>
                       </div>
                     )}
+
                   </div>
+
                 ))}
               </div>
             )}
           </div>
 
-        </div>
 
-        {/* Bottom Chat Bar */}
-        <div className="px-6 py-6 relative z-10">
-          <div className="glass-panel rounded-2xl p-2 flex items-center gap-3 shadow-2xl">
-            <div className="pl-3">
-              <MessageSquare className="w-6 h-6 text-primary-400 flex-shrink-0" />
+
+          {/* Bottom Chat Bar */}
+          <div className="px-6 py-6 relative z-10">
+            <div className="glass-panel rounded-2xl p-2 flex items-center gap-3 shadow-2xl">
+              <div className="pl-3">
+                <MessageSquare className="w-6 h-6 text-primary-400 flex-shrink-0" />
+              </div>
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+                placeholder="Type your message..."
+                className="flex-1 h-12 bg-transparent border-none font-sans text-base text-white placeholder-white/40 focus:outline-none focus:ring-0"
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={!inputValue.trim()}
+                className="w-12 h-12 bg-gradient-to-br from-primary-500 to-accent-500 hover:from-primary-400 hover:to-accent-400 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all duration-200 flex items-center justify-center flex-shrink-0 shadow-lg hover:shadow-primary-500/25"
+              >
+                <Send className="w-5 h-5 text-white" />
+              </button>
+              <button
+                onClick={() => onNavigate && onNavigate('dashboard')}
+                className="px-4 h-12 glass-button font-display font-semibold uppercase tracking-wide text-white/90 hover:text-white rounded-xl whitespace-nowrap flex-shrink-0"
+              >
+                Minimize Chat
+              </button>
             </div>
-            <input
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-              placeholder="Type your message..."
-              className="flex-1 h-12 bg-transparent border-none font-sans text-base text-white placeholder-white/40 focus:outline-none focus:ring-0"
-            />
-            <button
-              onClick={handleSendMessage}
-              disabled={!inputValue.trim()}
-              className="w-12 h-12 bg-gradient-to-br from-primary-500 to-accent-500 hover:from-primary-400 hover:to-accent-400 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all duration-200 flex items-center justify-center flex-shrink-0 shadow-lg hover:shadow-primary-500/25"
-            >
-              <Send className="w-5 h-5 text-white" />
-            </button>
-            <button
-              onClick={() => onNavigate && onNavigate('dashboard')}
-              className="px-4 h-12 glass-button font-display font-semibold uppercase tracking-wide text-white/90 hover:text-white rounded-xl whitespace-nowrap flex-shrink-0"
-            >
-              Minimize Chat
-            </button>
           </div>
+
+
+          {/* Notification */}
+          {
+            notification && (
+              <Notification
+                message={notification.message}
+                type={notification.type}
+                onClose={() => setNotification(null)}
+              />
+            )
+          }
+
+          {/* Compose Email Modal */}
+          {
+            showComposeModal && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="glass-panel border border-primary-500/60 rounded-lg w-[600px] max-h-[80vh] flex flex-col shadow-2xl">
+                  {/* Compose Header */}
+                  <div className="flex items-center justify-between p-6 border-b border-primary-500/60">
+                    <h2 className="text-lg font-medium text-white">New Message</h2>
+                    <button
+                      onClick={() => setShowComposeModal(false)}
+                      className="text-gray-400 hover:text-white p-1"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Compose Form */}
+                  <div className="flex-1 p-6 space-y-4 overflow-y-auto">
+                    {/* To Field */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">To</label>
+                      <input
+                        type="email"
+                        value={composeForm.to}
+                        onChange={(e) => setComposeForm(prev => ({ ...prev, to: e.target.value }))}
+                        placeholder="recipient@example.com"
+                        className="w-full bg-black/20 border border-primary-500/60 rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Subject Field */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Subject</label>
+                      <input
+                        type="text"
+                        value={composeForm.subject}
+                        onChange={(e) => setComposeForm(prev => ({ ...prev, subject: e.target.value }))}
+                        placeholder="Email subject"
+                        className="w-full bg-black/20 border border-primary-500/60 rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Content Field */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Message</label>
+                      <textarea
+                        value={composeForm.body}
+                        onChange={(e) => setComposeForm(prev => ({ ...prev, body: e.target.value }))}
+                        placeholder="Write your message..."
+                        rows={12}
+                        className="w-full bg-black/20 border border-primary-500/60 rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Compose Footer */}
+                  <div className="flex items-center justify-between p-6 border-t border-primary-500/60">
+                    <button
+                      onClick={() => setShowComposeModal(false)}
+                      className="px-4 py-2 text-gray-300 hover:text-white transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={handleSaveDraft}
+                        className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors font-medium"
+                      >
+                        <Save className="w-4 h-4" />
+                        <span>Save</span>
+                      </button>
+                      <button
+                        onClick={handleSendEmail}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors font-medium"
+                      >
+                        <Send className="w-4 h-4" />
+                        <span>Send</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          }
         </div>
       </div>
     </div>

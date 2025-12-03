@@ -79,20 +79,7 @@ class DemoManager:
                         "confidence": 0.95
                     }
                 ],
-                "response": """Sure, I’ll coordinate your email and calendar for this.
-
-Based on your schedule and typical working habits, here are my suggestions:
-
-**Tuesday 2:00–2:30 PM**
-Right after your class, in the same general time block, so you don’t lose context.
-
-**Wednesday 3:00–3:30 PM**
-Right after the career workshop, so you can immediately connect any ideas from the workshop to the Emobot project.
-
-**Wednesday 4:00–4:30 PM**
-A bit later in the afternoon when your calendar is open and you have time to prepare.
-
-Would you like me to draft an English reply email to Professor Tan using these options?""",
+                "response": "Sure, I'll coordinate your email and calendar for this. Based on the schedule, Tuesday 2:00-2:30 PM (after class) and Wednesday 3:00-3:30 PM (after workshop) or 4:00-4:30 PM are good slots. Would you like me to draft an English reply email to Professor Tan using these options?",
                 "actions": []
             },
             # Scene 2: Draft reply email
@@ -127,29 +114,11 @@ Would you like me to draft an English reply email to Professor Tan using these o
                         "step": 3,
                         "type": "observation",
                         "action": "Observation from email",
-                        "reasoning": "Draft created successfully with ID: draft_123.",
+                        "reasoning": "Draft created successfully with ID: draft_117.",
                         "confidence": 1.0
                     }
                 ],
-                "response": """Got it. I’ll create a draft and keep it unsent.
-
-✅ The reply has been saved as a draft:
-**“Meeting about Emobot project – reply (draft)”**
-
-**Subject:** Meeting about Emobot project
-**Body:**
-Dear Professor Tan,
-
-Thank you for your email. I would be very happy to meet and discuss the progress of my Emobot project.
-
-My preferred time would be Tuesday 2:00–2:30 PM, but Wednesday 3:00–3:30 PM would also work well for me if that is more convenient for you.
-
-Please let me know which time you prefer, or if there is another time that works better.
-
-Best regards,
-Yifei
-
-Would you like to review the draft now, or keep it as is for the moment?""",
+                "response": "I have created an email.",
                 "actions": [
                     {
                         "tool": "email",
@@ -207,15 +176,7 @@ Would you like to review the draft now, or keep it as is for the moment?""",
                         "confidence": 1.0
                     }
                 ],
-                "response": """Okay, I’ll make sure this doesn’t fall through the cracks.
-
-✅ The follow-up task has been created:
-**Title:** Follow up with Prof. Tan about Emobot meeting
-**Due:** In 2 days at 9:00 AM
-**Category:** Study
-**Notes:** Check if there is a reply from Professor Tan. If not, send a brief follow-up email.
-
-I’ll remind you in two days and automatically re-check your inbox at that time.""",
+                "response": "Okay, I’ll make sure this doesn’t fall through the cracks. ✅ The follow-up task has been created: **Title:** Follow up with Prof. Tan about Emobot meeting **Due:** In 2 days at 9:00 AM **Category:** Study **Notes:** Check if there is a reply from Professor Tan. If not, send a brief follow-up email. I’ll remind you in two days and automatically re-check your inbox at that time.",
                 "actions": [
                     {
                         "tool": "todo_list",
@@ -313,7 +274,7 @@ You can edit any of these fields directly. This is useful because purely learnin
                 ],
                 "response": """Profile updated.
 
-**With unfamiliar contacts:** friendly but still concise and professional
+**With unfamiliar contacts:** friendly but still concise and professional.
 
 Going forward, when I write emails to new or less familiar people, I’ll follow this updated style.""",
                 "actions": [
@@ -365,26 +326,16 @@ Going forward, when I write emails to new or less familiar people, I’ll follow
                         "confidence": 0.95
                     }
                 ],
-                "response": """I’ll first look at how you usually write to Professor Tan.
-
-Based on your history, here is a draft that matches your usual tone:
-
-**Subject:** Update on Emobot project progress
-
-**Body:**
-Dear Professor Tan,
-
-I hope this message finds you well. I wanted to briefly update you on the progress of my Emobot project.
-
-Recently, I have implemented multi-tool orchestration that connects email, calendar, and to-do lists, as well as a memory module that maintains editable user profiles and interaction history. These components now work together to support more proactive and personalized assistance.
-
-I would be very happy to share more details and receive your feedback at our next meeting.
-
-Best regards,
-Yifei
-
-This structure, tone, and closing are consistent with your earlier emails to him.""",
-                "actions": []
+                "response": "I’ll first look at how you usually write to Professor Tan. Based on your history, here is a draft that matches your usual tone.",
+                "actions": [],
+                "ui_action": {
+                    "type": "open_email_draft",
+                    "data": {
+                        "recipient": "chenhao@uchicago.edu",
+                        "subject": "Update on Emobot project progress",
+                        "body": "Dear Professor Tan,\n\nI hope this message finds you well. I wanted to briefly update you on the progress of my Emobot project.\n\nRecently, I have implemented multi-tool orchestration that connects email, calendar, and to-do lists, as well as a memory module that maintains editable user profiles and interaction history. These components now work together to support more proactive and personalized assistance.\n\nI would be very happy to share more details and receive your feedback at our next meeting.\n\nBest regards,\nYifei"
+                    }
+                }
             },
             # Scene 6-2: Email to Mom
             {
@@ -417,26 +368,16 @@ This structure, tone, and closing are consistent with your earlier emails to him
                         "confidence": 1.0
                     }
                 ],
-                "response": """Let me first check your previous emails to your mom.
-
-Based on that, here is an English draft with a similar feeling:
-
-**Subject:** Small update about my Emobot project 😊
-
-**Body:**
-Hi Mom,
-
-Just wanted to share a small update with you about the Emobot project I’ve been working on. Things are getting more exciting recently.
-
-I’ve connected Emobot with my email, calendar, and to-do list, and I also added a “memory” module so it can remember my habits and help me stay organized. It can now remind me when I need to reply to someone or prepare for something important, which actually makes my days a bit less stressful.
-
-School is still busy, but I’m doing fine, eating and sleeping okay, so please don’t worry. I’ll tell you more about it when we video call this weekend.
-
-Love you,
-Yifei
-
-This keeps the message friendly and reassuring, similar to how you usually write to her.""",
-                "actions": []
+                "response": "Let me first check your previous emails to your mom. Based on that, here is a draft that matches your usual tone.",
+                "actions": [],
+                "ui_action": {
+                    "type": "open_email_draft",
+                    "data": {
+                        "recipient": "mom@example.com",
+                        "subject": "Small update about my Emobot project 😊",
+                        "body": "Hi Mom,\n\nJust wanted to share a small update with you about the Emobot project I’ve been working on. Things are getting more exciting recently.\n\nI’ve connected Emobot with my email, calendar, and to-do list, and I also added a “memory” module so it can remember my habits and help me stay organized. It can now remind me when I need to reply to someone or prepare for something important, which actually makes my days a bit less stressful.\n\nSchool is still busy, but I’m doing fine, eating and sleeping okay, so please don’t worry. I’ll tell you more about it when we video call this weekend.\n\nLove you,\nYifei"
+                    }
+                }
             },
             # Scene 6-3: Email to Alex Li
             {
@@ -470,24 +411,16 @@ This keeps the message friendly and reassuring, similar to how you usually write
                         "confidence": 1.0
                     }
                 ],
-                "response": """I’ll follow your updated profile style for unfamiliar contacts: **friendly, but concise and professional.**
-
-**Subject:** Quick update on Emobot and potential collaboration
-
-**Body:**
-Hi Alex,
-
-Hope you’re doing well! I wanted to share a quick update on my Emobot project since we last spoke.
-
-I’ve recently implemented multi-tool orchestration connecting email, calendar, and to-do lists, along with a memory module for personalized and proactive assistance. It’s now much better at turning everyday signals into concrete suggestions.
-
-If you’re interested, I’d love to schedule a short call next week to explore potential collaboration or hear your thoughts.
-
-Best,
-Yifei
-
-Compared to your emails to professors, this is slightly more friendly and concise, but still professional.""",
-                "actions": []
+                "response": "I’ll follow your updated profile style for unfamiliar contacts: **friendly, but concise and professional.** Here is a draft that matches your usual tone.",
+                "actions": [],
+                "ui_action": {
+                    "type": "open_email_draft",
+                    "data": {
+                        "recipient": "alex.li@example.com",
+                        "subject": "Quick update on Emobot and potential collaboration",
+                        "body": "Hi Alex,\n\nHope you’re doing well! I wanted to share a quick update on my Emobot project since we last spoke.\n\nI’ve recently implemented multi-tool orchestration connecting email, calendar, and to-do lists, along with a memory module for personalized and proactive assistance. It’s now much better at turning everyday signals into concrete suggestions.\n\nIf you’re interested, I’d love to schedule a short call next week to explore potential collaboration or hear your thoughts.\n\nBest,\nYifei"
+                    }
+                }
             },
             # Scene 7: Explain tone consistency
             {
@@ -720,8 +653,8 @@ Would you like me to open your calendar or the draft email so you can show them 
         
         self.logger.info(f"Executing demo scenario: {matched_scenario['id']}")
         
-        # Simulate thinking time (2-4 seconds)
-        sleep_time = random.uniform(2.0, 4.0)
+        # Simulate thinking time (5-10 seconds)
+        sleep_time = random.uniform(5.0, 10.0)
         self.logger.info(f"Simulating thinking for {sleep_time:.2f} seconds...")
         time.sleep(sleep_time)
         
@@ -745,7 +678,7 @@ Would you like me to open your calendar or the draft email so you can show them 
             except Exception as e:
                 self.logger.error(f"Failed to execute demo action: {e}")
         
-        result = {"response": matched_scenario["response"]}
+        result = {"response": matched_scenario["response"], "actions": matched_scenario["actions"]}
         if "ui_action" in matched_scenario:
             result["ui_action"] = matched_scenario["ui_action"]
             

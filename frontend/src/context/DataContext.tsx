@@ -63,6 +63,10 @@ export interface ChatMessage {
   sender: 'user' | 'bot';
   timestamp: Date;
   reasoningSteps?: ReasoningStep[];
+  uiAction?: {
+    type: string;
+    data: any;
+  };
 }
 
 // Helper function to format date in local timezone
@@ -94,7 +98,7 @@ interface DataContextType {
 
   // Email
   emails: Email[];
-  setEmails: (emails: Email[]) => void;
+  setEmails: React.Dispatch<React.SetStateAction<Email[]>>;
   markEmailAsRead: (emailId: string) => void;
   toggleEmailStar: (emailId: string) => void;
   toggleEmailImportant: (emailId: string) => void;
@@ -355,14 +359,35 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           };
         });
 
-        // Sort by internal date if available, otherwise by timestamp
-        transformedEmails.sort((a: any, b: any) => {
-          const aDate = a.internalDate || new Date(a.timestamp).getTime();
-          const bDate = b.internalDate || new Date(b.timestamp).getTime();
-          return Number(bDate) - Number(aDate);
-        });
+        setEmails(prev => {
+          // Create a set of IDs from backend emails for efficient lookup
+          const backendIds = new Set(transformedEmails.map((e: any) => e.id));
 
-        setEmails(transformedEmails);
+          // Keep local emails that are NOT in backend response AND are in sent/drafts
+          // This preserves locally added emails that haven't been synced/returned by backend yet
+          const localEmailsToKeep = prev.filter(email =>
+            !backendIds.has(email.id) &&
+            (email.folder === 'sent' || email.folder === 'drafts')
+          );
+
+          console.log(`📧 Merging ${localEmailsToKeep.length} local emails with ${transformedEmails.length} backend emails`);
+
+          // Combine and sort
+          const merged = [...transformedEmails, ...localEmailsToKeep];
+          merged.sort((a: any, b: any) => {
+            // Handle "Just now" timestamp for local emails
+            const getTimestamp = (email: any) => {
+              if (email.timestamp === 'Just now') return Date.now();
+              return new Date(email.timestamp).getTime();
+            };
+
+            const aDate = a.internalDate || getTimestamp(a);
+            const bDate = b.internalDate || getTimestamp(b);
+            return Number(bDate) - Number(aDate);
+          });
+
+          return merged;
+        });
       }
     } catch (error) {
       console.log('Email sync failed, using local data:', error);
@@ -376,7 +401,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const backendTasks = todoResponse.tasks || todoResponse.todos;
         const transformedTasks = backendTasks.map((task: any) => ({
           ...task,
-          dueDate: task.due_date || task.dueDate // Handle both snake_case and camelCase
+          id: task.id || task.task_id, // Map backend task_id to frontend id
+          dueDate: task.due_date || task.dueDate, // Handle both snake_case and camelCase
+          createdAt: task.created_at || task.createdAt || 'Just now',
+          completed: task.status === 'completed' || task.completed || false,
+          category: task.category || 'personal',
+          priority: task.priority || 'medium',
+          starred: task.starred || false
         }));
         setTodos(transformedTasks);
       }
@@ -489,7 +520,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     // Optimistically update UI
-    setEmails(prev => [newEmail, ...prev]);
+    console.log('📧 addEmail called:', newEmail);
+    setEmails(prev => {
+      console.log('📧 Previous emails:', prev.length);
+      const updated = [newEmail, ...prev];
+      console.log('📧 Updated emails:', updated.length);
+      return updated;
+    });
 
     // Sync with backend if it's being sent
     if (email.folder === 'sent' || !email.folder) {
@@ -573,8 +610,22 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     ));
   };
 
-  const deleteTodo = (todoId: string) => {
-    setTodos(prev => prev.filter(todo => todo.id !== todoId));
+  const deleteTodo = async (todoId: string) => {
+    try {
+      // Optimistic update
+      setTodos(prev => prev.filter(todo => todo.id !== todoId));
+
+      const response = await todoApi.deleteTodo(todoId);
+      if (!response.success) {
+        // Revert if failed (would need to re-fetch or keep a backup, but for now just logging)
+        console.error('Failed to delete todo on server:', response.error);
+        // Ideally we would revert the optimistic update here
+        syncWithBackend();
+      }
+    } catch (error) {
+      console.error('Error deleting todo:', error);
+      syncWithBackend();
+    }
   };
 
   const addSubtask = (projectId: string, subtask: Omit<TodoItem, 'id'>) => {
@@ -829,15 +880,24 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       let botText = response.raw_response?.response || 'No response received.';
 
       // Handle UI Actions
+      let uiActionData = undefined;
       if (response.raw_response?.ui_action) {
         const uiAction = response.raw_response.ui_action;
+        uiActionData = uiAction;
+
+        // We now handle open_email_draft inline, so we don't need the global modal
+        // But we keep the global modal for other actions if needed, or for backward compatibility
+
         if (uiAction.type === 'open_email_draft') {
-          setEmailComposeModal({
-            isOpen: true,
-            to: uiAction.data.recipient || '',
-            subject: uiAction.data.subject || '',
-            body: uiAction.data.body || ''
-          });
+          // Add a 5-10 second delay before opening the modal
+          setTimeout(() => {
+            setEmailComposeModal({
+              isOpen: true,
+              to: uiAction.data.recipient || '',
+              subject: uiAction.data.subject || '',
+              body: uiAction.data.body || ''
+            });
+          }, Math.random() * 5000 + 5000);
         }
       }
 
@@ -896,7 +956,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               ...chat,
               content: botText,
               timestamp: new Date(),
-              reasoningSteps: reasoningSteps
+              reasoningSteps: reasoningSteps,
+              uiAction: uiActionData
             }
             : chat
         )

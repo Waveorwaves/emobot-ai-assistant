@@ -515,6 +515,8 @@ class ReasoningModule:
         - Today is {current_date_str}
         - Tomorrow is {(current_datetime + timedelta(days=1)).strftime("%A, %B %d, %Y")}
         - This week starts on {(current_datetime - timedelta(days=current_datetime.weekday())).strftime("%B %d, %Y")}
+
+        CRITICAL: When calculating relative dates (e.g. 'in 2 days', 'next week'), PRESERVE the current time of day unless the user explicitly specifies a different time. Do not default to morning.
         """
 
         if conversation_history and conversation_history != "No history records.":

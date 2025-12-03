@@ -260,7 +260,27 @@ const TodoPage: React.FC<TodoPageProps> = ({ onNavigate }) => {
   };
 
 
-  const handleDeleteTodo = (todoId: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    if (dateString === 'Just now') return dateString;
+    try {
+      const date = new Date(dateString);
+      // Check if date is valid
+      if (isNaN(date.getTime())) return dateString;
+
+      return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+      }).format(date);
+    } catch {
+      return dateString;
+    }
+  };
+
+  const handleDeleteTodo = (e: React.MouseEvent, todoId: string) => {
+    e.stopPropagation();
     deleteTodo(todoId);
   };
 
@@ -293,14 +313,17 @@ const TodoPage: React.FC<TodoPageProps> = ({ onNavigate }) => {
   };
 
   const handleEditTodo = (todo: TodoItem) => {
-    setEditingTodo(todo.id);
+    // Handle both 'T' and space as separators
+    const separator = (todo.dueDate || '').includes('T') ? 'T' : ' ';
+    const [datePart, timePart] = (todo.dueDate || '').split(separator);
+
     setEditTodo({
       title: todo.title,
       description: todo.description || '',
       priority: todo.priority as 'low' | 'medium' | 'high',
       category: todo.category,
-      dueDate: todo.dueDate || '',
-      dueTime: ''
+      dueDate: datePart || '',
+      dueTime: timePart ? timePart.substring(0, 5) : '' // Take HH:MM
     });
   };
 
@@ -1060,8 +1083,9 @@ const TodoPage: React.FC<TodoPageProps> = ({ onNavigate }) => {
                                   <Edit3 className="w-4 h-4" />
                                 </button>
                                 <button
-                                  onClick={() => handleDeleteTodo(todo.id)}
-                                  className="text-gray-400 hover:text-red-400"
+                                  onClick={(e) => handleDeleteTodo(e, todo.id)}
+                                  className="text-gray-400 hover:text-red-400 p-2 hover:bg-white/10 rounded-full transition-colors"
+                                  title="Delete Task"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
@@ -1126,8 +1150,8 @@ const TodoPage: React.FC<TodoPageProps> = ({ onNavigate }) => {
                               </div>
 
                               <div className="flex items-center space-x-3 text-xs text-gray-500">
-                                {todo.dueDate && <span>Due: {todo.dueDate}</span>}
-                                <span>Created: {todo.createdAt}</span>
+                                {todo.dueDate && <span>Due: {formatDate(todo.dueDate)}</span>}
+                                <span>Created: {formatDate(todo.createdAt)}</span>
                               </div>
                             </div>
                           </div>
@@ -1408,8 +1432,8 @@ const TodoPage: React.FC<TodoPageProps> = ({ onNavigate }) => {
                     Edit
                   </button>
                   <button
-                    onClick={() => {
-                      handleDeleteTodo(selectedTodoDetails.id);
+                    onClick={(e) => {
+                      handleDeleteTodo(e, selectedTodoDetails.id);
                       setSelectedTodoDetails(null);
                     }}
                     className="text-gray-400 hover:text-red-400 px-3 py-2 rounded-lg transition-colors"
@@ -1449,13 +1473,13 @@ const TodoPage: React.FC<TodoPageProps> = ({ onNavigate }) => {
                 {selectedTodoDetails.dueDate && (
                   <div>
                     <h3 className="text-sm font-medium text-gray-400 mb-2">Due Date</h3>
-                    <span className="text-gray-200">{selectedTodoDetails.dueDate}</span>
+                    <span className="text-gray-200">{formatDate(selectedTodoDetails.dueDate)}</span>
                   </div>
                 )}
 
                 <div>
                   <h3 className="text-sm font-medium text-gray-400 mb-2">Created</h3>
-                  <span className="text-gray-200">{selectedTodoDetails.createdAt}</span>
+                  <span className="text-gray-200">{formatDate(selectedTodoDetails.createdAt)}</span>
                 </div>
               </div>
 
