@@ -36,59 +36,13 @@
   },
   {
     "id": "event_4",
-    "title": "Microsoft Interview",
-    "start_time": "2025-12-06T10:00:00",
-    "end_time": "2025-12-06T11:00:00",
-    "location": "",
-    "description": "Attendees: hr@microsoft.com",
-    "attendees": [
-      "hr@microsoft.com"
-    ],
-    "created_at": "2025-12-03T15:27:21.232276",
-    "status": "confirmed"
-  },
-  {
-    "id": "event_5",
-    "title": "You have an upcoming interview but no prep time scheduled",
-    "start_time": "2025-12-03T15:47:03.079034",
-    "end_time": "2025-12-03T16:47:03.079034",
+    "title": "Interview Prep - Microsoft AI Asia",
+    "start_time": "2025-12-04T19:00:00",
+    "end_time": "2025-12-04T20:00:00",
     "location": "",
     "description": "",
     "attendees": [],
-    "created_at": "2025-12-03T15:47:03.079412",
-    "status": "confirmed"
-  },
-  {
-    "id": "event_6",
-    "title": "Microsoft AI interview",
-    "start_time": "2025-12-03T10:00:00",
-    "end_time": "2025-12-03T11:00:00",
-    "location": "",
-    "description": "Microsoft AI interview",
-    "attendees": [],
-    "created_at": "2025-12-03T15:56:13.155402",
-    "status": "confirmed"
-  },
-  {
-    "id": "event_7",
-    "title": "Interview Prep",
-    "start_time": "2025-12-03T10:00:00",
-    "end_time": "2025-12-03T11:00:00",
-    "location": "",
-    "description": "",
-    "attendees": [],
-    "created_at": "2025-12-03T15:57:31.309503",
-    "status": "confirmed"
-  },
-  {
-    "id": "event_8",
-    "title": "You have an upcoming interview but no prep time scheduled",
-    "start_time": "2025-12-03T16:05:12.007010",
-    "end_time": "2025-12-03T17:05:12.007010",
-    "location": "",
-    "description": "",
-    "attendees": [],
-    "created_at": "2025-12-03T16:05:12.007287",
+    "created_at": "2025-12-03T16:23:54.939475",
     "status": "confirmed"
   }
 ]

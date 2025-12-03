@@ -101,7 +101,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     emailComposeModal,
     setEmailComposeModal,
     todos,
-    emails
+    emails,
+    refreshCalendarData
   } = useData();
 
   const showComposeModal = emailComposeModal.isOpen;
@@ -654,8 +655,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
     // Check if we already have a draft for this insight
     if (insightEmailDrafts[index]) {
-      setComposeForm(insightEmailDrafts[index]);
-      setShowComposeModal(true);
+      const draft = insightEmailDrafts[index];
+      // Update both composeForm AND emailComposeModal to prevent useEffect from resetting
+      setComposeForm(draft);
+      setEmailComposeModal({
+        isOpen: true,
+        to: draft.to,
+        subject: draft.subject,
+        body: draft.body
+      });
       return;
     }
 
@@ -674,8 +682,14 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         [index]: demoDraft
       }));
 
+      // Update both composeForm AND emailComposeModal to prevent useEffect from resetting
       setComposeForm(demoDraft);
-      setShowComposeModal(true);
+      setEmailComposeModal({
+        isOpen: true,
+        to: demoDraft.to,
+        subject: demoDraft.subject,
+        body: demoDraft.body
+      });
       showNotification('✓ Email draft ready!', 'success');
       return;
     }
@@ -772,22 +786,25 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         }
 
         // Store draft preview in state to display in insight
-        setInsightEmailDrafts(prev => ({
-          ...prev,
-          [index]: {
-            to: finalRecipient,
-            subject: data.subject || 'Re: Meeting Request',
-            body: cleanedBody
-          }
-        }));
-
-        // Set compose form and open modal on dashboard
-        setComposeForm({
+        const draftData = {
           to: finalRecipient,
           subject: data.subject || 'Re: Meeting Request',
           body: cleanedBody
+        };
+        
+        setInsightEmailDrafts(prev => ({
+          ...prev,
+          [index]: draftData
+        }));
+
+        // Set compose form and open modal - use setEmailComposeModal to prevent useEffect reset
+        setComposeForm(draftData);
+        setEmailComposeModal({
+          isOpen: true,
+          to: draftData.to,
+          subject: draftData.subject,
+          body: draftData.body
         });
-        setShowComposeModal(true);
 
         showNotification('✓ Email draft ready!', 'success');
       } else {
@@ -904,13 +921,19 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         cleanedBody = `Dear ${recipient.split('@')[0]},\n\nThank you for your email. I confirm my availability for the meeting on the proposed date and time.\n\nLooking forward to it.\n\nBest regards`;
       }
 
-      // Show compose modal first
-      setComposeForm({
+      // Show compose modal first - use setEmailComposeModal to prevent useEffect reset
+      const draftData = {
         to: finalRecipient,
         subject: emailData.subject || 'Re: Meeting Request',
         body: cleanedBody
+      };
+      setComposeForm(draftData);
+      setEmailComposeModal({
+        isOpen: true,
+        to: draftData.to,
+        subject: draftData.subject,
+        body: draftData.body
       });
-      setShowComposeModal(true);
 
       // Extract calendar event info from insight
       const combined = (insight.content || '') + ' ' + (insight.suggestion || '') + ' ' + (insight.title || '');
@@ -974,6 +997,20 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           time: '10:00 AM',
           duration: '1 hour',
           recipient: 'hr@microsoft.com',
+          insightIndex: index
+        });
+        setShowCalendarConfirmation(true);
+        return;
+      }
+
+      // Special handling for insight 2 - interview prep time
+      if (insight.title && insight.title.includes('upcoming interview but no prep time scheduled')) {
+        setCalendarEventData({
+          title: 'Interview Prep - Microsoft AI Asia',
+          date: 'December 4th', // Tomorrow for demo
+          time: '7:00 PM',
+          duration: '1 hour',
+          recipient: '',
           insightIndex: index
         });
         setShowCalendarConfirmation(true);
@@ -1189,8 +1226,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         setCalendarEventData(null);
         setComposeForm({ to: '', subject: '', body: '' });
 
-        // Refresh the page or trigger a calendar refresh
-        // You might want to add a callback here to refresh calendar data
+        // Refresh calendar data so CalendarPage shows the new event
+        await refreshCalendarData();
       } else {
         showNotification('❌ Failed to add to calendar: ' + (data.error || 'Unknown error'), 'error');
       }

@@ -95,6 +95,7 @@ interface DataContextType {
   deleteEvent: (eventId: string) => void;
   getEventsForDate: (date: Date) => CalendarEvent[];
   detectConflicts: (events: CalendarEvent[]) => { eventId: string; conflictsWith: string[] }[];
+  refreshCalendarData: () => Promise<void>;
 
   // Email
   emails: Email[];
@@ -743,6 +744,54 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return allEvents.filter(event => event.date === dateString);
   };
 
+  // Refresh calendar data from backend
+  const refreshCalendarData = async () => {
+    try {
+      const calendarResponse = await calendarApi.getEvents();
+      if (calendarResponse.success && calendarResponse.events) {
+        const transformedEvents = calendarResponse.events.map((event: any) => {
+          let eventDate = event.date;
+          if (!eventDate) {
+            const startTime = event.start_time || event.start || event.datetime;
+            if (startTime) {
+              if (typeof startTime === 'string' && startTime.includes('T')) {
+                eventDate = startTime.split('T')[0];
+              } else if (typeof startTime === 'string' && startTime.match(/^\d{4}-\d{2}-\d{2}/)) {
+                eventDate = startTime.substring(0, 10);
+              }
+            }
+          }
+
+          let eventTime = event.time || '00:00';
+          if (!event.time) {
+            const startTime = event.start_time || event.start || event.datetime;
+            if (startTime && typeof startTime === 'string') {
+              if (startTime.includes('T')) {
+                const timePart = startTime.split('T')[1];
+                eventTime = timePart ? timePart.substring(0, 5) : '00:00';
+              } else if (startTime.match(/^\d{2}:\d{2}/)) {
+                eventTime = startTime.substring(0, 5);
+              }
+            }
+          }
+
+          return {
+            id: event.id || Date.now().toString(),
+            title: event.title || event.summary || 'Untitled Event',
+            time: eventTime,
+            duration: event.duration || '1 hour',
+            type: event.type || 'meeting',
+            description: event.description || event.details || '',
+            date: eventDate || formatDateLocal(new Date())
+          };
+        });
+        setAllEvents(transformedEvents);
+      }
+    } catch (error) {
+      console.error('Failed to refresh calendar data:', error);
+    }
+  };
+
   // Helper function to convert time string to minutes since midnight
   const timeToMinutes = (timeStr: string): number => {
     const [hours, minutes] = timeStr.split(':').map(Number);
@@ -996,6 +1045,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     deleteEvent,
     getEventsForDate,
     detectConflicts,
+    refreshCalendarData,
 
     // Email
     emails,
