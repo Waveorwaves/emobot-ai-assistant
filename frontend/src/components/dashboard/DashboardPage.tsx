@@ -163,6 +163,61 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     }
   };
 
+  // Clear demo insight states on page load (so demo mode always shows all 3 insights)
+  React.useEffect(() => {
+    const clearDemoInsightStates = () => {
+      try {
+        // Demo insights have these fixed titles - calculate their hashes and clear them
+        const demoInsightTitles = [
+          'Interview prep is missing',
+          'Emobot draft may be delayed',
+          'Emobot polishing tasks are fragmented'
+        ];
+        const demoInsightTypes = ['urgent', 'warning', 'optimization'];
+        
+        const saved = localStorage.getItem('insightStates');
+        if (saved) {
+          const states = JSON.parse(saved);
+          let hasChanges = false;
+          
+          // Clear states for demo insights
+          demoInsightTitles.forEach((title, index) => {
+            const hash = `${title}-${demoInsightTypes[index]}`.replace(/\s+/g, '-').toLowerCase();
+            if (states[hash]) {
+              delete states[hash];
+              hasChanges = true;
+            }
+          });
+          
+          if (hasChanges) {
+            localStorage.setItem('insightStates', JSON.stringify(states));
+            setInsightStates(states);
+            console.log('🔄 Cleared demo insight states for fresh demo mode');
+          }
+        }
+        
+        // Also clear cached insights if they are demo insights
+        const cachedInsights = localStorage.getItem('cachedInsights');
+        if (cachedInsights) {
+          const insights = JSON.parse(cachedInsights);
+          const isDemoInsights = insights.some((i: any) => i.id && i.id.startsWith('insight_'));
+          if (isDemoInsights) {
+            localStorage.removeItem('cachedInsights');
+            localStorage.removeItem('cachedInsightsSummary');
+            localStorage.removeItem('insightsLastRefresh');
+            setInsights([]);
+            console.log('🔄 Cleared cached demo insights');
+          }
+        }
+      } catch (error) {
+        console.error('Error clearing demo insight states:', error);
+      }
+    };
+    
+    // Clear demo states on initial load
+    clearDemoInsightStates();
+  }, []); // Run once on mount
+  
   // Auto-refresh insights on page load if they're stale (older than 5 minutes)
   React.useEffect(() => {
     const checkAndRefreshInsights = () => {
@@ -301,37 +356,73 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
       const data = await response.json();
 
       if (data.success) {
-        // Filter out completed and snoozed insights
-        const now = Date.now();
-        const filteredInsights = (data.insights || []).filter((insight: any) => {
+        const rawInsights = data.insights || [];
+        
+        // Check if this is demo mode (demo insights have IDs like "insight_1", "insight_2", "insight_3")
+        const isDemoInsights = rawInsights.some((insight: any) => 
+          insight.id && insight.id.startsWith('insight_')
+        );
+        
+        // In demo mode, clear the states for demo insights so they always show
+        if (isDemoInsights) {
+          const demoInsightHashes = rawInsights.map((insight: any) => getInsightHash(insight));
+          const cleanedStates = { ...insightStates };
+          demoInsightHashes.forEach((hash: string) => {
+            delete cleanedStates[hash];
+          });
+          saveInsightStates(cleanedStates);
+          // Update local state immediately
+          setInsightStates(cleanedStates);
+          // In demo mode, show all insights without filtering
+          setInsights(rawInsights);
+        } else {
+          // Filter out completed and snoozed insights (non-demo mode)
+          const now = Date.now();
+          const filteredInsights = rawInsights.filter((insight: any) => {
+            const hash = getInsightHash(insight);
+            const state = insightStates[hash];
+
+            // Skip if completed
+            if (state && state.status === 'completed') {
+              return false;
+            }
+
+            // Skip if snoozed and not yet time
+            if (state && state.status === 'snoozed' && state.snoozeUntil > now) {
+              return false;
+            }
+
+            return true;
+          });
+          setInsights(filteredInsights);
+        }
+        
+        // Update summary with actual displayed count
+        const displayedCount = isDemoInsights ? rawInsights.length : rawInsights.filter((insight: any) => {
           const hash = getInsightHash(insight);
           const state = insightStates[hash];
-
-          // Skip if completed
-          if (state && state.status === 'completed') {
-            return false;
-          }
-
-          // Skip if snoozed and not yet time
-          if (state && state.status === 'snoozed' && state.snoozeUntil > now) {
-            return false;
-          }
-
+          if (state && state.status === 'completed') return false;
+          if (state && state.status === 'snoozed' && state.snoozeUntil > Date.now()) return false;
           return true;
-        });
-
-        setInsights(filteredInsights);
-
-        // Update summary with actual filtered count
+        }).length;
+        
         const updatedSummary = {
           ...(data.summary || {}),
-          insights_count: filteredInsights.length
+          insights_count: displayedCount
         };
         setInsightsSummary(updatedSummary);
 
         // Cache insights and summary to localStorage
+        const insightsToCache = isDemoInsights ? rawInsights : rawInsights.filter((insight: any) => {
+          const hash = getInsightHash(insight);
+          const state = insightStates[hash];
+          if (state && state.status === 'completed') return false;
+          if (state && state.status === 'snoozed' && state.snoozeUntil > Date.now()) return false;
+          return true;
+        });
+        
         try {
-          localStorage.setItem('cachedInsights', JSON.stringify(filteredInsights));
+          localStorage.setItem('cachedInsights', JSON.stringify(insightsToCache));
           localStorage.setItem('cachedInsightsSummary', JSON.stringify(updatedSummary));
           localStorage.setItem('insightsLastRefresh', Date.now().toString());
         } catch (error) {

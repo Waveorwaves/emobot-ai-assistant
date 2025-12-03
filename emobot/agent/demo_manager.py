@@ -326,7 +326,7 @@ Going forward, when I write emails to new or less familiar people, I’ll follow
                         "confidence": 0.95
                     }
                 ],
-                "response": "I’ll first look at how you usually write to Professor Tan. Based on your history, here is a draft that matches your usual tone.",
+                "response": "I’ll first look at how you usually write to Professor Tan. Based on your history, I have written a draft that matches your usual tone.",
                 "actions": [],
                 "ui_action": {
                     "type": "open_email_draft",
@@ -368,7 +368,7 @@ Going forward, when I write emails to new or less familiar people, I’ll follow
                         "confidence": 1.0
                     }
                 ],
-                "response": "Let me first check your previous emails to your mom. Based on that, here is a draft that matches your usual tone.",
+                "response": "Let me first check your previous emails to your mom. Based on that, a draft email that matches your usual tone has been created.",
                 "actions": [],
                 "ui_action": {
                     "type": "open_email_draft",
@@ -411,7 +411,7 @@ Going forward, when I write emails to new or less familiar people, I’ll follow
                         "confidence": 1.0
                     }
                 ],
-                "response": "I’ll follow your updated profile style for unfamiliar contacts: **friendly, but concise and professional.** Here is a draft that matches your usual tone.",
+                "response": "I'll follow your updated profile style for unfamiliar contacts: friendly, but concise and professional. There is a draft email that matches your tone that is ready to be sent.",
                 "actions": [],
                 "ui_action": {
                     "type": "open_email_draft",
