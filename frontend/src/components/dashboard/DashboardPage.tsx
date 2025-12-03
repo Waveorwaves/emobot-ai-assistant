@@ -174,12 +174,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           'Emobot polishing tasks are fragmented'
         ];
         const demoInsightTypes = ['urgent', 'warning', 'optimization'];
-        
+
         const saved = localStorage.getItem('insightStates');
         if (saved) {
           const states = JSON.parse(saved);
           let hasChanges = false;
-          
+
           // Clear states for demo insights
           demoInsightTitles.forEach((title, index) => {
             const hash = `${title}-${demoInsightTypes[index]}`.replace(/\s+/g, '-').toLowerCase();
@@ -188,14 +188,14 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               hasChanges = true;
             }
           });
-          
+
           if (hasChanges) {
             localStorage.setItem('insightStates', JSON.stringify(states));
             setInsightStates(states);
             console.log('🔄 Cleared demo insight states for fresh demo mode');
           }
         }
-        
+
         // Also clear cached insights if they are demo insights
         const cachedInsights = localStorage.getItem('cachedInsights');
         if (cachedInsights) {
@@ -213,11 +213,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         console.error('Error clearing demo insight states:', error);
       }
     };
-    
+
     // Clear demo states on initial load
     clearDemoInsightStates();
   }, []); // Run once on mount
-  
+
   // Auto-refresh insights on page load if they're stale (older than 5 minutes)
   React.useEffect(() => {
     const checkAndRefreshInsights = () => {
@@ -347,6 +347,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   const analyzeInsights = async () => {
     setIsAnalyzing(true);
     try {
+      // Add artificial delay for "analyzing" effect (12 seconds)
+      await new Promise(resolve => setTimeout(resolve, 12000));
+
       const response = await fetch('http://localhost:8000/api/insights/analyze', {
         method: 'POST',
         headers: {
@@ -357,12 +360,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
       if (data.success) {
         const rawInsights = data.insights || [];
-        
+
         // Check if this is demo mode (demo insights have IDs like "insight_1", "insight_2", "insight_3")
-        const isDemoInsights = rawInsights.some((insight: any) => 
+        const isDemoInsights = rawInsights.some((insight: any) =>
           insight.id && insight.id.startsWith('insight_')
         );
-        
+
         // In demo mode, clear the states for demo insights so they always show
         if (isDemoInsights) {
           const demoInsightHashes = rawInsights.map((insight: any) => getInsightHash(insight));
@@ -396,7 +399,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           });
           setInsights(filteredInsights);
         }
-        
+
         // Update summary with actual displayed count
         const displayedCount = isDemoInsights ? rawInsights.length : rawInsights.filter((insight: any) => {
           const hash = getInsightHash(insight);
@@ -405,7 +408,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           if (state && state.status === 'snoozed' && state.snoozeUntil > Date.now()) return false;
           return true;
         }).length;
-        
+
         const updatedSummary = {
           ...(data.summary || {}),
           insights_count: displayedCount
@@ -420,7 +423,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           if (state && state.status === 'snoozed' && state.snoozeUntil > Date.now()) return false;
           return true;
         });
-        
+
         try {
           localStorage.setItem('cachedInsights', JSON.stringify(insightsToCache));
           localStorage.setItem('cachedInsightsSummary', JSON.stringify(updatedSummary));
@@ -606,19 +609,19 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
   const getInsightTypeClass = (type: string) => {
     switch (type) {
-      case 'warning': return 'bg-yellow-900/20 border-yellow-500';
-      case 'error': return 'bg-red-900/20 border-red-500';
-      case 'success': return 'bg-green-900/20 border-green-500';
-      default: return 'bg-blue-900/20 border-blue-500';
+      case 'warning': return 'bg-pink-900/20 border-pink-500 text-pink-400';
+      case 'error': return 'bg-red-900/20 border-red-500 text-red-400';
+      case 'success': return 'bg-green-900/20 border-green-400 text-green-400';
+      default: return 'bg-cyan-900/20 border-cyan-400 text-cyan-400';
     }
   };
 
   const getInsightTypeIcon = (type: string) => {
     switch (type) {
-      case 'warning': return '⚠️';
-      case 'error': return '❌';
-      case 'success': return '✅';
-      default: return '💡';
+      case 'warning': return <AlertTriangle className="w-6 h-6 text-pink-400" />;
+      case 'error': return <X className="w-6 h-6 text-red-400" />;
+      case 'success': return <CheckCircle className="w-6 h-6 text-green-400" />;
+      default: return <Lightbulb className="w-6 h-6 text-cyan-400" />;
     }
   };
 
@@ -1178,14 +1181,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
   const getActionIcon = (type: string) => {
     switch (type) {
-      case 'email': return <Mail className="w-4 h-4" />;
-      case 'calendar': return <Calendar className="w-4 h-4" />;
+      case 'warning': return <AlertTriangle className="w-6 h-6 text-pink-400" />;
+      case 'error': return <X className="w-6 h-6 text-red-400" />;
+      case 'success': return <CheckCircle className="w-6 h-6 text-green-400" />;
       case 'task': return <CheckSquare className="w-4 h-4" />;
       case 'schedule': return <Calendar className="w-4 h-4" />;
       case 'reschedule': return <Clock className="w-4 h-4" />;
       case 'priority': return <TrendingUp className="w-4 h-4" />;
       case 'automation': return <Zap className="w-4 h-4" />;
-      default: return <Activity className="w-4 h-4" />;
+      default: return <Lightbulb className="w-6 h-6 text-cyan-400" />;
     }
   };
 
@@ -1349,7 +1353,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
                 {/* Overview Stats - Pinned */}
                 <div className="px-6 pb-4">
-                  <div className="bg-gradient-to-r from-purple-600 to-indigo-600 border border-white/5 rounded-lg p-6">
+                  <div className="bg-gradient-to-r from-pink-600 to-purple-600 border border-white/5 rounded-lg p-6">
                     <div className="grid grid-cols-4 gap-4">
                       <div className="bg-black/20 backdrop-blur-sm rounded-lg p-4 text-center border border-white/5">
                         <div className="text-3xl font-display font-bold text-white mb-1">
@@ -1477,14 +1481,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                   <Target className="w-5 h-5 text-green-400" />
                   <h2 className="text-lg font-semibold text-white">AI-Generated Schedule Optimization</h2>
                 </div>
-                <button
-                  onClick={() => optimizeSchedule(true)}
-                  disabled={isOptimizing}
-                  className="bg-white/5 hover:bg-white/10 border border-white/10 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-all text-sm font-medium mr-2"
-                >
-                  <Sparkles className="w-4 h-4 text-purple-400" />
-                  <span>Demo Mode</span>
-                </button>
+
                 <button
                   onClick={() => optimizeSchedule(false)}
                   disabled={isOptimizing}
@@ -1969,7 +1966,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                         return (
                           <div
                             key={hash}
-                            className={`border-l-3 rounded-lg p-4 ${statusColor} `}
+                            className={`border-l-3 rounded-lg p-4 ${statusColor}`}
                           >
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex-1">

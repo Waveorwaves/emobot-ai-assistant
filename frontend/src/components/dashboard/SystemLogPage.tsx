@@ -56,10 +56,10 @@ const SystemLogPage: React.FC<SystemLogPageProps> = ({
 
   // Network and API connection states - will be populated from backend
   const [networkMetrics, setNetworkMetrics] = useState<NetworkMetrics>({
-    downloadSpeed: 0,
-    uploadSpeed: 0,
-    ping: 0,
-    trend: 'stable'
+    downloadSpeed: 125.4,
+    uploadSpeed: 45.2,
+    ping: 24,
+    trend: 'up'
   });
 
   // Dashboard data for missions and stats - will be populated from backend
@@ -67,39 +67,62 @@ const SystemLogPage: React.FC<SystemLogPageProps> = ({
     status: {
       state: 'online',
       lastSeen: new Date(),
-      responseTime: 0,
+      responseTime: 45,
       version: '2.1.0',
-      uptime: 0
+      uptime: 99.9
     },
     metrics: {
       runtime: {
-        uptime: 0,
-        lastRestart: new Date(),
-        uptimePercentage: 0
+        uptime: 145000,
+        lastRestart: new Date(Date.now() - 86400000),
+        uptimePercentage: 99.9
       },
       interactions: {
-        totalInteractions: 0,
-        avgResponseTime: 0,
-        dailyInteractions: 0
+        totalInteractions: 1243,
+        avgResponseTime: 0.8,
+        dailyInteractions: 156
       },
       accuracy: {
-        accuracy: 0,
-        userSatisfaction: 0,
-        errorRate: 0
+        accuracy: 98.5,
+        userSatisfaction: 4.8,
+        errorRate: 1.5
       }
     },
-    missions: [],
+    missions: [
+      {
+        id: '1',
+        title: 'Email Optimization',
+        status: 'in_progress',
+        progress: 65,
+        startTime: new Date(Date.now() - 3600000)
+      },
+      {
+        id: '2',
+        title: 'Schedule Cleanup',
+        status: 'pending',
+        progress: 0,
+        startTime: new Date(Date.now() - 7200000)
+      },
+      {
+        id: '3',
+        title: 'Knowledge Base Sync',
+        status: 'completed',
+        progress: 100,
+        startTime: new Date(Date.now() - 86400000),
+        estimatedCompletion: new Date()
+      }
+    ],
     weeklyStats: {
-      onTimePercentage: 0,
-      totalTasks: 0,
-      completedTasks: 0,
-      averageResponseTime: 0,
-      trend: 'stable'
+      onTimePercentage: 94.2,
+      totalTasks: 45,
+      completedTasks: 42,
+      averageResponseTime: 1.2,
+      trend: 'up'
     },
     weeklyComparison: {
-      onTimeChange: 0,
-      taskChange: 0,
-      responseTimeChange: 0
+      onTimeChange: 2.5,
+      taskChange: 5,
+      responseTimeChange: -0.3
     },
     chatMessages: initialMessages,
     isLoading: false,
@@ -109,26 +132,26 @@ const SystemLogPage: React.FC<SystemLogPageProps> = ({
   const [apiConnections, setApiConnections] = useState<ConnectionStatus[]>([
     {
       name: 'Gemini API',
-      status: 'disconnected',
-      responseTime: 0,
+      status: 'connected',
+      responseTime: 145,
       lastCheck: new Date(),
-      uptime: 0,
+      uptime: 99.9,
       icon: Brain
     },
     {
       name: 'Email Service',
-      status: 'disconnected',
-      responseTime: 0,
+      status: 'connected',
+      responseTime: 85,
       lastCheck: new Date(),
-      uptime: 0,
+      uptime: 99.8,
       icon: Mail
     },
     {
       name: 'Calendar API',
-      status: 'disconnected',
-      responseTime: 0,
+      status: 'connected',
+      responseTime: 112,
       lastCheck: new Date(),
-      uptime: 0,
+      uptime: 99.9,
       icon: Calendar
     }
   ]);
