@@ -32,9 +32,9 @@ class InsightsManager:
             {
                 "id": "insight_1",
                 "type": "urgent",
-                "title": "Interview prep is missing",
+                "title": "Microsoft interview confirmation",
                 "description": "I found an unread email from Microsoft AI confirming an interview on Friday at 10:00 AM, but your calendar has no prep time.",
-                "suggestion": "Reserve 1 hour tomorrow and 1 hour the day after for interview preparation.",
+                "suggestion": "Scheduled friday 10am for interview and reply to email.",
                 "priority": "high",
                 "content": "Email from Microsoft AI HR: Interview confirmed for Friday 10:00 AM.",
                 "sender_email": "hr@microsoft.com" # Mock
@@ -42,11 +42,11 @@ class InsightsManager:
             {
                 "id": "insight_2",
                 "type": "warning",
-                "title": "Emobot draft may be delayed",
-                "description": "Professor Tan asked for an updated Emobot draft 3 days ago. Your 'Finish Emobot draft v2' task is overdue.",
-                "suggestion": "Block a 2-hour focus session this week and draft a short update email to him.",
+                "title": "You have an upcoming interview but no prep time scheduled",
+                "description": "You have an interview with Microsoft AI Asia on Friday at 10:00 AM, confirmed by HR. There is no dedicated prep time scheduled before the interview in your calendar.",
+                "suggestion": "Block 1 hour tomorrow evening and 1 hour the day after for interview preparation",
                 "priority": "high",
-                "content": "Email from Prof. Tan: Please send the updated draft.",
+                "content": "You have an interview with Microsoft AI Asia on Friday at 10:00 AM, confirmed by HR. There is no dedicated prep time scheduled before the interview in your calendar.",
                 "sender_email": "chenhao@uchicago.edu" # Mock
             },
             {

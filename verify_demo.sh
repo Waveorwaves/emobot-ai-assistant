@@ -35,8 +35,8 @@ echo $RESPONSE | grep "concise communication" && echo "✅ Profile analysis retu
 # 7. Check Insights
 echo -e "\n7️⃣  Checking Insights..."
 RESPONSE=$(curl -s -X POST "$BASE_URL/api/insights/analyze")
-echo $RESPONSE | grep "Interview prep is missing" && echo "✅ Found Interview Insight" || echo "❌ Interview Insight missing"
-echo $RESPONSE | grep "Emobot draft may be delayed" && echo "✅ Found Draft Insight" || echo "❌ Draft Insight missing"
+echo $RESPONSE | grep "Microsoft interview confirmation" && echo "✅ Found Interview Insight" || echo "❌ Interview Insight missing"
+echo $RESPONSE | grep "You have an upcoming interview but no prep time scheduled" && echo "✅ Found Prep Time Insight" || echo "❌ Prep Time Insight missing"
 
 # 8. Check Reply Generation
 echo -e "\n8️⃣  Checking Reply Generation..."

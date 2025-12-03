@@ -169,8 +169,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
       try {
         // Demo insights have these fixed titles - calculate their hashes and clear them
         const demoInsightTitles = [
-          'Interview prep is missing',
-          'Emobot draft may be delayed',
+          'Microsoft interview confirmation',
+          'You have an upcoming interview but no prep time scheduled',
           'Emobot polishing tasks are fragmented'
         ];
         const demoInsightTypes = ['urgent', 'warning', 'optimization'];
@@ -1115,6 +1115,55 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     const suggestion = (insight.suggestion || '').toLowerCase();
     const title = (insight.title || '').toLowerCase();
     const combined = content + ' ' + suggestion + ' ' + title;
+
+    // Special handling for "Microsoft interview confirmation" demo insight
+    if (title.includes('microsoft interview confirmation')) {
+      return [
+        {
+          label: '✅ Confirm',
+          onClick: () => handleConfirmAction(insight, index),
+          type: 'confirm',
+          priority: true
+        },
+        {
+          label: '📧 Reply to Email',
+          onClick: () => handleReplyEmail(insight, index),
+          type: 'primary'
+        },
+        {
+          label: '📅 Schedule',
+          onClick: () => {
+            if (onNavigate) {
+              onNavigate('calendar');
+            }
+          },
+          type: 'primary'
+        }
+      ];
+    }
+
+    // Special handling for "You have an upcoming interview but no prep time scheduled" demo insight
+    if (title.includes('upcoming interview but no prep time scheduled')) {
+      return [
+        {
+          label: '✅ Add tasks',
+          onClick: () => {
+            // Mock adding tasks
+            showNotification('✅ Tasks added to Todo list', 'success');
+          },
+          type: 'confirm',
+          priority: true
+        },
+        {
+          label: '📅 Schedule',
+          onClick: () => {
+            // Mock scheduling
+            showNotification('✅ Preparation time blocked in calendar', 'success');
+          },
+          type: 'primary'
+        }
+      ];
+    }
 
     // Detect if this is about email reply - only if there's a sender_email or it's clearly an email-specific insight
     const isEmailInsight = insight.sender_email ||
