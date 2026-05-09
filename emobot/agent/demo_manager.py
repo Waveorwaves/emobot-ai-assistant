@@ -22,8 +22,8 @@ class DemoManager:
             {
                 "id": "scene_1",
                 "triggers": [
-                    "handle the meeting request from Professor Tan",
-                    "meeting request from Professor Tan",
+                    "handle the meeting request from Professor Chen",
+                    "meeting request from Professor Chen",
                     "help me handle the meeting request"
                 ],
                 "reasoning_steps": [
@@ -31,7 +31,7 @@ class DemoManager:
                         "step": 1,
                         "type": "thought",
                         "action": "Thinking",
-                        "reasoning": "User wants to handle a meeting request from Professor Tan. I need to find the latest email from him to understand the context and requested time.",
+                        "reasoning": "User wants to handle a meeting request from Professor Chen. I need to find the latest email from him to understand the context and requested time.",
                         "confidence": 0.9
                     },
                     {
@@ -79,7 +79,7 @@ class DemoManager:
                         "confidence": 0.95
                     }
                 ],
-                "response": "Sure, I'll coordinate your email and calendar for this. Based on the schedule, Tuesday 2:00-2:30 PM (after class) and Wednesday 3:00-3:30 PM (after workshop) or 4:00-4:30 PM are good slots. Would you like me to draft an English reply email to Professor Tan using these options?",
+                "response": "Sure, I'll coordinate your email and calendar for this. Based on the schedule, Tuesday 2:00-2:30 PM (after class) and Wednesday 3:00-3:30 PM (after workshop) or 4:00-4:30 PM are good slots. Would you like me to draft an English reply email to Professor Chen using these options?",
                 "actions": []
             },
             # Scene 2: Draft reply email
@@ -102,11 +102,11 @@ class DemoManager:
                         "step": 2,
                         "type": "tool_call",
                         "action": "Action: email",
-                        "reasoning": "Creating a draft email to Professor Tan.",
+                        "reasoning": "Creating a draft email to Professor Chen.",
                         "tool_name": "email",
                         "parameters": {
                             "operation": "create_draft",
-                            "recipient": "chenhao@uchicago.edu",
+                            "recipient": "prof.chen@university.edu",
                             "subject": "Meeting about Emobot project"
                         }
                     },
@@ -124,18 +124,18 @@ class DemoManager:
                         "tool": "email",
                         "parameters": {
                             "operation": "create_draft",
-                            "recipient": "chenhao@uchicago.edu",
+                            "recipient": "prof.chen@university.edu",
                             "subject": "Meeting about Emobot project",
-                            "body": "Dear Professor Tan,\n\nThank you for your email. I would be very happy to meet and discuss the progress of my Emobot project.\n\nMy preferred time would be Tuesday 2:00–2:30 PM, but Wednesday 3:00–3:30 PM would also work well for me if that is more convenient for you.\n\nPlease let me know which time you prefer, or if there is another time that works better.\n\nBest regards,\nYifei"
+                            "body": "Dear Professor Chen,\n\nThank you for your email. I would be very happy to meet and discuss the progress of my Emobot project.\n\nMy preferred time would be Tuesday 2:00–2:30 PM, but Wednesday 3:00–3:30 PM would also work well for me if that is more convenient for you.\n\nPlease let me know which time you prefer, or if there is another time that works better.\n\nBest regards,\nYifei"
                         }
                     }
                 ],
                 "ui_action": {
                     "type": "open_email_draft",
                     "data": {
-                        "recipient": "chenhao@uchicago.edu",
+                        "recipient": "prof.chen@university.edu",
                         "subject": "Meeting about Emobot project",
-                        "body": "Dear Professor Tan,\n\nThank you for your email. I would be very happy to meet and discuss the progress of my Emobot project.\n\nMy preferred time would be Tuesday 2:00–2:30 PM, but Wednesday 3:00–3:30 PM would also work well for me if that is more convenient for you.\n\nPlease let me know which time you prefer, or if there is another time that works better.\n\nBest regards,\nYifei"
+                        "body": "Dear Professor Chen,\n\nThank you for your email. I would be very happy to meet and discuss the progress of my Emobot project.\n\nMy preferred time would be Tuesday 2:00–2:30 PM, but Wednesday 3:00–3:30 PM would also work well for me if that is more convenient for you.\n\nPlease let me know which time you prefer, or if there is another time that works better.\n\nBest regards,\nYifei"
                     }
                 }
             },
@@ -176,14 +176,14 @@ class DemoManager:
                         "confidence": 1.0
                     }
                 ],
-                "response": "Okay, I’ll make sure this doesn’t fall through the cracks. ✅ The follow-up task has been created: **Title:** Follow up with Prof. Tan about Emobot meeting **Due:** In 2 days at 9:00 AM **Category:** Study **Notes:** Check if there is a reply from Professor Tan. If not, send a brief follow-up email. I’ll remind you in two days and automatically re-check your inbox at that time.",
+                "response": "Okay, I’ll make sure this doesn’t fall through the cracks. ✅ The follow-up task has been created: **Title:** Follow up with Prof. Tan about Emobot meeting **Due:** In 2 days at 9:00 AM **Category:** Study **Notes:** Check if there is a reply from Professor Chen. If not, send a brief follow-up email. I’ll remind you in two days and automatically re-check your inbox at that time.",
                 "actions": [
                     {
                         "tool": "todo_list",
                         "parameters": {
                             "operation": "add_task",
                             "title": "Follow up with Prof. Tan about Emobot meeting",
-                            "description": "Check if there is a reply from Professor Tan. If not, send a brief follow-up email.",
+                            "description": "Check if there is a reply from Professor Chen. If not, send a brief follow-up email.",
                             "due_date": "2025-12-04T09:00:00",
                             "category": "study"
                         }
@@ -217,13 +217,13 @@ class DemoManager:
                         "step": 3,
                         "type": "observation",
                         "action": "Observation from memory",
-                        "reasoning": "Profile retrieved: Name=Yifei Wang, Role=MS Data Science, ...",
+                        "reasoning": "Profile retrieved: Name=Alex Jordan, Role=MS Data Science, ...",
                         "confidence": 1.0
                     }
                 ],
                 "response": """Sure, here’s a summary of your editable profile:
 
-**Name:** Yifei Wang
+**Name:** Alex Jordan
 **Role:** MS in Applied Data Science @ UChicago
 **Preferred languages:** English, Chinese
 
@@ -292,7 +292,7 @@ Going forward, when I write emails to new or less familiar people, I’ll follow
             {
                 "id": "scene_6_1",
                 "triggers": [
-                    "write an English email to Professor Tan",
+                    "write an English email to Professor Chen",
                     "updating him on the Emobot progress"
                 ],
                 "reasoning_steps": [
@@ -300,22 +300,22 @@ Going forward, when I write emails to new or less familiar people, I’ll follow
                         "step": 1,
                         "type": "thought",
                         "action": "Thinking",
-                        "reasoning": "User wants to write an email to Professor Tan about Emobot progress. I need to check the memory for historical email tone.",
+                        "reasoning": "User wants to write an email to Professor Chen about Emobot progress. I need to check the memory for historical email tone.",
                         "confidence": 0.9
                     },
                     {
                         "step": 2,
                         "type": "tool_call",
                         "action": "Action: memory",
-                        "reasoning": "Searching for past emails to 'Professor Tan' to analyze tone.",
+                        "reasoning": "Searching for past emails to 'Professor Chen' to analyze tone.",
                         "tool_name": "memory",
-                        "parameters": {"operation": "search_history", "query": "email to Professor Tan"}
+                        "parameters": {"operation": "search_history", "query": "email to Professor Chen"}
                     },
                     {
                         "step": 3,
                         "type": "observation",
                         "action": "Observation from memory",
-                        "reasoning": "Found pattern: Formal, structured, polite. Uses 'Dear Professor Tan', 'Best regards'.",
+                        "reasoning": "Found pattern: Formal, structured, polite. Uses 'Dear Professor Chen', 'Best regards'.",
                         "confidence": 1.0
                     },
                     {
@@ -326,14 +326,14 @@ Going forward, when I write emails to new or less familiar people, I’ll follow
                         "confidence": 0.95
                     }
                 ],
-                "response": "I’ll first look at how you usually write to Professor Tan. Based on your history, I have written a draft that matches your usual tone.",
+                "response": "I’ll first look at how you usually write to Professor Chen. Based on your history, I have written a draft that matches your usual tone.",
                 "actions": [],
                 "ui_action": {
                     "type": "open_email_draft",
                     "data": {
-                        "recipient": "chenhao@uchicago.edu",
+                        "recipient": "prof.chen@university.edu",
                         "subject": "Update on Emobot project progress",
-                        "body": "Dear Professor Tan,\n\nI hope this message finds you well. I wanted to briefly update you on the progress of my Emobot project.\n\nRecently, I have implemented multi-tool orchestration that connects email, calendar, and to-do lists, as well as a memory module that maintains editable user profiles and interaction history. These components now work together to support more proactive and personalized assistance.\n\nI would be very happy to share more details and receive your feedback at our next meeting.\n\nBest regards,\nYifei"
+                        "body": "Dear Professor Chen,\n\nI hope this message finds you well. I wanted to briefly update you on the progress of my Emobot project.\n\nRecently, I have implemented multi-tool orchestration that connects email, calendar, and to-do lists, as well as a memory module that maintains editable user profiles and interaction history. These components now work together to support more proactive and personalized assistance.\n\nI would be very happy to share more details and receive your feedback at our next meeting.\n\nBest regards,\nYifei"
                     }
                 }
             },
@@ -447,9 +447,9 @@ Going forward, when I write emails to new or less familiar people, I’ll follow
                 ],
                 "response": """Sure, here’s a quick comparison:
 
-1️⃣ **Email to Professor Tan**
+1️⃣ **Email to Professor Chen**
 *   **Tone:** formal, structured, polite.
-*   **Consistency:** Uses “Dear Professor Tan,” follows usual pattern (greeting → update → request), ends with “Best regards”.
+*   **Consistency:** Uses “Dear Professor Chen,” follows usual pattern (greeting → update → request), ends with “Best regards”.
 
 2️⃣ **Email to your mom**
 *   **Tone:** casual, warm, and personal, with emojis.
@@ -503,7 +503,7 @@ All three drafts were generated by combining your explicit profile with historic
 *   Create a to-do to summarize your key talking points and project highlights.
 
 **Insight #2 – Emobot draft may be delayed**
-📧 Three days ago, Professor Tan asked for an updated Emobot draft; you haven’t replied yet.
+📧 Three days ago, Professor Chen asked for an updated Emobot draft; you haven’t replied yet.
 📝 Your to-do “Finish Emobot draft v2” is already 2 days overdue.
 ✅ Suggested actions:
 *   Block a 2-hour focus session this week to finish the draft.
@@ -557,9 +557,9 @@ You can say something like: “Accept insights 1 and 2,” and I’ll automatica
                         "step": 4,
                         "type": "tool_call",
                         "action": "Action: email",
-                        "reasoning": "Drafting update email to Professor Tan.",
+                        "reasoning": "Drafting update email to Professor Chen.",
                         "tool_name": "email",
-                        "parameters": {"operation": "create_draft", "recipient": "chenhao@uchicago.edu"}
+                        "parameters": {"operation": "create_draft", "recipient": "prof.chen@university.edu"}
                     }
                 ],
                 "response": """Understood. I’ll turn Insights 1 and 2 into concrete actions.
@@ -571,7 +571,7 @@ You can say something like: “Accept insights 1 and 2,” and I’ll automatica
 **For Insight #2 – Emobot draft**
 📅 **Calendar:** Created focus block (Thursday 3:00–5:00 PM).
 📝 **To-Do:** Updated task "Finish Emobot draft v2".
-✉️ **Email:** Drafted a short update email to Professor Tan.
+✉️ **Email:** Drafted a short update email to Professor Chen.
 
 ✅ The calendar blocks and to-dos have been created, and the email has been saved as a draft.
 
@@ -616,9 +616,9 @@ Would you like me to open your calendar or the draft email so you can show them 
                         "tool": "email",
                         "parameters": {
                             "operation": "create_draft",
-                            "recipient": "chenhao@uchicago.edu",
+                            "recipient": "prof.chen@university.edu",
                             "subject": "Brief update on Emobot draft",
-                            "body": "Dear Professor Tan,\n\nI wanted to let you know that I’m currently working on the updated draft of my Emobot project. I have scheduled focused time later this week to finalize it and plan to send you the new version by Thursday evening.\n\nThank you for your patience, and I appreciate your guidance on this project.\n\nBest regards,\nYifei"
+                            "body": "Dear Professor Chen,\n\nI wanted to let you know that I’m currently working on the updated draft of my Emobot project. I have scheduled focused time later this week to finalize it and plan to send you the new version by Thursday evening.\n\nThank you for your patience, and I appreciate your guidance on this project.\n\nBest regards,\nYifei"
                         }
                     }
                 ]

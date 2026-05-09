@@ -3,11 +3,11 @@
         "id": "msg_demo_1",
         "thread_id": "thread_demo_1",
         "subject": "Meeting about your Emobot project",
-        "from": "Prof. Chenhao Tan <chenhao@uchicago.edu>",
-        "to": "Yifei Wang <yifei@uchicago.edu>",
+        "from": "Prof. Sarah Chen <prof.chen@university.edu>",
+        "to": "Alex Jordan <user@example.com>",
         "date": "Tue, 02 Dec 2025 09:30:00 -0600",
         "snippet": "Could we meet for 30 minutes sometime next Tuesday or Wednesday afternoon...",
-        "body": "Hi Yifei,\n\nCould we meet for 30 minutes sometime next Tuesday or Wednesday afternoon to discuss your Emobot project progress?\n\nBest,\nChenhao",
+        "body": "Hi Alex,\n\nCould we meet for 30 minutes sometime next Tuesday or Wednesday afternoon to discuss your Emobot project progress?\n\nBest,\nProf. Chen",
         "labels": [
             "INBOX",
             "UNREAD"
@@ -18,12 +18,12 @@
     {
         "id": "msg_demo_2",
         "thread_id": "thread_demo_2",
-        "subject": "Interview Confirmation - Microsoft AI",
-        "from": "HR Team <hr@microsoft.com>",
-        "to": "Yifei Wang <yifei@uchicago.edu>",
+        "subject": "Interview Confirmation - TechCorp AI",
+        "from": "HR Team <hr@techcorp.example.com>",
+        "to": "Alex Jordan <user@example.com>",
         "date": "Mon, 01 Dec 2025 14:00:00 -0600",
         "snippet": "We are pleased to confirm your interview scheduled for Friday at 10:00 AM...",
-        "body": "Dear Yifei,\n\nWe are pleased to confirm your interview scheduled for Friday, December 5th at 10:00 AM CST.\n\nPlease be prepared to discuss your recent projects.\n\nBest regards,\nMicrosoft AI HR Team",
+        "body": "Dear Alex,\n\nWe are pleased to confirm your interview scheduled for Friday, December 5th at 10:00 AM CST.\n\nPlease be prepared to discuss your recent projects.\n\nBest regards,\nTechCorp AI HR Team",
         "labels": [
             "INBOX",
             "UNREAD"

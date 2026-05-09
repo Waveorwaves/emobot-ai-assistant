@@ -1,160 +1,104 @@
 # Emobot AI Assistant
 
-An intelligent AI assistant with calendar, email, and todo management capabilities.
+A full-stack personal AI assistant with Gmail, Google Calendar, and task management — built on a Flask backend with a React/TypeScript frontend.
 
 ## Features
 
-- 💬 **Chat Interface** - Natural language interaction with AI
-- 📅 **Calendar** - Google Calendar integration
-- 📧 **Email** - Gmail integration
-- ✅ **Todo List** - Task management
-- 📊 **Dashboard** - Overview of all features
+- **Chat** — Natural language interface powered by Gemini AI and smolagents
+- **Email** — Gmail integration: read, draft, and send
+- **Calendar** — Google Calendar integration: view and create events
+- **Tasks** — Todo management with AI-assisted prioritization
+- **Dashboard** — Unified overview of all tools
+- **Memory** — Episodic memory module for personalized, context-aware responses
 
 ## Quick Start
-
-### One-Command Setup
 
 ```bash
 chmod +x start-integrated.sh
 ./start-integrated.sh
 ```
 
-Then open: **http://localhost:3000**
+Open **http://localhost:3000**
 
 ## Prerequisites
 
 - Python 3.8+
 - Node.js 16+
-- Gmail API credentials
+- Gmail API credentials (OAuth 2.0)
 
 ## Installation
 
-1. **Clone the repository**:
+1. Clone the repository:
 ```bash
-git clone <your-repo-url>
-cd emobot-yifei
+git clone https://github.com/Waveorwaves/emobot-ai-assistant
+cd emobot-ai-assistant
 ```
 
-2. **Add Gmail credentials**:
-   - Get `gmail_credentials.json` from Google Cloud Console
-   - Place in `emobot/` directory
+2. Set up credentials — copy the example config and fill in your values:
+```bash
+cp emobot/configs/gmail_config.example.yaml emobot/configs/gmail_config.yaml
+cp .env.example .env
+```
 
-3. **Run the startup script**:
+3. Get Gmail/Calendar OAuth credentials from [Google Cloud Console](https://console.cloud.google.com/), enable the Gmail API and Calendar API, and download `gmail_credentials.json` into `emobot/`.
+
+4. Run:
 ```bash
 chmod +x start-integrated.sh
 ./start-integrated.sh
 ```
 
-## Project Structure
-
-```
-emobot-yifei/
-├── emobot/                  # Python Flask backend
-│   ├── agent/              # AI reasoning module
-│   ├── tools/              # MCP tools (calendar, email, todo)
-│   ├── configs/            # Configuration files
-│   ├── web_app.py          # Main Flask application
-│   ├── requirements.txt    # Python dependencies
-│   └── gmail_credentials.json  # Gmail API credentials
-├── frontend/               # React frontend
-│   ├── src/               # Source code
-│   ├── package.json       # Node dependencies
-│   └── vite.config.ts     # Vite configuration
-└── start-integrated.sh    # Startup script
-```
-
 ## Manual Setup
 
-### Backend
-
+**Backend:**
 ```bash
 cd emobot
 pip install -r requirements.txt
-python web_app.py
+python web_app.py        # http://localhost:8000
 ```
 
-Backend runs on: **http://localhost:8000**
-
-### Frontend
-
+**Frontend:**
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev              # http://localhost:3000
 ```
 
-Frontend runs on: **http://localhost:3000**
+## Project Structure
 
-## Gmail API Setup
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project
-3. Enable Gmail API and Google Calendar API
-4. Create OAuth 2.0 credentials
-5. Download credentials as `gmail_credentials.json`
-6. Place in `emobot/` directory
-
-## API Endpoints
-
-### Chat
-- `POST /api/chat` - Send chat message
-- `POST /api/query` - Query with reasoning
-
-### Calendar
-- `GET /api/calendar/events` - List events
-- `POST /api/calendar/events` - Create event
-
-### Email
-- `GET /api/email/list` - List emails
-- `POST /api/email/send` - Send email
-- `GET /api/email/read/<id>` - Read email
-
-### Todo
-- `GET /api/todo/list` - List todos
-- `POST /api/todo/add` - Add todo
-- `PUT /api/todo/update/<id>` - Update todo
-- `DELETE /api/todo/delete/<id>` - Delete todo
-
-## Troubleshooting
-
-### Port Already in Use
-The startup script automatically kills processes on ports 3000, 8000, and 8080.
-
-Manual cleanup:
-```bash
-lsof -ti :8000 | xargs kill
-lsof -ti :3000 | xargs kill
+```
+emobot-ai-assistant/
+├── emobot/                   # Python Flask backend
+│   ├── agent/               # AI reasoning, memory, demo manager
+│   ├── tools/               # MCP tools (Gmail, Calendar, Todo)
+│   ├── configs/             # Config files and examples
+│   ├── demo_data/           # Seed data for demo mode
+│   ├── web_app.py           # Main Flask application
+│   └── requirements.txt
+├── frontend/                # React + TypeScript frontend
+│   ├── src/
+│   └── vite.config.ts
+├── start-integrated.sh      # One-command startup
+├── .env.example
+└── SECURITY.md
 ```
 
-### Backend Won't Start
-1. Check Python: `python --version`
-2. Install dependencies: `pip install -r emobot/requirements.txt`
-3. Check `gmail_credentials.json` exists in `emobot/`
+## API Reference
 
-### Frontend Won't Start
-1. Check Node.js: `node --version`
-2. Install dependencies: `cd frontend && npm install`
-3. Check backend is running on port 8000
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/chat` | Send a chat message |
+| GET | `/api/calendar/events` | List calendar events |
+| POST | `/api/calendar/events` | Create an event |
+| GET | `/api/email/list` | List emails |
+| POST | `/api/email/send` | Send an email |
+| GET | `/api/todo/list` | List todos |
+| POST | `/api/todo/add` | Add a todo |
 
-## Technologies
+## Stack
 
-### Backend
-- Python 3.8+
-- Flask
-- Google API Client (Gmail, Calendar)
-- Gemini AI
-
-### Frontend
-- React 18
-- TypeScript
-- Vite
-- Tailwind CSS
-- Axios
+Python · Flask · Gemini AI · smolagents · Google APIs · React 18 · TypeScript · Vite · Tailwind CSS
 
 ## License
 
-MIT License
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+MIT
