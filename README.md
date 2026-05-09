@@ -4,7 +4,7 @@ A full-stack personal AI assistant with Gmail, Google Calendar, and task managem
 
 ## Features
 
-- **Chat** — Natural language interface powered by Gemini AI and smolagents
+- **Chat** — Natural language interface powered by LLM and smolagents
 - **Email** — Gmail integration: read, draft, and send
 - **Calendar** — Google Calendar integration: view and create events
 - **Tasks** — Todo management with AI-assisted prioritization
